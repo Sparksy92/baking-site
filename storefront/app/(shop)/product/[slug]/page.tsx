@@ -1,8 +1,9 @@
 import type { Metadata } from 'next';
 import { notFound } from 'next/navigation';
-import { apiFetch, type Product } from '@/lib/api';
+import { apiFetch, type Product, type ProductListItem } from '@/lib/api';
 import { formatCents, brandName, siteUrl } from '@/lib/format';
 import { JsonLd } from '@/components/JsonLd';
+import { ProductCard } from '@/components/ProductCard';
 import { ProductInteractive } from './ProductInteractive';
 import { ImageGallery } from './ImageGallery';
 
@@ -86,6 +87,34 @@ export default async function ProductPage({ params }: Props) {
         {/* Interactive product info — client component */}
         <ProductInteractive product={product} />
       </div>
+
+      {/* Related products */}
+      <RelatedProducts categorySlug={product.category?.slug ?? null} currentSlug={slug} />
     </div>
   );
+}
+
+async function RelatedProducts({ categorySlug, currentSlug }: { categorySlug: string | null; currentSlug: string }) {
+  if (!categorySlug) return null;
+
+  try {
+    const data = await apiFetch<{ products: ProductListItem[] }>(
+      `/api/products?category=${encodeURIComponent(categorySlug)}&limit=5`
+    );
+    const related = data.products.filter((p) => p.slug !== currentSlug).slice(0, 4);
+    if (related.length === 0) return null;
+
+    return (
+      <section className="mt-16 border-t border-gray-100 pt-12">
+        <h2 className="text-2xl font-bold text-gray-900 mb-6">You Might Also Like</h2>
+        <div className="grid grid-cols-2 md:grid-cols-4 gap-4 md:gap-6">
+          {related.map((product) => (
+            <ProductCard key={product.id} product={product} />
+          ))}
+        </div>
+      </section>
+    );
+  } catch {
+    return null;
+  }
 }

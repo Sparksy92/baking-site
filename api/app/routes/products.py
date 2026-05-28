@@ -19,6 +19,7 @@ async def list_products(
     collection: str | None = None,
     featured: bool | None = None,
     search: str | None = None,
+    sort: str | None = None,
     page: int = Query(default=1, ge=1),
     limit: int = Query(default=24, ge=1, le=100),
     db: aiosqlite.Connection = Depends(get_db),
@@ -57,14 +58,25 @@ async def list_products(
     row = await cursor.fetchone()
     total = row[0]
 
+    # Determine sort order
+    sort_map = {
+        "price_asc": "min_price ASC",
+        "price_desc": "min_price DESC",
+        "newest": "p.id DESC",
+        "name_asc": "p.name ASC",
+        "name_desc": "p.name DESC",
+    }
+    order_clause = sort_map.get(sort or "", "p.sort_order, p.name")
+
     # Fetch products
     sql = f"""
         SELECT p.id, p.name, p.slug, p.description, p.category_id,
-               p.is_active, p.is_featured
+               p.is_active, p.is_featured,
+               (SELECT MIN(pv.price_cents) FROM product_variants pv WHERE pv.product_id = p.id AND pv.is_active = 1) as min_price
         FROM products p
         LEFT JOIN categories c ON c.id = p.category_id
         WHERE {where}
-        ORDER BY p.sort_order, p.name
+        ORDER BY {order_clause}
         LIMIT ? OFFSET ?
     """
     cursor = await db.execute(sql, params + [limit, offset])

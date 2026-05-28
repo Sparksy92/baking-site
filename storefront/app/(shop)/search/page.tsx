@@ -1,27 +1,41 @@
 'use client';
 
 import { useState } from 'react';
-import Link from 'next/link';
 import { Search as SearchIcon } from 'lucide-react';
 import { api, type ProductListItem } from '@/lib/api';
-import { formatCents } from '@/lib/format';
+import { ProductCard } from '@/components/ProductCard';
 
 export default function SearchPage() {
   const [query, setQuery] = useState('');
   const [results, setResults] = useState<ProductListItem[]>([]);
+  const [total, setTotal] = useState(0);
   const [searched, setSearched] = useState(false);
+  const [sort, setSort] = useState('');
 
-  async function handleSearch(e: React.FormEvent) {
-    e.preventDefault();
-    if (!query.trim()) return;
-    const data = await api.get<{ products: ProductListItem[] }>(`/api/products?search=${encodeURIComponent(query.trim())}`);
+  async function doSearch(q: string, sortBy: string) {
+    if (!q.trim()) return;
+    const sortParam = sortBy ? `&sort=${sortBy}` : '';
+    const data = await api.get<{ products: ProductListItem[]; total: number }>(
+      `/api/products?search=${encodeURIComponent(q.trim())}&limit=48${sortParam}`
+    );
     setResults(data.products);
+    setTotal(data.total);
     setSearched(true);
   }
 
+  async function handleSearch(e: React.FormEvent) {
+    e.preventDefault();
+    doSearch(query, sort);
+  }
+
+  function handleSortChange(newSort: string) {
+    setSort(newSort);
+    if (searched) doSearch(query, newSort);
+  }
+
   return (
-    <div className="max-w-3xl mx-auto px-4 py-8">
-      <form onSubmit={handleSearch} className="flex gap-2">
+    <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+      <form onSubmit={handleSearch} className="max-w-2xl mx-auto flex gap-2">
         <div className="flex-1 relative">
           <SearchIcon size={18} className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400" />
           <input
@@ -38,24 +52,32 @@ export default function SearchPage() {
         </button>
       </form>
 
-      {searched && results.length === 0 && (
-        <p className="mt-8 text-center text-gray-500">No products found for &quot;{query}&quot;</p>
+      {searched && (
+        <div className="mt-6 flex items-center justify-between">
+          <p className="text-sm text-gray-500">
+            {total === 0 ? `No products found for "${query}"` : `${total} result${total !== 1 ? 's' : ''} for "${query}"`}
+          </p>
+          {total > 0 && (
+            <select
+              value={sort}
+              onChange={(e) => handleSortChange(e.target.value)}
+              className="text-sm border border-gray-200 rounded-lg px-3 py-2 bg-white text-gray-700 focus:border-brand outline-none"
+            >
+              <option value="">Default</option>
+              <option value="newest">Newest</option>
+              <option value="price_asc">Price: Low to High</option>
+              <option value="price_desc">Price: High to Low</option>
+              <option value="name_asc">Name: A-Z</option>
+              <option value="name_desc">Name: Z-A</option>
+            </select>
+          )}
+        </div>
       )}
 
       {results.length > 0 && (
-        <div className="mt-8 grid grid-cols-2 md:grid-cols-3 gap-4">
+        <div className="mt-6 grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4 md:gap-6">
           {results.map((product) => (
-            <Link key={product.id} href={`/product/${product.slug}`} className="group">
-              <div className="aspect-[3/4] bg-gray-100 rounded-lg overflow-hidden">
-                {product.image_url ? (
-                  <img src={product.image_url} alt={product.name} className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300" />
-                ) : (
-                  <div className="w-full h-full flex items-center justify-center text-gray-400 text-xs">No image</div>
-                )}
-              </div>
-              <h3 className="mt-2 text-sm font-medium text-gray-900 truncate">{product.name}</h3>
-              <p className="text-sm font-bold">{formatCents(product.min_price_cents ?? 0)}</p>
-            </Link>
+            <ProductCard key={product.id} product={product} />
           ))}
         </div>
       )}
