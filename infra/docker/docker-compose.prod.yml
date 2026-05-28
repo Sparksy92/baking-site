@@ -1,0 +1,36 @@
+version: "3.8"
+
+services:
+  api:
+    build:
+      context: ../../
+      dockerfile: infra/docker/api.prod.Dockerfile
+    container_name: ${COMPOSE_CONTAINER_PREFIX:-elder}-api
+    env_file: ../../.env
+    volumes:
+      - app-data:/app/data
+      - app-uploads:/app/uploads
+    ports:
+      - "${API_PORT:-8100}:8100"
+    healthcheck:
+      test: ["CMD", "python3", "-c", "import urllib.request; urllib.request.urlopen('http://localhost:8100/api/health')"]
+      interval: 30s
+      timeout: 5s
+      retries: 3
+    restart: unless-stopped
+
+  storefront:
+    build:
+      context: ../../
+      dockerfile: infra/docker/storefront.prod.Dockerfile
+    container_name: ${COMPOSE_CONTAINER_PREFIX:-elder}-storefront
+    ports:
+      - "${STOREFRONT_PORT:-3000}:3000"
+    depends_on:
+      api:
+        condition: service_healthy
+    restart: unless-stopped
+
+volumes:
+  app-data:
+  app-uploads:

@@ -1,0 +1,18 @@
+@import "tailwindcss";
+
+@theme {
+  --color-brand: var(--brand-primary, #1A1A1A);
+  --color-accent: var(--brand-accent, #C53030);
+  --color-surface: #F5F5F5;
+}
+
+:root {
+  --brand-primary: #1A1A1A;
+  --brand-accent: #C53030;
+}
+
+body {
+  font-family: 'Inter', system-ui, -apple-system, sans-serif;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+}
