@@ -4,6 +4,8 @@ import { useState } from 'react';
 import type { Product } from '@/lib/api';
 import { cart } from '@/lib/cart';
 import { formatCents } from '@/lib/format';
+import { addToast } from '@/lib/toast';
+import { SizeGuide } from '@/components/SizeGuide';
 
 export function ProductInteractive({ product }: { product: Product }) {
   const sizes = [...new Set(product.variants.map((v) => v.size))];
@@ -29,6 +31,7 @@ export function ProductInteractive({ product }: { product: Product }) {
       unitPriceCents: selectedVariant.price_cents,
       imageUrl: product.images[0]?.url ?? null,
     });
+    addToast(`${product.name} added to cart`, 'success');
     setAdded(true);
     setTimeout(() => setAdded(false), 2000);
   }
@@ -83,7 +86,10 @@ export function ProductInteractive({ product }: { product: Product }) {
       {/* Size selector */}
       {sizes.length > 0 && (
         <div className="mt-6">
-          <h3 className="text-sm font-semibold text-gray-900 mb-2">Size</h3>
+          <div className="flex items-center justify-between mb-2">
+            <h3 className="text-sm font-semibold text-gray-900">Size</h3>
+            <SizeGuide category={product.category?.slug} />
+          </div>
           <div className="flex flex-wrap gap-2">
             {sizes.map((size) => {
               const sizeVariant = product.variants.find(

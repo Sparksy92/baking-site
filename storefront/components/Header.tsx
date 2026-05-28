@@ -2,6 +2,7 @@
 
 import { useState, useEffect } from 'react';
 import Link from 'next/link';
+import Image from 'next/image';
 import { usePathname } from 'next/navigation';
 import { ShoppingBag, Search, Menu, X } from 'lucide-react';
 import { useCart } from '@/lib/cart';
@@ -54,7 +55,7 @@ export function Header() {
           {/* Logo */}
           <Link href="/" className="flex items-center gap-2">
             {brandLogo() && (
-              <img src={brandLogo()!} alt={brandName()} className="h-8 w-auto" />
+              <Image src={brandLogo()!} alt={brandName()} width={32} height={32} className="h-8 w-auto" />
             )}
             <span className="text-2xl font-black tracking-tight text-brand">{brandName()}</span>
           </Link>

@@ -1,6 +1,7 @@
 'use client';
 
 import Link from 'next/link';
+import Image from 'next/image';
 import { Trash2, Plus, Minus } from 'lucide-react';
 import { useCart } from '@/lib/cart';
 import { formatCents } from '@/lib/format';
@@ -57,7 +58,7 @@ export default function CartPage() {
         {items.map((item) => (
           <div key={item.variantId} className="flex gap-4 p-4 bg-white border border-gray-100 rounded-xl">
             {item.imageUrl && (
-              <img src={item.imageUrl} alt={item.productName} className="w-20 h-20 object-cover rounded-lg flex-shrink-0" />
+              <Image src={item.imageUrl} alt={item.productName} width={80} height={80} className="w-20 h-20 object-cover rounded-lg flex-shrink-0" />
             )}
             <div className="flex-1 min-w-0">
               <h3 className="font-medium text-gray-900 text-sm truncate">{item.productName}</h3>

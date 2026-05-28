@@ -1,8 +1,10 @@
 import Link from 'next/link';
+import Image from 'next/image';
 import { apiFetch, type ProductListItem, type Collection } from '@/lib/api';
 import { formatCents } from '@/lib/format';
 import { ProductCard } from '@/components/ProductCard';
 import { JsonLd } from '@/components/JsonLd';
+import { Newsletter } from '@/components/Newsletter';
 import { brandName, brandTagline, siteUrl } from '@/lib/format';
 
 export default async function Home() {
@@ -52,10 +54,12 @@ export default async function Home() {
                 className="group relative overflow-hidden rounded-xl bg-gray-100 aspect-[4/3] flex items-end"
               >
                 {col.image_url && (
-                  <img
+                  <Image
                     src={col.image_url}
                     alt={col.name}
-                    className="absolute inset-0 w-full h-full object-cover group-hover:scale-105 transition-transform duration-500"
+                    fill
+                    sizes="(max-width: 640px) 100vw, (max-width: 1024px) 50vw, 33vw"
+                    className="object-cover group-hover:scale-105 transition-transform duration-500"
                   />
                 )}
                 <div className="relative z-10 w-full p-6 bg-gradient-to-t from-black/70 to-transparent">
@@ -79,6 +83,9 @@ export default async function Home() {
           </div>
         </section>
       )}
+
+      {/* Newsletter */}
+      <Newsletter />
     </div>
   );
 }

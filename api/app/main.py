@@ -11,7 +11,7 @@ from app.config import get_settings
 from app.database import init_db
 from app.middleware.logging import setup_logging
 from app.middleware.rate_limit import RateLimitMiddleware
-from app.routes import health, products, settings, auth, checkout, webhooks, promos
+from app.routes import health, products, settings, auth, checkout, webhooks, promos, newsletter
 from app.routes.admin import (
     products as admin_products,
     collections as admin_collections,
@@ -60,9 +60,10 @@ def create_app() -> FastAPI:
     app.include_router(products.router, prefix="/api")
     app.include_router(settings.router, prefix="/api")
 
-    # ── Checkout, Promos & Webhooks ─────────────────────────────
+    # ── Checkout, Promos, Newsletter & Webhooks ──────────────────
     app.include_router(checkout.router, prefix="/api")
     app.include_router(promos.router, prefix="/api")
+    app.include_router(newsletter.router, prefix="/api")
     app.include_router(webhooks.router, prefix="/api")
 
     # ── Auth ───────────────────────────────────────────────────

@@ -6,3 +6,8 @@ dist/
 .env*.local
 *.tsbuildinfo
 next-env.d.ts
+
+# Test artifacts
+test-results/
+playwright-report/
+blob-report/
