@@ -192,6 +192,7 @@ class CheckoutRequest(BaseModel):
     customer_phone: str | None = None
     shipping_address: ShippingAddress
     items: list[CheckoutItem] = Field(min_length=1)
+    promo_code: str | None = None
     customer_notes: str | None = None
 
 
@@ -217,9 +218,11 @@ class OrderResponse(BaseModel):
     payment_status: str
     items: list[OrderItemResponse]
     subtotal_cents: int
+    discount_cents: int = 0
     shipping_cents: int
     tax_cents: int
     total_cents: int
+    promo_code: str | None = None
     tracking_number: str | None = None
     tracking_carrier: str | None = None
     created_at: str
@@ -230,6 +233,39 @@ class OrderStatusUpdate(BaseModel):
     tracking_number: str | None = None
     tracking_carrier: str | None = None
     admin_notes: str | None = None
+
+
+# ── Promo Codes ──────────────────────────────────────────────────
+
+class PromoCodeCreate(BaseModel):
+    code: str = Field(min_length=2, max_length=50)
+    description: str | None = None
+    discount_type: str = Field(default="percent", pattern="^(percent|fixed_cents)$")
+    discount_value: int = Field(gt=0)
+    minimum_order_cents: int = 0
+    max_uses: int | None = None
+    starts_at: str | None = None
+    expires_at: str | None = None
+    is_active: bool = True
+
+
+class PromoCodeUpdate(BaseModel):
+    description: str | None = None
+    discount_type: str | None = None
+    discount_value: int | None = None
+    minimum_order_cents: int | None = None
+    max_uses: int | None = None
+    starts_at: str | None = None
+    expires_at: str | None = None
+    is_active: bool | None = None
+
+
+class PromoValidateResponse(BaseModel):
+    valid: bool
+    code: str
+    discount_type: str | None = None
+    discount_value: int | None = None
+    message: str | None = None
 
 
 # ── Settings ────────────────────────────────────────────────────

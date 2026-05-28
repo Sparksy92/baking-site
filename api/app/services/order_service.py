@@ -61,20 +61,37 @@ async def validate_checkout(db: aiosqlite.Connection, body: CheckoutRequest) -> 
             "line_total_cents": line_total,
         })
 
+    # Promo code discount
+    discount_cents = 0
+    applied_promo = None
+    if body.promo_code:
+        from app.routes.promos import _validate_promo_code, calculate_discount
+        promo_result = await _validate_promo_code(db, body.promo_code, subtotal_cents)
+        if promo_result.valid:
+            discount_cents = calculate_discount(
+                promo_result.discount_type, promo_result.discount_value, subtotal_cents
+            )
+            applied_promo = promo_result.code
+        else:
+            raise CheckoutError(promo_result.message or "Invalid promo code")
+
     # Shipping
     if subtotal_cents >= settings.shipping_free_threshold_cents:
         shipping_cents = 0
     else:
         shipping_cents = settings.shipping_flat_rate_cents
 
-    # Tax
-    tax_cents = int(subtotal_cents * settings.tax_rate)
+    # Tax (on subtotal after discount)
+    taxable = subtotal_cents - discount_cents
+    tax_cents = int(taxable * settings.tax_rate)
 
-    total_cents = subtotal_cents + shipping_cents + tax_cents
+    total_cents = subtotal_cents - discount_cents + shipping_cents + tax_cents
 
     return {
         "order_items": order_items,
         "subtotal_cents": subtotal_cents,
+        "discount_cents": discount_cents,
+        "promo_code": applied_promo,
         "shipping_cents": shipping_cents,
         "tax_cents": tax_cents,
         "total_cents": total_cents,
@@ -100,20 +117,27 @@ async def create_order(
             shipping_address_line1, shipping_address_line2,
             shipping_address_city, shipping_address_province,
             shipping_address_postal, shipping_address_country,
-            subtotal_cents, shipping_cents, tax_cents, total_cents,
-            customer_notes)
-           VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)""",
+            subtotal_cents, discount_cents, shipping_cents, tax_cents, total_cents,
+            promo_code, customer_notes)
+           VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)""",
         (
             order_number, "stripe", payment_status, stripe_session_id,
             body.customer_name, body.customer_email, body.customer_phone,
             body.shipping_address.line1, body.shipping_address.line2,
             body.shipping_address.city, body.shipping_address.province,
             body.shipping_address.postal_code, body.shipping_address.country,
-            validated["subtotal_cents"], validated["shipping_cents"],
-            validated["tax_cents"], validated["total_cents"],
-            body.customer_notes,
+            validated["subtotal_cents"], validated["discount_cents"],
+            validated["shipping_cents"], validated["tax_cents"], validated["total_cents"],
+            validated["promo_code"], body.customer_notes,
         ),
     )
+
+    # Increment promo usage
+    if validated.get("promo_code"):
+        await db.execute(
+            "UPDATE promo_codes SET times_used = times_used + 1 WHERE code = ? COLLATE NOCASE",
+            (validated["promo_code"],),
+        )
 
     # Get order ID
     cursor = await db.execute("SELECT last_insert_rowid()")

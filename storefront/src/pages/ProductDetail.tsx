@@ -3,11 +3,13 @@ import { useParams } from 'react-router-dom';
 import { api, type Product } from '../lib/api';
 import { cart } from '../lib/cart';
 import { formatCents } from '../lib/format';
+import { useDocumentTitle } from '../lib/seo';
 
 export default function ProductDetail() {
   const { slug } = useParams<{ slug: string }>();
   const [product, setProduct] = useState<Product | null>(null);
   const [loading, setLoading] = useState(true);
+  useDocumentTitle(product?.name);
   const [selectedSize, setSelectedSize] = useState<string>('');
   const [selectedColor, setSelectedColor] = useState<string>('');
   const [activeImage, setActiveImage] = useState(0);

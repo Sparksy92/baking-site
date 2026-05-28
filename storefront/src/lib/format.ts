@@ -5,3 +5,15 @@ export function formatCents(cents: number): string {
 export function brandName(): string {
   return import.meta.env.VITE_BRAND_NAME || 'Store';
 }
+
+export function brandTagline(): string {
+  return import.meta.env.VITE_BRAND_TAGLINE || '';
+}
+
+export function brandLogo(): string | null {
+  return import.meta.env.VITE_BRAND_LOGO || null;
+}
+
+export function brandAccent(): string {
+  return import.meta.env.VITE_BRAND_COLOR_ACCENT || '#C53030';
+}

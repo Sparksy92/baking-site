@@ -2,12 +2,14 @@ import { useEffect, useState } from 'react';
 import { useParams, Link } from 'react-router-dom';
 import { api, type ProductListItem } from '../lib/api';
 import { formatCents } from '../lib/format';
+import { useDocumentTitle } from '../lib/seo';
 
 export default function CollectionPage() {
   const { slug } = useParams<{ slug: string }>();
   const [products, setProducts] = useState<ProductListItem[]>([]);
   const [collection, setCollection] = useState<{ name: string; description: string | null } | null>(null);
   const [loading, setLoading] = useState(true);
+  useDocumentTitle(collection?.name || slug);
 
   useEffect(() => {
     if (!slug) return;

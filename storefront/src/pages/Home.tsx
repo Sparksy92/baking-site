@@ -2,8 +2,10 @@ import { useEffect, useState } from 'react';
 import { Link } from 'react-router-dom';
 import { api, type ProductListItem, type Collection } from '../lib/api';
 import { formatCents } from '../lib/format';
+import { useDocumentTitle } from '../lib/seo';
 
 export default function Home() {
+  useDocumentTitle();
   const [featured, setFeatured] = useState<ProductListItem[]>([]);
   const [collections, setCollections] = useState<Collection[]>([]);
   const [loading, setLoading] = useState(true);

@@ -1,7 +1,7 @@
 import { Link, Outlet, useLocation } from 'react-router-dom';
 import { ShoppingBag, Search } from 'lucide-react';
 import { useCart } from '../lib/cart';
-import { brandName, formatCents } from '../lib/format';
+import { brandName, brandTagline, brandLogo, formatCents } from '../lib/format';
 
 export default function Layout() {
   const { count, subtotal } = useCart();
@@ -14,8 +14,11 @@ export default function Layout() {
       <header className="sticky top-0 z-50 bg-white border-b border-gray-100">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 h-16 flex items-center justify-between">
           {/* Logo */}
-          <Link to="/" className="text-2xl font-black tracking-tight text-brand">
-            {brandName()}
+          <Link to="/" className="flex items-center gap-2">
+            {brandLogo() && (
+              <img src={brandLogo()!} alt={brandName()} className="h-8 w-auto" />
+            )}
+            <span className="text-2xl font-black tracking-tight text-brand">{brandName()}</span>
           </Link>
 
           {/* Nav — desktop */}
@@ -67,7 +70,7 @@ export default function Layout() {
           <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
             <div>
               <h3 className="font-bold text-brand text-lg">{brandName()}</h3>
-              <p className="mt-2 text-sm text-gray-600">Indigenous streetwear. Culture forward.</p>
+              {brandTagline() && <p className="mt-2 text-sm text-gray-600">{brandTagline()}</p>}
             </div>
             <div>
               <h4 className="font-semibold text-sm text-gray-900 mb-3">Shop</h4>

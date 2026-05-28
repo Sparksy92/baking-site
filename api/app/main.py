@@ -11,12 +11,13 @@ from app.config import get_settings
 from app.database import init_db
 from app.middleware.logging import setup_logging
 from app.middleware.rate_limit import RateLimitMiddleware
-from app.routes import health, products, settings, auth, checkout, webhooks
+from app.routes import health, products, settings, auth, checkout, webhooks, promos
 from app.routes.admin import (
     products as admin_products,
     collections as admin_collections,
     orders as admin_orders,
     settings as admin_settings,
+    promos as admin_promos,
 )
 
 logger = logging.getLogger(__name__)
@@ -59,8 +60,9 @@ def create_app() -> FastAPI:
     app.include_router(products.router, prefix="/api")
     app.include_router(settings.router, prefix="/api")
 
-    # ── Checkout & Webhooks ────────────────────────────────────
+    # ── Checkout, Promos & Webhooks ─────────────────────────────
     app.include_router(checkout.router, prefix="/api")
+    app.include_router(promos.router, prefix="/api")
     app.include_router(webhooks.router, prefix="/api")
 
     # ── Auth ───────────────────────────────────────────────────
@@ -71,6 +73,7 @@ def create_app() -> FastAPI:
     app.include_router(admin_collections.router, prefix="/api")
     app.include_router(admin_orders.router, prefix="/api")
     app.include_router(admin_settings.router, prefix="/api")
+    app.include_router(admin_promos.router, prefix="/api")
 
     # ── Static files (uploaded images) ─────────────────────────
     uploads_dir = app_settings.uploads_dir
