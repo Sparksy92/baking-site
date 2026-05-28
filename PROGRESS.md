@@ -44,12 +44,22 @@
 - [x] In-memory rate limiter with sliding window
 - [x] `.gitignore` excludes test artifacts
 
+### Admin
+- [x] Newsletter subscriber viewer with pagination + CSV export
+- [x] Settings page with friendly labels, hints, toast feedback
+- [x] Admin-configurable GA4 analytics (measurement ID in settings)
+
+### Infrastructure
+- [x] GitLab CI pipeline (pytest, vitest, typecheck, build)
+- [x] Cart TTL — 7-day expiry prevents stale variant checkout failures
+- [x] Accessibility — skip-nav link, focus trap on modals, ARIA attributes
+- [x] `.env.example` updated for Next.js (removed stale Vite vars)
+- [x] `store_domain` default fixed to localhost:3000
+
 ## Deferred
 - [ ] Abandoned cart email (needs background job scheduler)
-- [ ] Admin newsletter viewer/export CSV
-- [ ] CI pipeline (.gitlab-ci.yml with pytest + vitest + playwright)
 - [ ] Product CSV import/export
-- [ ] Accessibility pass (skip-nav, focus traps, ARIA)
+- [ ] Playwright E2E in CI (needs headless browser in runner)
 
 ## Architecture Decisions
 - **Port**: API on 8100, Next.js on 3000

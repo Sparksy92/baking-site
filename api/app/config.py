@@ -46,7 +46,7 @@ class Settings(BaseSettings):
 
     # ── Store ────────────────────────────────────────────────────
     order_number_prefix: str = "ELD"
-    store_domain: str = "http://localhost:5173"
+    store_domain: str = "http://localhost:3000"
 
     # ── Dev ──────────────────────────────────────────────────────
     dev_mode: bool = True

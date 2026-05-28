@@ -18,6 +18,7 @@ from app.routes.admin import (
     orders as admin_orders,
     settings as admin_settings,
     promos as admin_promos,
+    newsletter as admin_newsletter,
 )
 
 logger = logging.getLogger(__name__)
@@ -75,6 +76,7 @@ def create_app() -> FastAPI:
     app.include_router(admin_orders.router, prefix="/api")
     app.include_router(admin_settings.router, prefix="/api")
     app.include_router(admin_promos.router, prefix="/api")
+    app.include_router(admin_newsletter.router, prefix="/api")
 
     # ── Static files (uploaded images) ─────────────────────────
     uploads_dir = app_settings.uploads_dir

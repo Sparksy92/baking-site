@@ -1,6 +1,6 @@
 'use client';
 
-import { useState } from 'react';
+import { useState, useEffect, useRef, useCallback } from 'react';
 import { X, Ruler } from 'lucide-react';
 
 const sizeCharts: Record<string, { headers: string[]; rows: string[][] }> = {
@@ -40,6 +40,34 @@ const sizeCharts: Record<string, { headers: string[]; rows: string[][] }> = {
 export function SizeGuide({ category }: { category?: string }) {
   const [open, setOpen] = useState(false);
   const chart = sizeCharts[category ?? ''] ?? sizeCharts.default;
+  const dialogRef = useRef<HTMLDivElement>(null);
+
+  const close = useCallback(() => setOpen(false), []);
+
+  useEffect(() => {
+    if (!open) return;
+    const handleKey = (e: KeyboardEvent) => {
+      if (e.key === 'Escape') close();
+      if (e.key === 'Tab' && dialogRef.current) {
+        const focusable = dialogRef.current.querySelectorAll<HTMLElement>(
+          'button, [href], input, select, textarea, [tabindex]:not([tabindex="-1"])'
+        );
+        if (focusable.length === 0) return;
+        const first = focusable[0];
+        const last = focusable[focusable.length - 1];
+        if (e.shiftKey && document.activeElement === first) {
+          e.preventDefault();
+          last.focus();
+        } else if (!e.shiftKey && document.activeElement === last) {
+          e.preventDefault();
+          first.focus();
+        }
+      }
+    };
+    document.addEventListener('keydown', handleKey);
+    dialogRef.current?.querySelector<HTMLElement>('button')?.focus();
+    return () => document.removeEventListener('keydown', handleKey);
+  }, [open, close]);
 
   return (
     <>
@@ -53,9 +81,9 @@ export function SizeGuide({ category }: { category?: string }) {
       </button>
 
       {open && (
-        <div className="fixed inset-0 z-[200] flex items-center justify-center p-4">
-          <div className="absolute inset-0 bg-black/40" onClick={() => setOpen(false)} />
-          <div className="relative bg-white rounded-2xl shadow-2xl max-w-lg w-full max-h-[80vh] overflow-auto p-6">
+        <div className="fixed inset-0 z-[200] flex items-center justify-center p-4" role="dialog" aria-modal="true" aria-label="Size Guide">
+          <div className="absolute inset-0 bg-black/40" onClick={close} />
+          <div ref={dialogRef} className="relative bg-white rounded-2xl shadow-2xl max-w-lg w-full max-h-[80vh] overflow-auto p-6">
             <div className="flex items-center justify-between mb-4">
               <h2 className="text-lg font-bold text-gray-900">Size Guide</h2>
               <button

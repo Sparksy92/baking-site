@@ -1,0 +1,91 @@
+stages:
+  - test
+  - build
+
+variables:
+  PIP_CACHE_DIR: "$CI_PROJECT_DIR/.cache/pip"
+  npm_config_cache: "$CI_PROJECT_DIR/.cache/npm"
+
+# ── API Tests (pytest) ──────────────────────────────────────────────
+
+test:api:
+  stage: test
+  image: python:3.12-slim
+  cache:
+    key: api-pip
+    paths:
+      - .cache/pip
+      - api/.venv
+  before_script:
+    - cd api
+    - python -m venv .venv
+    - source .venv/bin/activate
+    - pip install -r requirements.txt
+  script:
+    - source .venv/bin/activate
+    - python -m pytest tests/ -v --tb=short
+  rules:
+    - changes:
+        - api/**/*
+
+# ── Storefront Unit Tests (Vitest) ──────────────────────────────────
+
+test:unit:
+  stage: test
+  image: node:20-slim
+  cache:
+    key: storefront-npm
+    paths:
+      - .cache/npm
+      - storefront/node_modules
+  before_script:
+    - cd storefront
+    - npm ci
+  script:
+    - npx vitest run
+  rules:
+    - changes:
+        - storefront/**/*
+
+# ── Storefront Type Check ───────────────────────────────────────────
+
+test:typecheck:
+  stage: test
+  image: node:20-slim
+  cache:
+    key: storefront-npm
+    paths:
+      - .cache/npm
+      - storefront/node_modules
+  before_script:
+    - cd storefront
+    - npm ci
+  script:
+    - npx tsc --noEmit
+  rules:
+    - changes:
+        - storefront/**/*
+
+# ── Storefront Build ────────────────────────────────────────────────
+
+build:storefront:
+  stage: build
+  image: node:20-slim
+  cache:
+    key: storefront-npm
+    paths:
+      - .cache/npm
+      - storefront/node_modules
+  variables:
+    NEXT_PUBLIC_BRAND_NAME: "CI Build"
+    NEXT_PUBLIC_SITE_URL: "http://localhost:3000"
+    API_URL: "http://localhost:8100"
+  before_script:
+    - cd storefront
+    - npm ci
+  script:
+    - npx next build
+  allow_failure: true
+  rules:
+    - changes:
+        - storefront/**/*

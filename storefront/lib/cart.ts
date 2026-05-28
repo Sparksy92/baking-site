@@ -15,15 +15,26 @@ export interface CartItem {
 
 type Listener = () => void;
 
+const CART_KEY = 'cart';
+const CART_TS_KEY = 'cart_ts';
+const CART_TTL_MS = 7 * 24 * 60 * 60 * 1000; // 7 days
+
 class CartStore {
   private items: CartItem[] = [];
   private listeners: Set<Listener> = new Set();
 
   constructor() {
     if (typeof window !== 'undefined') {
-      const saved = localStorage.getItem('cart');
-      if (saved) {
-        try { this.items = JSON.parse(saved); } catch { /* ignore */ }
+      const ts = localStorage.getItem(CART_TS_KEY);
+      const expired = ts && Date.now() - Number(ts) > CART_TTL_MS;
+      if (expired) {
+        localStorage.removeItem(CART_KEY);
+        localStorage.removeItem(CART_TS_KEY);
+      } else {
+        const saved = localStorage.getItem(CART_KEY);
+        if (saved) {
+          try { this.items = JSON.parse(saved); } catch { /* ignore */ }
+        }
       }
     }
   }
@@ -35,7 +46,8 @@ class CartStore {
 
   private persist() {
     if (typeof window !== 'undefined') {
-      localStorage.setItem('cart', JSON.stringify(this.items));
+      localStorage.setItem(CART_KEY, JSON.stringify(this.items));
+      localStorage.setItem(CART_TS_KEY, String(Date.now()));
     }
   }
 
