@@ -15,6 +15,21 @@ os.environ["ORDER_NUMBER_PREFIX"] = "TST"
 os.environ["DEV_MODE"] = "true"
 
 
+def _clear_rate_limits(app):
+    """Reset in-memory rate limiter between tests."""
+    from app.middleware.rate_limit import RateLimitMiddleware
+    for mw in app.user_middleware:
+        if mw.cls is RateLimitMiddleware:
+            break
+    # Walk the actual middleware stack
+    handler = app.middleware_stack
+    while handler:
+        if isinstance(handler, RateLimitMiddleware):
+            handler._hits.clear()
+            break
+        handler = getattr(handler, "app", None)
+
+
 @pytest.fixture
 async def client():
     """Provide an async test client with a fresh temporary database."""
@@ -33,6 +48,8 @@ async def client():
     await init_db()
 
     from app.main import app
+    _clear_rate_limits(app)
+
     transport = ASGITransport(app=app)
     async with AsyncClient(transport=transport, base_url="http://test") as ac:
         yield ac

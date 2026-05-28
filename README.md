@@ -161,6 +161,40 @@ See `infra/` directory for Docker and nginx configuration.
 
 ---
 
+## Testing
+
+### API (pytest)
+
+```bash
+cd api
+source .venv/bin/activate
+python -m pytest tests/ -v
+```
+
+50 tests covering: health, auth, products (CRUD, filtering, sorting, pagination), categories, collections, promo codes (admin CRUD, validation, discount calc), and public settings.
+
+### Storefront Unit Tests (Vitest)
+
+```bash
+cd storefront
+npm test
+```
+
+26 tests covering: `formatCents`, brand helpers, cart store (add, remove, update, persistence, subscriptions).
+
+### Storefront E2E (Playwright)
+
+```bash
+cd storefront
+npx playwright test
+```
+
+34 tests covering: smoke tests (all public routes), header/footer navigation, mobile menu, search, cart, policy pages, info pages, and categories.
+
+> **Note:** E2E tests require the Next.js dev server on port 3000. Playwright auto-starts it, or reuses an existing one.
+
+---
+
 ## Forking for a New Brand
 
 1. Fork/copy this repo
