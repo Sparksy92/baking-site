@@ -52,6 +52,14 @@ export default async function ProductPage({ params }: Props) {
     <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8 md:py-12">
       <JsonLd data={{
         '@context': 'https://schema.org',
+        '@type': 'BreadcrumbList',
+        itemListElement: [
+          { '@type': 'ListItem', position: 1, name: 'Home', item: siteUrl() },
+          { '@type': 'ListItem', position: 2, name: product.name, item: `${siteUrl()}/product/${slug}` },
+        ],
+      }} />
+      <JsonLd data={{
+        '@context': 'https://schema.org',
         '@type': 'Product',
         name: product.name,
         description: product.description,

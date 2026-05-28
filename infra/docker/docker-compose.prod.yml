@@ -23,7 +23,15 @@ services:
     build:
       context: ../../
       dockerfile: infra/docker/storefront.prod.Dockerfile
+      args:
+        NEXT_PUBLIC_BRAND_NAME: ${BRAND_NAME:-Elder}
+        NEXT_PUBLIC_BRAND_TAGLINE: ${BRAND_TAGLINE:-Indigenous Streetwear}
+        NEXT_PUBLIC_BRAND_COLOR_PRIMARY: ${BRAND_COLOR_PRIMARY:-#1A1A1A}
+        NEXT_PUBLIC_BRAND_COLOR_ACCENT: ${BRAND_COLOR_ACCENT:-#C53030}
+        NEXT_PUBLIC_SITE_URL: ${SITE_URL:-https://store.example.com}
     container_name: ${COMPOSE_CONTAINER_PREFIX:-elder}-storefront
+    environment:
+      - API_URL=http://api:8100
     ports:
       - "${STOREFRONT_PORT:-3000}:3000"
     depends_on:

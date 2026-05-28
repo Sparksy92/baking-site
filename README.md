@@ -6,10 +6,10 @@ A lightweight, white-label ecommerce platform purpose-built for **clothing and a
 
 ```
 ┌─────────────────────────────────────────────────┐
-│  Storefront (React + Vite + Tailwind)           │
-│  Desktop-responsive • Image-forward • Fast      │
+│  Storefront (Next.js 15 + Tailwind CSS v4)      │
+│  SSR/SSG • SEO-first • Image-forward • Fast     │
 └────────────────────┬────────────────────────────┘
-                     │ /api/*
+                     │ /api/* (proxy rewrite)
 ┌────────────────────▼────────────────────────────┐
 │  API (Python 3.12 + FastAPI + SQLite)           │
 │  Products • Orders • Payments • Shipping        │
@@ -26,7 +26,8 @@ A lightweight, white-label ecommerce platform purpose-built for **clothing and a
 |-------|-----------|
 | **API** | Python 3.12 + FastAPI + uvicorn + aiosqlite |
 | **Database** | SQLite (WAL mode) — zero infrastructure |
-| **Frontend** | React 19 + Vite + TypeScript + Tailwind CSS v4 |
+| **Frontend** | Next.js 15 (App Router) + TypeScript + Tailwind CSS v4 |
+| **SEO** | Metadata API, JSON-LD, dynamic sitemap, robots.txt |
 | **Payments** | Stripe Checkout (card payments) |
 | **Email** | Resend (order confirmations, shipping updates) |
 | **Deploy** | Podman (rootless) + nginx + Ansible |
@@ -38,9 +39,10 @@ A lightweight, white-label ecommerce platform purpose-built for **clothing and a
 - **Size × Color variants** — swatch selectors, size guide
 - **Collections** — curated groups (drops, seasons, categories)
 - **Smart search** — search by name, description, collection
-- **Cart & Checkout** — Stripe Checkout, clean UX
+- **Cart & Checkout** — Stripe Checkout, promo codes, clean UX
 - **Order tracking** — lookup by order number + email
 - **Responsive** — desktop grid + mobile-optimized
+- **SEO** — SSR pages, JSON-LD structured data, dynamic OG images, sitemap.xml
 
 ### Admin Dashboard
 - **Product management** — CRUD, multi-image upload, variant matrix
@@ -104,7 +106,7 @@ uvicorn app.main:app --reload --port 8100
 
 API docs: `http://localhost:8100/api/docs` (Swagger UI)
 
-### Frontend
+### Frontend (Next.js)
 
 ```bash
 cd storefront
@@ -113,6 +115,8 @@ npm run dev
 ```
 
 Storefront: `http://localhost:5173`
+
+The storefront proxies `/api/*` to the backend via `next.config.ts` rewrites.
 
 ---
 
@@ -142,7 +146,8 @@ STORE_CURRENCY=CAD
 
 ## Deployment
 
-Single container (API) + nginx serving the built storefront.
+Two containers: API (FastAPI/uvicorn) + Storefront (Next.js `next start`).
+nginx reverse-proxies both behind a single domain.
 
 ```bash
 # Build
