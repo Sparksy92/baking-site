@@ -6,8 +6,16 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
   const base = siteUrl();
   const entries: MetadataRoute.Sitemap = [
     { url: base, lastModified: new Date(), changeFrequency: 'daily', priority: 1.0 },
+    { url: `${base}/about`, changeFrequency: 'monthly', priority: 0.6 },
+    { url: `${base}/categories`, changeFrequency: 'weekly', priority: 0.7 },
+    { url: `${base}/contact`, changeFrequency: 'monthly', priority: 0.4 },
+    { url: `${base}/faq`, changeFrequency: 'monthly', priority: 0.4 },
     { url: `${base}/search`, changeFrequency: 'weekly', priority: 0.3 },
     { url: `${base}/order-lookup`, changeFrequency: 'monthly', priority: 0.2 },
+    { url: `${base}/shipping-policy`, changeFrequency: 'monthly', priority: 0.3 },
+    { url: `${base}/return-policy`, changeFrequency: 'monthly', priority: 0.3 },
+    { url: `${base}/privacy-policy`, changeFrequency: 'monthly', priority: 0.2 },
+    { url: `${base}/terms-of-service`, changeFrequency: 'monthly', priority: 0.2 },
   ];
 
   try {

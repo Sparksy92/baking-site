@@ -4,6 +4,7 @@ import { apiFetch, type Product } from '@/lib/api';
 import { formatCents, brandName, siteUrl } from '@/lib/format';
 import { JsonLd } from '@/components/JsonLd';
 import { ProductInteractive } from './ProductInteractive';
+import { ImageGallery } from './ImageGallery';
 
 interface Props {
   params: Promise<{ slug: string }>;
@@ -79,22 +80,8 @@ export default async function ProductPage({ params }: Props) {
       }} />
 
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-8 lg:gap-12">
-        {/* Image gallery — server rendered for SEO */}
-        <div className="space-y-4">
-          <div className="aspect-[3/4] bg-gray-100 rounded-xl overflow-hidden">
-            {image ? (
-              <img
-                src={image}
-                alt={product.images[0]?.alt_text || product.name}
-                className="w-full h-full object-cover"
-              />
-            ) : (
-              <div className="w-full h-full flex items-center justify-center text-gray-400">
-                No image
-              </div>
-            )}
-          </div>
-        </div>
+        {/* Image gallery — interactive with all images */}
+        <ImageGallery images={product.images} productName={product.name} />
 
         {/* Interactive product info — client component */}
         <ProductInteractive product={product} />

@@ -94,6 +94,7 @@ class ProductListItem(BaseModel):
     image_url: str | None = None
     min_price_cents: int | None = None
     max_price_cents: int | None = None
+    compare_at_price_cents: int | None = None
     total_stock: int = 0
 
 

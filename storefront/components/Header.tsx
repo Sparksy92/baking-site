@@ -1,20 +1,56 @@
 'use client';
 
+import { useState, useEffect } from 'react';
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
-import { ShoppingBag, Search } from 'lucide-react';
+import { ShoppingBag, Search, Menu, X } from 'lucide-react';
 import { useCart } from '@/lib/cart';
+import { api, type PublicSettings } from '@/lib/api';
 import { brandName, brandLogo, formatCents } from '@/lib/format';
 
 export function Header() {
   const { count, subtotal } = useCart();
   const pathname = usePathname();
   const isCheckout = ['/cart', '/checkout'].includes(pathname);
+  const [mobileOpen, setMobileOpen] = useState(false);
+  const [announcement, setAnnouncement] = useState('');
+
+  useEffect(() => {
+    api.get<PublicSettings>('/api/settings/public')
+      .then((s) => { if (s.store_announcement) setAnnouncement(s.store_announcement); })
+      .catch(() => {});
+  }, []);
+
+  useEffect(() => { setMobileOpen(false); }, [pathname]);
+
+  const navLinks = [
+    { label: 'Shop', href: '/' },
+    { label: 'New Arrivals', href: '/collections/new-arrivals' },
+    { label: 'Categories', href: '/categories' },
+    { label: 'About', href: '/about' },
+    { label: 'Track Order', href: '/order-lookup' },
+  ];
 
   return (
     <>
+      {/* Announcement bar */}
+      {announcement && (
+        <div className="bg-brand text-white text-center text-xs font-medium py-2 px-4">
+          {announcement}
+        </div>
+      )}
+
       <header className="sticky top-0 z-50 bg-white border-b border-gray-100">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 h-16 flex items-center justify-between">
+          {/* Mobile menu toggle */}
+          <button
+            onClick={() => setMobileOpen(!mobileOpen)}
+            className="md:hidden w-10 h-10 flex items-center justify-center text-gray-600"
+            aria-label="Menu"
+          >
+            {mobileOpen ? <X size={22} /> : <Menu size={22} />}
+          </button>
+
           {/* Logo */}
           <Link href="/" className="flex items-center gap-2">
             {brandLogo() && (
@@ -25,15 +61,17 @@ export function Header() {
 
           {/* Nav — desktop */}
           <nav className="hidden md:flex items-center gap-8">
-            <Link href="/" className="text-sm font-medium text-gray-700 hover:text-brand transition-colors">
-              Shop
-            </Link>
-            <Link href="/collections/new-arrivals" className="text-sm font-medium text-gray-700 hover:text-brand transition-colors">
-              New Arrivals
-            </Link>
-            <Link href="/order-lookup" className="text-sm font-medium text-gray-700 hover:text-brand transition-colors">
-              Track Order
-            </Link>
+            {navLinks.map((link) => (
+              <Link
+                key={link.href}
+                href={link.href}
+                className={`text-sm font-medium transition-colors ${
+                  pathname === link.href ? 'text-brand' : 'text-gray-700 hover:text-brand'
+                }`}
+              >
+                {link.label}
+              </Link>
+            ))}
           </nav>
 
           {/* Actions */}
@@ -59,6 +97,23 @@ export function Header() {
             </Link>
           </div>
         </div>
+
+        {/* Mobile nav drawer */}
+        {mobileOpen && (
+          <nav className="md:hidden border-t border-gray-100 bg-white px-4 py-4 space-y-1">
+            {navLinks.map((link) => (
+              <Link
+                key={link.href}
+                href={link.href}
+                className={`block py-2.5 text-sm font-medium rounded-lg px-3 ${
+                  pathname === link.href ? 'bg-gray-100 text-brand' : 'text-gray-700 hover:bg-gray-50'
+                }`}
+              >
+                {link.label}
+              </Link>
+            ))}
+          </nav>
+        )}
       </header>
 
       {/* Floating cart bar — mobile only */}

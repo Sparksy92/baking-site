@@ -79,9 +79,9 @@ async def list_products(
         )
         img = await img_cursor.fetchone()
 
-        # Get variant price range + stock
+        # Get variant price range + stock + compare_at
         var_cursor = await db.execute(
-            "SELECT MIN(price_cents) as min_p, MAX(price_cents) as max_p, SUM(stock_quantity) as total_stock FROM product_variants WHERE product_id = ? AND is_active = 1",
+            "SELECT MIN(price_cents) as min_p, MAX(price_cents) as max_p, SUM(stock_quantity) as total_stock, MAX(compare_at_price_cents) as compare_at FROM product_variants WHERE product_id = ? AND is_active = 1",
             (row["id"],),
         )
         var_info = await var_cursor.fetchone()
@@ -97,6 +97,7 @@ async def list_products(
             image_url=img["url"] if img else None,
             min_price_cents=var_info["min_p"] if var_info else None,
             max_price_cents=var_info["max_p"] if var_info else None,
+            compare_at_price_cents=var_info["compare_at"] if var_info else None,
             total_stock=var_info["total_stock"] or 0 if var_info else 0,
         ))
 

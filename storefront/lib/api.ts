@@ -121,6 +121,7 @@ export interface ProductListItem {
   image_url: string | null;
   min_price_cents: number | null;
   max_price_cents: number | null;
+  compare_at_price_cents: number | null;
   total_stock: number;
 }
 
