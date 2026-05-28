@@ -278,3 +278,4 @@ class PublicSettingsResponse(BaseModel):
     shipping_free_threshold_cents: int
     tax_rate: float
     currency: str
+    analytics_id: str = ""

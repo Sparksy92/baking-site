@@ -1,40 +1,71 @@
 # Progress — clothing-ecommerce-baseline
 
-## Status: Pre-first-fork baseline hardening
+## Status: Template hardening — near launch-ready
+
+## Stack
+- **API**: Python 3.12 + FastAPI + aiosqlite (SQLite WAL)
+- **Storefront**: Next.js 15 + React 19 + Tailwind CSS v4 + TypeScript
+- **Payments**: Stripe Checkout
+- **Email**: Resend (transactional)
+- **Deploy**: Podman + nginx + Ansible
 
 ## Completed
-- [x] API: FastAPI + SQLite (WAL), 10-table schema, JWT auth, Stripe checkout, Resend email
-- [x] Storefront: React 19 + Vite + Tailwind, 8 customer pages, 8 admin pages
-- [x] Infra: Dockerfiles, docker-compose (no internal nginx — uses host nginx-proxy)
-- [x] Tests: 9/9 API tests passing
+
+### Core Features
+- [x] 11-table schema (products, variants, images, categories, collections, orders, promos, newsletter, settings, admin_users, audit_log)
+- [x] Product CRUD with variants (size × color), images, categories, collections
+- [x] Stripe checkout with stock enforcement (validate + decrement)
+- [x] Promo/discount codes (percent + fixed, with limits and expiry)
+- [x] Order management (status, tracking, admin notes)
+- [x] JWT auth with httpOnly cookies, rate-limited login
+- [x] Newsletter subscribe/unsubscribe (CASL-compliant)
+- [x] Admin-configurable analytics (GA4 measurement ID via settings)
+- [x] Public settings API (announcement, shipping, tax, analytics)
 - [x] CLI: `cli.py seed` + `cli.py create-admin`
-- [x] Git: initial commit on `main` (f36ec69)
-- [x] Smoke test: all API endpoints verified working
 
-## In Progress — Tier 1 (Must-fix before forking)
-- [ ] Fix branding (logo, brand name from env in storefront)
-- [ ] Promo/discount codes (schema + API + checkout)
-- [ ] Complete admin product form (variants, images, category picker)
-- [ ] SEO: dynamic `<title>` + meta tags per page
+### Storefront
+- [x] Next.js `<Image>` optimization (all public images)
+- [x] SEO: dynamic meta, OpenGraph images, JSON-LD, sitemap, robots
+- [x] Toast notification system (add to cart feedback)
+- [x] Size guide modal (3 chart types: tops, bottoms, headwear)
+- [x] Newsletter signup component (homepage)
+- [x] Loading skeletons (product grid, product detail)
+- [x] Pagination + sorting on category/collection/search pages
+- [x] Related products section on PDP
+- [x] Security headers middleware (X-Frame-Options, HSTS, nosniff)
 
-## Next — Tier 2
-- [ ] Branded email templates (HTML with logo/colors)
-- [ ] Static page system (About, Shipping Policy, Returns)
-- [ ] Size guide component
+### Testing
+- [x] API: 50 pytest tests (products, auth, promos, settings, checkout)
+- [x] Storefront unit: 26 Vitest tests (formatCents, cart store)
+- [x] Storefront E2E: 34 Playwright tests (smoke, navigation, search, cart, pages)
+
+### Infrastructure
+- [x] Rate limiting middleware (login, checkout, general)
+- [x] In-memory rate limiter with sliding window
+- [x] `.gitignore` excludes test artifacts
+
+## Deferred
+- [ ] Abandoned cart email (needs background job scheduler)
+- [ ] Admin newsletter viewer/export CSV
+- [ ] CI pipeline (.gitlab-ci.yml with pytest + vitest + playwright)
 - [ ] Product CSV import/export
-- [ ] Low stock alerts in admin
+- [ ] Accessibility pass (skip-nav, focus traps, ARIA)
 
 ## Architecture Decisions
-- **Port**: API runs on 8100, Vite dev on 5173
-- **No internal nginx**: Host-level nginx-proxy handles routing
-- **SQLite**: Single file DB, no container needed. WAL mode for concurrency.
-- **Auth**: JWT in httpOnly cookie, roles: owner | admin
-- **Env-driven theming**: BRAND_NAME, BRAND_COLOR_*, BRAND_LOGO_PATH
+- **Port**: API on 8100, Next.js on 3000
+- **SQLite**: Single file DB, no container. WAL mode for concurrency.
+- **Auth**: JWT in httpOnly cookie, admin role only
+- **Env-driven branding**: NEXT_PUBLIC_BRAND_NAME, BRAND_LOGO, etc.
 - **Forking model**: Copy repo → edit .env → seed → deploy
+- **Image domains**: localhost + *.rez-hub.com + *.clancollection.ca
 
 ## Key Files
-- `api/app/migrations/001_initial_schema.sql` — full schema
+- `api/app/migrations/001_initial_schema.sql` — full schema (11 tables)
+- `api/app/migrations/003_newsletter.sql` — newsletter subscribers
+- `api/app/migrations/004_analytics.sql` — analytics setting
 - `api/app/config.py` — all env vars
-- `storefront/src/main.tsx` — all routes
-- `storefront/vite.config.ts` — proxy to API
+- `api/app/services/order_service.py` — checkout validation + stock
+- `storefront/next.config.ts` — image domains, API rewrites
+- `storefront/middleware.ts` — security headers
+- `storefront/lib/toast.ts` — toast notification store
 - `.env.example` — full config template

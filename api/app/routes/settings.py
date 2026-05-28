@@ -25,4 +25,5 @@ async def get_public_settings(db: aiosqlite.Connection = Depends(get_db)):
         shipping_free_threshold_cents=int(store_settings.get("shipping_free_threshold_cents", str(settings.shipping_free_threshold_cents))),
         tax_rate=float(store_settings.get("tax_rate", str(settings.tax_rate))),
         currency=settings.store_currency,
+        analytics_id=store_settings.get("analytics_id", ""),
     )

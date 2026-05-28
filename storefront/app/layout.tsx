@@ -1,5 +1,7 @@
 import type { Metadata } from 'next';
+import { Suspense } from 'react';
 import { brandName, brandTagline, siteUrl } from '@/lib/format';
+import { Analytics } from '@/components/Analytics';
 import './globals.css';
 
 export function generateMetadata(): Metadata {
@@ -29,7 +31,12 @@ export function generateMetadata(): Metadata {
 export default function RootLayout({ children }: { children: React.ReactNode }) {
   return (
     <html lang="en">
-      <body>{children}</body>
+      <body>
+        {children}
+        <Suspense fallback={null}>
+          <Analytics />
+        </Suspense>
+      </body>
     </html>
   );
 }

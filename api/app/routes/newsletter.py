@@ -43,3 +43,18 @@ async def subscribe(
 
     logger.info("Newsletter subscription: %s", body.email)
     return NewsletterSubscribeResponse(message="You're in! Watch your inbox.")
+
+
+@router.post("/newsletter/unsubscribe", response_model=NewsletterSubscribeResponse)
+async def unsubscribe(
+    body: NewsletterSubscribeRequest,
+    db: aiosqlite.Connection = Depends(get_db),
+):
+    """Unsubscribe an email from the newsletter."""
+    result = await db.execute(
+        "UPDATE newsletter_subscribers SET is_active = 0 WHERE email = ? COLLATE NOCASE",
+        (body.email.lower(),),
+    )
+    await db.commit()
+    logger.info("Newsletter unsubscribe: %s (rows=%d)", body.email, result.rowcount)
+    return NewsletterSubscribeResponse(message="You've been unsubscribed.")

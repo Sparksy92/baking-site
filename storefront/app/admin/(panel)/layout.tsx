@@ -5,6 +5,7 @@ import { useRouter, usePathname } from 'next/navigation';
 import Link from 'next/link';
 import { LayoutDashboard, Package, ShoppingCart, Layers, Tag, Settings, LogOut } from 'lucide-react';
 import { api } from '@/lib/api';
+import { Toaster } from '@/components/Toaster';
 
 export default function AdminLayout({ children }: { children: React.ReactNode }) {
   const router = useRouter();
@@ -72,6 +73,7 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
         </div>
       </aside>
       <main className="flex-1 overflow-y-auto p-6">{children}</main>
+      <Toaster />
     </div>
   );
 }

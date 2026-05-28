@@ -143,6 +143,7 @@ export interface PublicSettings {
   shipping_free_threshold_cents: number;
   tax_rate: number;
   currency: string;
+  analytics_id: string;
 }
 
 export interface CheckoutResponse {
