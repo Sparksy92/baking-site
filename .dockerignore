@@ -1,0 +1,30 @@
+# Git
+.git
+.gitignore
+
+# Python
+api/.venv
+api/__pycache__
+api/.pytest_cache
+api/data/*.db*
+
+# Node
+storefront/node_modules
+storefront/.next
+storefront/test-results
+storefront/playwright-report
+storefront/blob-report
+
+# IDE
+.vscode
+.idea
+
+# Docs & CI
+*.md
+.gitlab-ci.yml
+.gitleaks.toml
+reports/
+
+# OS
+.DS_Store
+Thumbs.db

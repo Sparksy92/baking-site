@@ -24,6 +24,7 @@ class RateLimitMiddleware(BaseHTTPMiddleware):
     def __init__(self, app):
         super().__init__(app)
         self._hits: dict[str, list[float]] = defaultdict(list)
+        self._last_prune: float = 0.0
 
     def _get_limit(self, method: str, path: str) -> tuple[int, int]:
         """Returns (max_requests, window_seconds) for the given endpoint."""
@@ -56,6 +57,13 @@ class RateLimitMiddleware(BaseHTTPMiddleware):
         hits = self._hits[key]
         self._hits[key] = [t for t in hits if t > cutoff]
         hits = self._hits[key]
+
+        # Prune stale keys every 5 minutes to prevent memory leak
+        if now - self._last_prune > 300:
+            self._last_prune = now
+            stale = [k for k, v in self._hits.items() if not v or v[-1] < now - 900]
+            for k in stale:
+                del self._hits[k]
 
         if len(hits) >= max_requests:
             retry_after = int(hits[0] - cutoff) + 1

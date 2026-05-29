@@ -107,7 +107,17 @@ async def create_order(
 ) -> str:
     """Create order and order items in the database. Returns order_number."""
     settings = get_settings()
-    order_number = _generate_order_number(settings.order_number_prefix)
+
+    # Generate order number with collision retry
+    for attempt in range(5):
+        order_number = _generate_order_number(settings.order_number_prefix)
+        cursor = await db.execute(
+            "SELECT 1 FROM orders WHERE order_number = ?", (order_number,)
+        )
+        if not await cursor.fetchone():
+            break
+    else:
+        raise CheckoutError("Could not generate unique order number", status_code=500)
 
     # Insert order
     await db.execute(
@@ -163,13 +173,13 @@ async def create_order(
             (item["quantity"], item["variant_id"]),
         )
 
-    await db.commit()
+    # Note: caller is responsible for commit (allows wrapping in exclusive transaction)
     logger.info("Order created: %s (total: %d cents)", order_number, validated["total_cents"])
     return order_number
 
 
 def _generate_order_number(prefix: str) -> str:
-    """Generate a short, unique-ish order number like ELD-A3X7."""
+    """Generate a unique order number like ELD-A3X7K9."""
     chars = string.ascii_uppercase + string.digits
-    suffix = "".join(random.choices(chars, k=4))
+    suffix = "".join(random.choices(chars, k=6))
     return f"{prefix}-{suffix}"

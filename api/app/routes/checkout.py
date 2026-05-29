@@ -21,16 +21,32 @@ async def checkout(
     body: CheckoutRequest,
     db: aiosqlite.Connection = Depends(get_db),
 ):
-    """Create order and redirect to Stripe Checkout."""
+    """Create order and redirect to Stripe Checkout.
+
+    Uses an exclusive transaction to prevent stock race conditions:
+    validate stock → create order → decrement stock atomically.
+    Stripe session is created after the order to avoid orphan sessions.
+    """
+    # Acquire exclusive lock: validate + create order + decrement stock atomically
+    await db.execute("BEGIN EXCLUSIVE")
     try:
         validated = await validate_checkout(db, body)
+        order_number = await create_order(
+            db, body, validated,
+            payment_status="pending",
+            stripe_session_id=None,
+        )
     except CheckoutError as e:
+        await db.rollback()
         raise HTTPException(status_code=e.status_code, detail=e.detail)
+    except Exception:
+        await db.rollback()
+        raise
 
-    # Create Stripe session first
+    # Create Stripe session after order exists (no orphan sessions)
     try:
         checkout_url, session_id = await stripe_service.create_checkout_session(
-            order_number="pending",
+            order_number=order_number,
             items=validated["order_items"],
             subtotal_cents=validated["subtotal_cents"],
             shipping_cents=validated["shipping_cents"],
@@ -38,24 +54,19 @@ async def checkout(
             total_cents=validated["total_cents"],
             customer_email=body.customer_email,
         )
-    except Exception as e:
+    except Exception:
         logger.exception("Stripe session creation failed")
         raise HTTPException(
             status_code=status.HTTP_502_BAD_GATEWAY,
             detail="Payment service unavailable. Please try again.",
         )
 
-    order_number = await create_order(
-        db, body, validated,
-        payment_status="pending",
-        stripe_session_id=session_id,
+    # Link Stripe session to order
+    await db.execute(
+        "UPDATE orders SET stripe_session_id = ? WHERE order_number = ?",
+        (session_id, order_number),
     )
-
-    # Update Stripe session metadata with actual order number
-    try:
-        stripe_service.update_session_metadata(session_id, order_number)
-    except Exception:
-        logger.warning("Could not update Stripe session metadata for %s", order_number)
+    await db.commit()
 
     return CheckoutResponse(
         order_number=order_number,

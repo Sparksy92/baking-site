@@ -174,8 +174,12 @@ async def upload_image(
     uploads_dir = settings.uploads_dir
     uploads_dir.mkdir(parents=True, exist_ok=True)
 
-    # Validate image
+    # Validate file size (10MB max)
     contents = await file.read()
+    if len(contents) > 10 * 1024 * 1024:
+        raise HTTPException(status_code=status.HTTP_413_REQUEST_ENTITY_TOO_LARGE, detail="Image must be under 10MB")
+
+    # Validate image
     try:
         img = Image.open(io.BytesIO(contents))
         img.verify()
@@ -215,6 +219,24 @@ async def delete_image(
     db: aiosqlite.Connection = Depends(get_db),
     user: dict = Depends(require_admin),
 ):
+    from pathlib import Path
+
+    # Get image URL before deleting record
+    cursor = await db.execute(
+        "SELECT url FROM product_images WHERE id = ? AND product_id = ?", (image_id, product_id)
+    )
+    image = await cursor.fetchone()
+
     await db.execute("DELETE FROM product_images WHERE id = ? AND product_id = ?", (image_id, product_id))
     await db.commit()
+
+    # Clean up file on disk
+    if image and image["url"]:
+        settings = get_settings()
+        filename = image["url"].rsplit("/", 1)[-1]
+        filepath = settings.uploads_dir / filename
+        if filepath.is_file():
+            filepath.unlink(missing_ok=True)
+            logger.info("Deleted image file: %s", filepath)
+
     return {"deleted": True}

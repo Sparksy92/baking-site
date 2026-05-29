@@ -189,7 +189,7 @@ class CheckoutItem(BaseModel):
 
 class CheckoutRequest(BaseModel):
     customer_name: str = Field(min_length=1, max_length=300)
-    customer_email: str = Field(min_length=1, max_length=500)
+    customer_email: EmailStr
     customer_phone: str | None = None
     shipping_address: ShippingAddress
     items: list[CheckoutItem] = Field(min_length=1)
