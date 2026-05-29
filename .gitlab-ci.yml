@@ -1,57 +1,36 @@
-stages:
-  - test
-  - build
+# =============================================================================
+# clothing-ecommerce-baseline CI/CD Pipeline
+# =============================================================================
+# Consumes shared templates from rezhub-devops-baseline.
+# Repo-specific jobs (API tests, storefront tests) defined inline below.
+# =============================================================================
+
+include:
+  - project: 'rezhub/rezhub-devops-baseline'
+    ref: main
+    file:
+      - '/.gitlab-ci/templates/base.yml'
+      - '/.gitlab-ci/templates/security-baseline.yml'
 
 variables:
+  APP_NAME: "clothing-ecommerce-baseline"
+  APP_TYPE: "nextjs-fastapi"
+  NODE_VERSION: "20"
   PIP_CACHE_DIR: "$CI_PROJECT_DIR/.cache/pip"
   npm_config_cache: "$CI_PROJECT_DIR/.cache/npm"
+  # Security controls (Phase 1 — report-only)
+  ENABLE_SECRET_SCAN: "true"
+  ENABLE_VULNERABILITY_SCAN: "true"
+  ENABLE_SAST: "false"
 
-# ── API Tests (pytest) ──────────────────────────────────────────────
+# =============================================================================
+# QUALITY — Linting & type checking
+# =============================================================================
 
-test:api:
-  stage: test
-  image: python:3.12-slim
-  cache:
-    key: api-pip
-    paths:
-      - .cache/pip
-      - api/.venv
-  before_script:
-    - cd api
-    - python -m venv .venv
-    - source .venv/bin/activate
-    - pip install -r requirements.txt
-  script:
-    - source .venv/bin/activate
-    - python -m pytest tests/ -v --tb=short
-  rules:
-    - changes:
-        - api/**/*
-
-# ── Storefront Unit Tests (Vitest) ──────────────────────────────────
-
-test:unit:
-  stage: test
-  image: node:20-slim
-  cache:
-    key: storefront-npm
-    paths:
-      - .cache/npm
-      - storefront/node_modules
-  before_script:
-    - cd storefront
-    - npm ci
-  script:
-    - npx vitest run
-  rules:
-    - changes:
-        - storefront/**/*
-
-# ── Storefront Type Check ───────────────────────────────────────────
-
-test:typecheck:
-  stage: test
-  image: node:20-slim
+quality:typecheck:
+  stage: quality
+  image: node:${NODE_VERSION}-slim
+  extends: .default_job
   cache:
     key: storefront-npm
     paths:
@@ -66,11 +45,71 @@ test:typecheck:
     - changes:
         - storefront/**/*
 
-# ── Storefront Build ────────────────────────────────────────────────
+# =============================================================================
+# TEST — API (pytest) + Storefront (Vitest)
+# =============================================================================
+
+test:api:
+  stage: test
+  image: python:3.12-slim
+  extends: .default_job
+  cache:
+    key: api-pip
+    paths:
+      - .cache/pip
+      - api/.venv
+  before_script:
+    - cd api
+    - python -m venv .venv
+    - source .venv/bin/activate
+    - pip install -r requirements.txt
+  script:
+    - source .venv/bin/activate
+    - python -m pytest tests/ -v --tb=short --junitxml=../reports/api-test-results.xml
+  artifacts:
+    when: always
+    paths:
+      - reports/api-test-results.xml
+    reports:
+      junit: reports/api-test-results.xml
+    expire_in: 30 days
+  rules:
+    - changes:
+        - api/**/*
+
+test:unit:
+  stage: test
+  image: node:${NODE_VERSION}-slim
+  extends: .default_job
+  cache:
+    key: storefront-npm
+    paths:
+      - .cache/npm
+      - storefront/node_modules
+  before_script:
+    - cd storefront
+    - npm ci
+  script:
+    - npx vitest run --reporter=junit --outputFile=../reports/vitest-results.xml
+  artifacts:
+    when: always
+    paths:
+      - reports/vitest-results.xml
+    reports:
+      junit: reports/vitest-results.xml
+    expire_in: 30 days
+  rules:
+    - changes:
+        - storefront/**/*
+
+# =============================================================================
+# BUILD — Next.js build validation
+# =============================================================================
 
 build:storefront:
   stage: build
-  image: node:20-slim
+  image: node:${NODE_VERSION}-slim
+  extends: .default_job
   cache:
     key: storefront-npm
     paths:
