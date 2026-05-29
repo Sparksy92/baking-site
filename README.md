@@ -43,13 +43,17 @@ A lightweight, white-label ecommerce platform purpose-built for **clothing and a
 - **Order tracking** — lookup by order number + email
 - **Responsive** — desktop grid + mobile-optimized
 - **SEO** — SSR pages, JSON-LD structured data, dynamic OG images, sitemap.xml
+- **Newsletter signup** — email capture with toast confirmation
+- **Accessibility** — skip-nav, focus traps on modals, ARIA attributes
+- **Analytics** — admin-configurable GA4 (measurement ID in settings)
 
 ### Admin Dashboard
 - **Product management** — CRUD, multi-image upload, variant matrix
 - **Collection management** — create/edit collections, assign products
 - **Order management** — view, update status, add tracking numbers
 - **Inventory tracking** — stock levels, low-stock alerts
-- **Settings** — brand config, shipping, tax, announcements
+- **Settings** — brand config, shipping, tax, announcements, GA4 analytics
+- **Newsletter** — subscriber list, export CSV, active/unsubscribed status
 - **Audit log** — who changed what and when
 
 ### Brand Architecture
@@ -62,7 +66,7 @@ A lightweight, white-label ecommerce platform purpose-built for **clothing and a
 
 ## Data Model
 
-10 tables (lean but complete):
+13 tables (lean but complete):
 
 | Table | Purpose |
 |-------|---------|
@@ -74,7 +78,10 @@ A lightweight, white-label ecommerce platform purpose-built for **clothing and a
 | `collection_products` | Many-to-many: products ↔ collections |
 | `orders` | Customer info, shipping, payment status |
 | `order_items` | Line items with variant snapshot |
+| `promo_codes` | Discount codes (percent/fixed, limits, expiry) |
 | `admin_users` | Admin accounts (bcrypt, JWT) |
+| `settings` | Key-value store (shipping, tax, analytics, announcements) |
+| `newsletter_subscribers` | Email list with active/inactive status |
 | `audit_log` | Change tracking |
 
 ---
@@ -114,7 +121,7 @@ npm install
 npm run dev
 ```
 
-Storefront: `http://localhost:5173`
+Storefront: `http://localhost:3000`
 
 The storefront proxies `/api/*` to the backend via `next.config.ts` rewrites.
 
