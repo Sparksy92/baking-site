@@ -11,7 +11,7 @@ from app.config import get_settings
 from app.database import init_db
 from app.middleware.logging import setup_logging
 from app.middleware.rate_limit import RateLimitMiddleware
-from app.routes import health, products, settings, auth, checkout, webhooks, promos, newsletter, customers, contact, shipping
+from app.routes import health, products, settings, auth, checkout, webhooks, promos, newsletter, customers, contact, shipping, wishlist, reviews
 from app.routes.admin import (
     products as admin_products,
     collections as admin_collections,
@@ -20,6 +20,9 @@ from app.routes.admin import (
     settings as admin_settings,
     promos as admin_promos,
     newsletter as admin_newsletter,
+    dashboard as admin_dashboard,
+    csv_io as admin_csv,
+    reviews as admin_reviews,
 )
 
 logger = logging.getLogger(__name__)
@@ -94,6 +97,8 @@ def create_app() -> FastAPI:
 
     # ── Customer accounts ────────────────────────────────────────
     app.include_router(customers.router, prefix="/api")
+    app.include_router(wishlist.router, prefix="/api")
+    app.include_router(reviews.router, prefix="/api")
 
     # ── Admin routes ───────────────────────────────────────────
     app.include_router(admin_products.router, prefix="/api")
@@ -103,6 +108,9 @@ def create_app() -> FastAPI:
     app.include_router(admin_settings.router, prefix="/api")
     app.include_router(admin_promos.router, prefix="/api")
     app.include_router(admin_newsletter.router, prefix="/api")
+    app.include_router(admin_dashboard.router, prefix="/api")
+    app.include_router(admin_csv.router, prefix="/api")
+    app.include_router(admin_reviews.router, prefix="/api")
 
     # ── Static files (uploaded images) ─────────────────────────
     uploads_dir = app_settings.uploads_dir
