@@ -171,6 +171,21 @@ async def delete_variant(
 
 # ── Images ────────────────────────────────────────────────────
 
+@router.get("/{product_id}/images")
+async def list_images(
+    product_id: int,
+    db: aiosqlite.Connection = Depends(get_db),
+    user: dict = Depends(require_admin),
+):
+    """List all images for a product, ordered by sort_order."""
+    cursor = await db.execute(
+        "SELECT * FROM product_images WHERE product_id = ? ORDER BY sort_order",
+        (product_id,),
+    )
+    rows = await cursor.fetchall()
+    return [dict(r) for r in rows]
+
+
 @router.post("/{product_id}/images", status_code=status.HTTP_201_CREATED)
 async def upload_image(
     product_id: int,
@@ -253,3 +268,51 @@ async def delete_image(
             logger.info("Deleted image file: %s", filepath)
 
     return {"deleted": True}
+
+
+@router.patch("/{product_id}/images/{image_id}/primary")
+async def set_primary_image(
+    product_id: int,
+    image_id: int,
+    db: aiosqlite.Connection = Depends(get_db),
+    user: dict = Depends(require_admin),
+):
+    """Set an image as the primary image for a product."""
+    # Verify image exists
+    cursor = await db.execute(
+        "SELECT id FROM product_images WHERE id = ? AND product_id = ?", (image_id, product_id)
+    )
+    if not await cursor.fetchone():
+        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Image not found")
+
+    # Clear existing primary
+    await db.execute(
+        "UPDATE product_images SET is_primary = 0 WHERE product_id = ?", (product_id,)
+    )
+    # Set new primary
+    await db.execute(
+        "UPDATE product_images SET is_primary = 1 WHERE id = ? AND product_id = ?", (image_id, product_id)
+    )
+    await db.commit()
+    return {"primary": True}
+
+
+@router.patch("/{product_id}/images/reorder")
+async def reorder_images(
+    product_id: int,
+    body: dict,
+    db: aiosqlite.Connection = Depends(get_db),
+    user: dict = Depends(require_admin),
+):
+    """Reorder product images. Body: {"image_ids": [3, 1, 2]}"""
+    image_ids = body.get("image_ids", [])
+    if not image_ids or not isinstance(image_ids, list):
+        raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail="image_ids list required")
+
+    for sort_order, img_id in enumerate(image_ids):
+        await db.execute(
+            "UPDATE product_images SET sort_order = ? WHERE id = ? AND product_id = ?",
+            (sort_order, img_id, product_id),
+        )
+    await db.commit()
+    return {"reordered": True}
