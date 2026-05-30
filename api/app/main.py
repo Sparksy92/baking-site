@@ -11,7 +11,7 @@ from app.config import get_settings
 from app.database import init_db
 from app.middleware.logging import setup_logging
 from app.middleware.rate_limit import RateLimitMiddleware
-from app.routes import health, products, settings, auth, checkout, webhooks, promos, newsletter, customers, contact, shipping, wishlist, reviews, related_products, back_in_stock, cart, pages, size_guides
+from app.routes import health, products, settings, auth, checkout, webhooks, promos, newsletter, customers, contact, shipping, wishlist, reviews, related_products, back_in_stock, cart, pages, size_guides, gift_cards, loyalty, bundles
 from app.routes.admin import (
     products as admin_products,
     collections as admin_collections,
@@ -35,6 +35,9 @@ from app.routes.admin import (
     tags as admin_tags,
     segments as admin_segments,
     size_guides as admin_size_guides,
+    gift_cards as admin_gift_cards,
+    loyalty as admin_loyalty,
+    bundles as admin_bundles,
 )
 
 logger = logging.getLogger(__name__)
@@ -121,6 +124,11 @@ def create_app() -> FastAPI:
     app.include_router(pages.router, prefix="/api")
     app.include_router(size_guides.router, prefix="/api")
 
+    # ── Gift Cards, Loyalty & Bundles ─────────────────────────
+    app.include_router(gift_cards.router, prefix="/api")
+    app.include_router(loyalty.router, prefix="/api")
+    app.include_router(bundles.router, prefix="/api")
+
     # ── Admin routes ───────────────────────────────────────────
     app.include_router(admin_products.router, prefix="/api")
     app.include_router(admin_collections.router, prefix="/api")
@@ -144,6 +152,9 @@ def create_app() -> FastAPI:
     app.include_router(admin_tags.router, prefix="/api")
     app.include_router(admin_segments.router, prefix="/api")
     app.include_router(admin_size_guides.router, prefix="/api")
+    app.include_router(admin_gift_cards.router, prefix="/api")
+    app.include_router(admin_loyalty.router, prefix="/api")
+    app.include_router(admin_bundles.router, prefix="/api")
 
     # ── Static files (uploaded images) ─────────────────────────
     uploads_dir = app_settings.uploads_dir
