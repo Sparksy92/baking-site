@@ -85,6 +85,31 @@
 - [ ] **Keycloak OIDC integration** — Optional SSO (deferred — needs Keycloak instance)
 - [ ] **Subscription / recurring orders** — Low priority for clothing
 
+## Remaining — Tier 8: Platform Hardening & Gaps
+
+### Operations & Reliability
+- [ ] **Global exception handler + request ID** — Catch-all 500 handler with correlation ID in `X-Request-Id` header for log tracing
+- [ ] **Return/exchange workflow** — Customer self-serve return request, admin approve/deny, auto restock on receipt
+
+### Analytics & Attribution
+- [ ] **Server-side event log** — Lightweight `events` table tracking `product_viewed`, `add_to_cart`, `checkout_started`, `checkout_completed` for conversion funnel
+- [ ] **UTM capture on orders** — Store `utm_source`, `utm_medium`, `utm_campaign` from checkout for marketing attribution
+- [ ] **Admin reports with date-range** — Extend dashboard: filter by date, refund totals, repeat customer %, conversion rate
+
+### SEO & Marketing
+- [ ] **SEO sitemap.xml** — Auto-generated from products, categories, collections, blog posts
+- [ ] **Event webhook system** — Admin-configurable outbound webhooks (`customer.created`, `order.completed`, `newsletter.subscribed`) for Mailchimp/Klaviyo/etc.
+
+### Previously Deferred
+- [ ] **Social proof widgets** — "X people viewing" / "Y sold this week" on PDP (storefront-only)
+- [ ] **Community pricing** — Member vs non-member pricing (needs segment integration)
+- [ ] **Indigenous language support** — UI strings in Kanien'kéha/Mohawk (requires language consultant)
+- [ ] **Cultural content protection** — Watermarked images, right-click prevention, EXIF copyright metadata
+- [ ] **Multi-currency support** — Currently CAD only (future international expansion)
+- [ ] **Keycloak OIDC integration** — Optional SSO (needs Keycloak instance)
+- [ ] **Subscription / recurring orders** — Low priority for clothing
+- [ ] Playwright E2E in CI (needs headless browser in runner)
+
 ---
 
 ## Deploy Checklist (per brand fork)
