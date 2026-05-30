@@ -6,6 +6,7 @@ import { cart } from '@/lib/cart';
 import { formatCents } from '@/lib/format';
 import { addToast } from '@/lib/toast';
 import { SizeGuide } from '@/components/SizeGuide';
+import { SocialProof } from '@/components/SocialProof';
 
 export function ProductInteractive({ product }: { product: Product }) {
   const sizes = [...new Set(product.variants.map((v) => v.size))];
@@ -39,6 +40,7 @@ export function ProductInteractive({ product }: { product: Product }) {
   return (
     <div className="flex flex-col">
       <h1 className="text-2xl md:text-3xl font-bold text-gray-900">{product.name}</h1>
+      <SocialProof productId={product.id} />
 
       {selectedVariant && (
         <div className="mt-3 flex items-center gap-3">

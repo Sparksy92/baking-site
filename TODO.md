@@ -87,9 +87,9 @@
 - [x] **Admin reports with date-range** — Revenue, AOV, refunds, repeat %, daily breakdown, UTM attribution, top products, 2 tests
 - [x] **Return/exchange workflow** — Customer self-serve request, admin approve/reject/receive, auto-restock, status machine, 7 tests
 - [x] **Event webhook system** — Admin CRUD, HMAC signatures, delivery logging, 9 event types, 7 tests
+- [x] **Social proof widgets** — "X people viewing" / "Y sold this week" on PDP, backend API + storefront component, 2 tests
 
 ### Deferred
-- [ ] **Social proof widgets** — "X people viewing" / "Y sold this week" on PDP (storefront-only)
 - [ ] **Community pricing** — Member vs non-member pricing (needs segment integration)
 - [ ] **Indigenous language support** — UI strings in Kanien'kéha/Mohawk (requires language consultant)
 - [ ] **Cultural content protection** — Watermarked images, right-click prevention, EXIF copyright metadata

@@ -12,7 +12,7 @@ A lightweight, white-label ecommerce platform purpose-built for **clothing and a
                      │ /api/* (proxy rewrite)
 ┌────────────────────▼────────────────────────────┐
 │  API (Python 3.12 + FastAPI + SQLite)           │
-│  Products • Orders • Payments • Shipping        │
+│  60+ endpoints • 27 migration files • 334 tests│
 └────────────────────┬────────────────────────────┘
                      │
 ┌────────────────────▼────────────────────────────┐
@@ -27,62 +27,10 @@ A lightweight, white-label ecommerce platform purpose-built for **clothing and a
 | **API** | Python 3.12 + FastAPI + uvicorn + aiosqlite |
 | **Database** | SQLite (WAL mode) — zero infrastructure |
 | **Frontend** | Next.js 15 (App Router) + TypeScript + Tailwind CSS v4 |
-| **SEO** | Metadata API, JSON-LD, dynamic sitemap, robots.txt |
+| **SEO** | Metadata API, JSON-LD, dynamic sitemap.xml, robots.txt |
 | **Payments** | Stripe Checkout (card payments) |
-| **Email** | Resend (order confirmations, shipping updates) |
+| **Email** | Resend (order confirmations, shipping updates, alerts) |
 | **Deploy** | Podman (rootless) + nginx + Ansible |
-
-## Features
-
-### Customer-Facing
-- **Product gallery** — multiple images per product, hero carousel, zoom
-- **Size × Color variants** — swatch selectors, size guide
-- **Collections** — curated groups (drops, seasons, categories)
-- **Smart search** — search by name, description, collection
-- **Cart & Checkout** — Stripe Checkout, promo codes, clean UX
-- **Order tracking** — lookup by order number + email
-- **Responsive** — desktop grid + mobile-optimized
-- **SEO** — SSR pages, JSON-LD structured data, dynamic OG images, sitemap.xml
-- **Newsletter signup** — email capture with toast confirmation
-- **Accessibility** — skip-nav, focus traps on modals, ARIA attributes
-- **Analytics** — admin-configurable GA4 (measurement ID in settings)
-
-### Admin Dashboard
-- **Product management** — CRUD, multi-image upload, variant matrix
-- **Collection management** — create/edit collections, assign products
-- **Order management** — view, update status, add tracking numbers
-- **Inventory tracking** — stock levels, low-stock alerts
-- **Settings** — brand config, shipping, tax, announcements, GA4 analytics
-- **Newsletter** — subscriber list, export CSV, active/unsubscribed status
-- **Audit log** — who changed what and when
-
-### Brand Architecture
-- White-label: fork once per brand, configure via `.env`
-- No food-service concepts (no store hours, no modifiers, no kitchen kanban)
-- Shipping-first fulfillment (flat rate or free above threshold)
-- Tax calculation built in
-
----
-
-## Data Model
-
-13 tables (lean but complete):
-
-| Table | Purpose |
-|-------|---------|
-| `categories` | Product categories (Tees, Hoodies, Hats, etc.) |
-| `products` | Name, slug, description, is_active |
-| `product_variants` | Size × Color matrix with price, SKU, stock |
-| `product_images` | Multiple images per product (ordered) |
-| `collections` | Curated groups (New Arrivals, Summer Drop) |
-| `collection_products` | Many-to-many: products ↔ collections |
-| `orders` | Customer info, shipping, payment status |
-| `order_items` | Line items with variant snapshot |
-| `promo_codes` | Discount codes (percent/fixed, limits, expiry) |
-| `admin_users` | Admin accounts (bcrypt, JWT) |
-| `settings` | Key-value store (shipping, tax, analytics, announcements) |
-| `newsletter_subscribers` | Email list with active/inactive status |
-| `audit_log` | Change tracking |
 
 ---
 
@@ -90,30 +38,50 @@ A lightweight, white-label ecommerce platform purpose-built for **clothing and a
 
 ### Prerequisites
 
-- Python 3.12+
-- Node.js 20+
-- npm
+- **Python 3.12+** (for API)
+- **Node.js 20+** (for storefront)
+- **npm** (comes with Node)
 
-### Backend
+### 1. Clone & Configure
+
+```bash
+git clone <repo-url> clothing-ecommerce-baseline
+cd clothing-ecommerce-baseline
+cp .env.example .env
+```
+
+Edit `.env` — for local dev the defaults work fine. The only thing you _may_ want to set:
+
+```bash
+DEV_MODE=true                  # Enables Swagger docs + relaxed security
+ADMIN_JWT_SECRET=dev-secret    # Any non-default value works for local
+CUSTOMER_JWT_SECRET=dev-cust   # Any non-default value works for local
+```
+
+### 2. Backend (API)
 
 ```bash
 cd api
 python3 -m venv .venv
 source .venv/bin/activate
 pip install -r requirements.txt
-cp ../.env.example ../.env  # Edit with your values
 
-# Seed sample data + create admin user
+# Seed sample data (6 products, 3 categories, 2 collections)
 python cli.py seed
+
+# Create an admin user (interactive)
 python cli.py create-admin
 
-# Start API
+# Start the API server
 uvicorn app.main:app --reload --port 8100
 ```
 
-API docs: `http://localhost:8100/api/docs` (Swagger UI)
+The API will:
+- Auto-create `data/store.db` on first run
+- Run all 27 SQL migrations automatically
+- Serve Swagger docs at `http://localhost:8100/api/docs`
 
-### Frontend (Next.js)
+### 3. Storefront (Next.js)
 
 ```bash
 cd storefront
@@ -121,9 +89,74 @@ npm install
 npm run dev
 ```
 
-Storefront: `http://localhost:3000`
+- Storefront: **http://localhost:5173**
+- Admin panel: **http://localhost:5173/admin**
 
-The storefront proxies `/api/*` to the backend via `next.config.ts` rewrites.
+The storefront proxies `/api/*` to `http://localhost:8100` via `next.config.ts` rewrites.
+
+### 4. Login to Admin
+
+Navigate to `http://localhost:5173/admin` and log in with the credentials you created in step 2.
+
+---
+
+## Features
+
+### Customer-Facing Storefront
+- **Product gallery** — multiple images, hero carousel, zoom
+- **Size × Color variants** — swatch selectors, per-variant images, size guide
+- **Collections** — curated groups (drops, seasons)
+- **Smart search** — search by name, description, collection
+- **Cart & Checkout** — Stripe Checkout, promo codes, auto-discounts
+- **Customer accounts** — register, login, order history, saved addresses, wishlist
+- **Reviews** — star ratings with admin moderation
+- **Gift cards** — purchase, balance check, redeem at checkout
+- **Loyalty points** — earn on purchase, track balance
+- **Product bundles** — discounted multi-product sets
+- **Back-in-stock notifications** — email alerts when restocked
+- **Social proof** — "X people viewing" / "Y sold this week" on PDP
+- **Related products** — category-based recommendations
+- **Returns** — customer self-serve return requests
+- **Blog** — published pages and blog posts
+- **Newsletter signup** — email capture
+- **Order tracking** — lookup by order number + email
+- **SEO** — SSR, JSON-LD, OG images, sitemap.xml, robots.txt
+- **Responsive** — desktop + mobile optimized
+
+### Admin Dashboard (all manageable from UI)
+- **Dashboard** — revenue, orders, low stock, top products
+- **Products** — CRUD, multi-image upload, variant matrix
+- **Collections** — create/edit, assign products
+- **Categories** — organize catalog
+- **Orders** — view, update status, tracking, partial fulfillment, order editing
+- **Returns** — approve/reject/receive, auto-restock
+- **Analytics** — conversion funnel, date-range sales reports, UTM attribution
+- **Gift Cards** — issue, deactivate, balance tracking
+- **Loyalty** — program stats
+- **Bundles** — create/manage bundle deals
+- **Pages & Blog** — CRUD with draft/published workflow
+- **Tags** — product tagging
+- **Segments** — customer segmentation with rules
+- **Size Guides** — per-category with fallback
+- **Promos** — discount codes (percent/fixed, limits, expiry)
+- **Newsletter** — subscriber list, CSV export
+- **Webhooks** — outbound event webhooks (order.*, customer.*, return.*)
+- **Staff** — roles & permissions (owner/admin/staff)
+- **Settings** — brand config, shipping, tax, analytics
+
+### Platform Features
+- **Request ID tracing** — `X-Request-Id` on every response
+- **Global exception handler** — catch-all 500s with correlation ID
+- **Rate limiting** — sliding window per IP
+- **Structured JSON logging** — for log aggregation
+- **UTM tracking** — marketing attribution on orders
+- **Event analytics** — server-side conversion funnel
+- **Webhook system** — HMAC-signed outbound webhooks
+- **Auto-discounts** — rule-based discounts
+- **Abandoned cart recovery** — email reminders
+- **Packing slips** — printable order documents
+- **CSV import/export** — bulk product management
+- **Audit log** — who changed what
 
 ---
 
@@ -131,29 +164,55 @@ The storefront proxies `/api/*` to the backend via `next.config.ts` rewrites.
 
 See `.env.example` for the full list. Key variables:
 
+| Variable | Description | Default |
+|----------|-------------|---------|
+| `DATABASE_PATH` | SQLite file path | `./data/store.db` |
+| `ADMIN_JWT_SECRET` | JWT signing key (admin) | Must change in prod |
+| `CUSTOMER_JWT_SECRET` | JWT signing key (customers) | Must change in prod |
+| `STRIPE_SECRET_KEY` | Stripe API key | `sk_test_...` |
+| `STRIPE_WEBHOOK_SECRET` | Stripe webhook signature | `whsec_...` |
+| `RESEND_API_KEY` | Email service API key | `re_...` |
+| `SHIPPING_FLAT_RATE_CENTS` | Flat rate shipping | `1200` |
+| `SHIPPING_FREE_THRESHOLD_CENTS` | Free shipping above | `15000` |
+| `TAX_RATE` | Tax rate | `0` (set to `0.13` for ON) |
+| `STORE_DOMAIN` | Public URL | `http://localhost:5173` |
+| `DEV_MODE` | Enable docs + relaxed cookies | `true` |
+
+---
+
+## Testing
+
+### API Tests (pytest)
+
 ```bash
-BRAND_NAME="Elder"
-BRAND_COLOR_PRIMARY="#1A1A1A"
-BRAND_COLOR_ACCENT="#C53030"
-
-DATABASE_PATH=./data/store.db
-ADMIN_JWT_SECRET=<openssl rand -base64 32>
-
-STRIPE_SECRET_KEY=sk_test_...
-STRIPE_WEBHOOK_SECRET=whsec_...
-
-SHIPPING_FLAT_RATE_CENTS=1200
-SHIPPING_FREE_THRESHOLD_CENTS=15000
-
-TAX_RATE=0.13
-STORE_CURRENCY=CAD
+cd api
+source .venv/bin/activate
+python -m pytest tests/ -v
 ```
+
+**334 tests** covering all features: health, auth, products, categories, collections, orders, promos, checkout, shipping, customers, wishlist, reviews, related products, back-in-stock, cart, pages, tags, segments, size guides, gift cards, loyalty, bundles, events, analytics, reports, returns, webhooks, social proof, sitemap, request ID.
+
+### Storefront Unit Tests (Vitest)
+
+```bash
+cd storefront
+npm test
+```
+
+### Storefront E2E (Playwright)
+
+```bash
+cd storefront
+npx playwright test
+```
+
+> Requires the dev servers running (Next.js + API).
 
 ---
 
 ## Deployment
 
-Two containers: API (FastAPI/uvicorn) + Storefront (Next.js `next start`).
+Two containers: API (FastAPI/uvicorn) + Storefront (Next.js standalone).
 nginx reverse-proxies both behind a single domain.
 
 ```bash
@@ -164,51 +223,52 @@ podman-compose -f infra/docker/docker-compose.prod.yml build
 podman-compose -f infra/docker/docker-compose.prod.yml up -d
 ```
 
-See `infra/` directory for Docker and nginx configuration.
+See `infra/` for Docker and nginx configuration.
 
 ---
 
-## Testing
+## Project Structure
 
-### API (pytest)
-
-```bash
-cd api
-source .venv/bin/activate
-python -m pytest tests/ -v
 ```
-
-50 tests covering: health, auth, products (CRUD, filtering, sorting, pagination), categories, collections, promo codes (admin CRUD, validation, discount calc), and public settings.
-
-### Storefront Unit Tests (Vitest)
-
-```bash
-cd storefront
-npm test
+├── api/
+│   ├── app/
+│   │   ├── main.py              # FastAPI app factory
+│   │   ├── config.py            # Settings (from env)
+│   │   ├── database.py          # SQLite connection + migrations
+│   │   ├── auth.py              # Admin JWT auth
+│   │   ├── customer_auth.py     # Customer JWT auth
+│   │   ├── middleware/          # Rate limiting, request ID, logging
+│   │   ├── migrations/          # 001-027 SQL schema files
+│   │   ├── models/schemas.py    # Pydantic models
+│   │   ├── routes/              # Public API routes
+│   │   ├── routes/admin/        # Admin API routes
+│   │   └── services/            # Business logic (orders, email, webhooks)
+│   ├── tests/                   # pytest async tests
+│   ├── cli.py                   # seed + create-admin commands
+│   └── requirements.txt
+├── storefront/
+│   ├── app/
+│   │   ├── (shop)/              # Public pages (products, cart, checkout)
+│   │   └── admin/(panel)/       # Admin dashboard pages
+│   ├── components/              # Shared React components
+│   ├── lib/                     # API client, cart store, helpers
+│   └── package.json
+├── infra/                       # Docker + nginx configs
+├── .env.example                 # Environment template
+├── TODO.md                      # Feature tracking
+└── README.md                    # This file
 ```
-
-26 tests covering: `formatCents`, brand helpers, cart store (add, remove, update, persistence, subscriptions).
-
-### Storefront E2E (Playwright)
-
-```bash
-cd storefront
-npx playwright test
-```
-
-34 tests covering: smoke tests (all public routes), header/footer navigation, mobile menu, search, cart, policy pages, info pages, and categories.
-
-> **Note:** E2E tests require the Next.js dev server on port 3000. Playwright auto-starts it, or reuses an existing one.
 
 ---
 
 ## Forking for a New Brand
 
 1. Fork/copy this repo
-2. Update `.env` with brand name, colors, logo
+2. Update `.env` with brand name, colors, domain
 3. Replace `storefront/public/images/brand/` assets
-4. Seed your products via admin dashboard or API
-5. Deploy
+4. `cd api && python cli.py seed` (or add products via admin UI)
+5. `python cli.py create-admin`
+6. Deploy
 
 ---
 

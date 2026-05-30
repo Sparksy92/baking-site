@@ -12,7 +12,7 @@ from app.database import init_db
 from app.middleware.logging import setup_logging
 from app.middleware.rate_limit import RateLimitMiddleware
 from app.middleware.request_id import RequestIdMiddleware
-from app.routes import health, products, settings, auth, checkout, webhooks, promos, newsletter, customers, contact, shipping, wishlist, reviews, related_products, back_in_stock, cart, pages, size_guides, gift_cards, loyalty, bundles, sitemap, events, returns
+from app.routes import health, products, settings, auth, checkout, webhooks, promos, newsletter, customers, contact, shipping, wishlist, reviews, related_products, back_in_stock, cart, pages, size_guides, gift_cards, loyalty, bundles, sitemap, events, returns, social_proof
 from app.routes.admin import (
     products as admin_products,
     collections as admin_collections,
@@ -139,6 +139,7 @@ def create_app() -> FastAPI:
     app.include_router(events.router, prefix="/api")
     app.include_router(returns.router, prefix="/api")
     app.include_router(sitemap.router, prefix="/api")
+    app.include_router(social_proof.router, prefix="/api")
 
     # ── Admin routes ───────────────────────────────────────────
     app.include_router(admin_products.router, prefix="/api")
