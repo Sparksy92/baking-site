@@ -89,7 +89,20 @@ async def delete_product(
     db: aiosqlite.Connection = Depends(get_db),
     user: dict = Depends(require_admin),
 ):
-    """Delete a product (cascades to variants, images)."""
+    """Soft-delete a product (deactivate). Hard-delete only if no orders reference it."""
+    cursor = await db.execute(
+        "SELECT COUNT(*) FROM order_items WHERE product_id = ?", (product_id,)
+    )
+    order_count = (await cursor.fetchone())[0]
+
+    if order_count > 0:
+        await db.execute(
+            "UPDATE products SET is_active = 0, updated_at = datetime('now') WHERE id = ?",
+            (product_id,),
+        )
+        await db.commit()
+        return {"deleted": False, "deactivated": True, "reason": "Product has existing orders"}
+
     await db.execute("DELETE FROM products WHERE id = ?", (product_id,))
     await db.commit()
     return {"deleted": True}

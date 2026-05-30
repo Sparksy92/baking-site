@@ -6,7 +6,7 @@ from fastapi import APIRouter, Depends, HTTPException, Request, status
 import aiosqlite
 
 from app.database import get_db
-from app.services.email_service import send_payment_confirmed
+from app.services.email_service import send_payment_confirmed, send_order_cancelled
 from app.services.order_service import cancel_order
 from app.services.stripe_service import verify_webhook_signature
 
@@ -117,3 +117,8 @@ async def _handle_checkout_expired(db: aiosqlite.Connection, session: dict, even
 
     await cancel_order(db, order["id"], reason="expired")
     logger.info("Order %s expired — stock restored", order["order_number"])
+
+    try:
+        await send_order_cancelled(dict(order), reason="expired")
+    except Exception:
+        logger.exception("Failed to send cancellation email for %s", order["order_number"])
