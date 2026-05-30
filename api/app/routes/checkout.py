@@ -49,6 +49,7 @@ async def checkout(
             order_number=order_number,
             items=validated["order_items"],
             subtotal_cents=validated["subtotal_cents"],
+            discount_cents=validated["discount_cents"],
             shipping_cents=validated["shipping_cents"],
             tax_cents=validated["tax_cents"],
             total_cents=validated["total_cents"],
@@ -67,6 +68,23 @@ async def checkout(
         (session_id, order_number),
     )
     await db.commit()
+
+    # Send order confirmation email (order received, payment still pending)
+    try:
+        await send_order_confirmation(
+            {
+                "order_number": order_number,
+                "customer_name": body.customer_name,
+                "customer_email": body.customer_email,
+                "subtotal_cents": validated["subtotal_cents"],
+                "shipping_cents": validated["shipping_cents"],
+                "tax_cents": validated["tax_cents"],
+                "total_cents": validated["total_cents"],
+            },
+            validated["order_items"],
+        )
+    except Exception:
+        logger.exception("Failed to send order confirmation email for %s", order_number)
 
     return CheckoutResponse(
         order_number=order_number,

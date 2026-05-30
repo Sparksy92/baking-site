@@ -37,7 +37,7 @@ class Settings(BaseSettings):
     shipping_description: str = "Flat rate shipping across Canada"
 
     # ── Tax ───────────────────────────────────────────────────────
-    tax_rate: float = 0.13
+    tax_rate: float = 0.0
     store_currency: str = "CAD"
 
     # ── Email (Resend) ───────────────────────────────────────────

@@ -1,6 +1,13 @@
 from __future__ import annotations
 
+from typing import Literal
+
 from pydantic import BaseModel, EmailStr, Field
+
+# Valid order statuses
+ORDER_STATUSES = Literal[
+    "received", "processing", "shipped", "delivered", "cancelled", "refunded"
+]
 
 
 # ── Auth ────────────────────────────────────────────────────────
@@ -230,7 +237,7 @@ class OrderResponse(BaseModel):
 
 
 class OrderStatusUpdate(BaseModel):
-    status: str | None = None
+    status: ORDER_STATUSES | None = None
     tracking_number: str | None = None
     tracking_carrier: str | None = None
     admin_notes: str | None = None

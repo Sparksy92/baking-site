@@ -86,7 +86,7 @@ export default function CartPage() {
       <div className="mt-8 border-t border-gray-200 pt-6 space-y-3">
         <div className="flex justify-between text-sm text-gray-600"><span>Subtotal</span><span className="font-medium">{formatCents(subtotal)}</span></div>
         <div className="flex justify-between text-sm text-gray-600"><span>Shipping</span><span className="font-medium">{shippingCost === 0 ? 'Free' : formatCents(shippingCost)}</span></div>
-        <div className="flex justify-between text-sm text-gray-600"><span>Tax (HST)</span><span className="font-medium">{formatCents(tax)}</span></div>
+        {tax > 0 && <div className="flex justify-between text-sm text-gray-600"><span>Tax</span><span className="font-medium">{formatCents(tax)}</span></div>}
         <div className="flex justify-between text-lg font-bold text-gray-900 pt-3 border-t border-gray-200"><span>Total</span><span>{formatCents(total)}</span></div>
       </div>
 

@@ -7,7 +7,7 @@ import { api, type CheckoutResponse, type PublicSettings } from '@/lib/api';
 import { formatCents } from '@/lib/format';
 
 export default function CheckoutPage() {
-  const { items, subtotal, clear } = useCart();
+  const { items, subtotal } = useCart();
   const router = useRouter();
   const [settings, setSettings] = useState<PublicSettings | null>(null);
   const [loading, setLoading] = useState(false);
@@ -95,7 +95,11 @@ export default function CheckoutPage() {
         promo_code: promoApplied?.code || null,
         customer_notes: notes.trim() || null,
       });
-      clear();
+      // Store order info for confirmation page — don't clear cart until payment confirmed
+      sessionStorage.setItem('pending_order', JSON.stringify({
+        order_number: resp.order_number,
+        email: email.trim(),
+      }));
       window.location.href = resp.stripe_checkout_url;
     } catch (err: unknown) {
       setError(err instanceof Error ? err.message : 'Something went wrong');
@@ -113,21 +117,60 @@ export default function CheckoutPage() {
         <section>
           <h2 className="text-sm font-semibold text-gray-900 mb-3">Contact</h2>
           <div className="space-y-3">
-            <input type="text" placeholder="Full name" value={name} onChange={(e) => setName(e.target.value)} required className={inputClass} />
-            <input type="email" placeholder="Email" value={email} onChange={(e) => setEmail(e.target.value)} required className={inputClass} />
-            <input type="tel" placeholder="Phone (optional)" value={phone} onChange={(e) => setPhone(e.target.value)} className={inputClass} />
+            <div>
+              <label htmlFor="checkout-name" className="sr-only">Full name</label>
+              <input id="checkout-name" type="text" placeholder="Full name" value={name} onChange={(e) => setName(e.target.value)} required className={inputClass} autoComplete="name" />
+            </div>
+            <div>
+              <label htmlFor="checkout-email" className="sr-only">Email</label>
+              <input id="checkout-email" type="email" placeholder="Email" value={email} onChange={(e) => setEmail(e.target.value)} required className={inputClass} autoComplete="email" />
+            </div>
+            <div>
+              <label htmlFor="checkout-phone" className="sr-only">Phone (optional)</label>
+              <input id="checkout-phone" type="tel" placeholder="Phone (optional)" value={phone} onChange={(e) => setPhone(e.target.value)} className={inputClass} autoComplete="tel" />
+            </div>
           </div>
         </section>
         <section>
           <h2 className="text-sm font-semibold text-gray-900 mb-3">Shipping Address</h2>
           <div className="space-y-3">
-            <input type="text" placeholder="Address" value={line1} onChange={(e) => setLine1(e.target.value)} required className={inputClass} />
-            <input type="text" placeholder="Apt / Suite (optional)" value={line2} onChange={(e) => setLine2(e.target.value)} className={inputClass} />
-            <div className="grid grid-cols-2 gap-3">
-              <input type="text" placeholder="City" value={city} onChange={(e) => setCity(e.target.value)} required className={inputClass} />
-              <input type="text" placeholder="Province" value={province} onChange={(e) => setProvince(e.target.value)} required className={inputClass} />
+            <div>
+              <label htmlFor="checkout-address" className="sr-only">Address</label>
+              <input id="checkout-address" type="text" placeholder="Address" value={line1} onChange={(e) => setLine1(e.target.value)} required className={inputClass} autoComplete="address-line1" />
             </div>
-            <input type="text" placeholder="Postal code" value={postal} onChange={(e) => setPostal(e.target.value)} required className={inputClass} />
+            <div>
+              <label htmlFor="checkout-address2" className="sr-only">Apt / Suite (optional)</label>
+              <input id="checkout-address2" type="text" placeholder="Apt / Suite (optional)" value={line2} onChange={(e) => setLine2(e.target.value)} className={inputClass} autoComplete="address-line2" />
+            </div>
+            <div className="grid grid-cols-2 gap-3">
+              <div>
+                <label htmlFor="checkout-city" className="sr-only">City</label>
+                <input id="checkout-city" type="text" placeholder="City" value={city} onChange={(e) => setCity(e.target.value)} required className={inputClass} autoComplete="address-level2" />
+              </div>
+              <div>
+                <label htmlFor="checkout-province" className="sr-only">Province</label>
+                <select id="checkout-province" value={province} onChange={(e) => setProvince(e.target.value)} required className={inputClass} autoComplete="address-level1">
+                  <option value="" disabled>Province</option>
+                  <option value="AB">Alberta</option>
+                  <option value="BC">British Columbia</option>
+                  <option value="MB">Manitoba</option>
+                  <option value="NB">New Brunswick</option>
+                  <option value="NL">Newfoundland and Labrador</option>
+                  <option value="NS">Nova Scotia</option>
+                  <option value="NT">Northwest Territories</option>
+                  <option value="NU">Nunavut</option>
+                  <option value="ON">Ontario</option>
+                  <option value="PE">Prince Edward Island</option>
+                  <option value="QC">Quebec</option>
+                  <option value="SK">Saskatchewan</option>
+                  <option value="YT">Yukon</option>
+                </select>
+              </div>
+            </div>
+            <div>
+              <label htmlFor="checkout-postal" className="sr-only">Postal code</label>
+              <input id="checkout-postal" type="text" placeholder="Postal code" value={postal} onChange={(e) => setPostal(e.target.value)} required className={inputClass} autoComplete="postal-code" />
+            </div>
           </div>
         </section>
         <section>
@@ -151,7 +194,7 @@ export default function CheckoutPage() {
           <div className="flex justify-between text-sm"><span>Subtotal</span><span>{formatCents(subtotal)}</span></div>
           {discount > 0 && <div className="flex justify-between text-sm text-green-700"><span>Discount</span><span>-{formatCents(discount)}</span></div>}
           <div className="flex justify-between text-sm"><span>Shipping</span><span>{shippingCost === 0 ? 'Free' : formatCents(shippingCost)}</span></div>
-          <div className="flex justify-between text-sm"><span>Tax (HST)</span><span>{formatCents(tax)}</span></div>
+          {tax > 0 && <div className="flex justify-between text-sm"><span>Tax</span><span>{formatCents(tax)}</span></div>}
           <div className="flex justify-between font-bold text-base pt-2 border-t border-gray-200"><span>Total</span><span>{formatCents(total)}</span></div>
         </section>
         {error && <div className="text-sm text-red-600 bg-red-50 border border-red-200 rounded-lg p-3">{error}</div>}

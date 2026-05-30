@@ -5,7 +5,7 @@ from datetime import datetime, timedelta, timezone
 
 import bcrypt
 from fastapi import Depends, HTTPException, Request, status
-from jose import JWTError, jwt
+import jwt
 
 from app.config import Settings, get_settings
 
@@ -38,13 +38,13 @@ def create_access_token(
         "exp": expire,
         "iat": datetime.now(timezone.utc),
     }
-    return jwt.encode(payload, settings.admin_jwt_secret, algorithm=settings.admin_jwt_algorithm)
+    return jwt.encode(payload, settings.admin_jwt_secret, algorithm=settings.admin_jwt_algorithm)  # type: ignore[arg-type]
 
 
 def decode_token(token: str, settings: Settings | None = None) -> dict:
     if settings is None:
         settings = get_settings()
-    return jwt.decode(token, settings.admin_jwt_secret, algorithms=[settings.admin_jwt_algorithm])
+    return jwt.decode(token, settings.admin_jwt_secret, algorithms=[settings.admin_jwt_algorithm])  # type: ignore[arg-type]
 
 
 async def get_current_user(request: Request) -> dict:
@@ -58,7 +58,7 @@ async def get_current_user(request: Request) -> dict:
         )
     try:
         payload = decode_token(token)
-    except JWTError:
+    except (jwt.PyJWTError, Exception):
         raise HTTPException(
             status_code=status.HTTP_401_UNAUTHORIZED,
             detail="Invalid or expired token",

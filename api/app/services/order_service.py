@@ -178,6 +178,37 @@ async def create_order(
     return order_number
 
 
+async def cancel_order(db: aiosqlite.Connection, order_id: int, reason: str = "expired") -> None:
+    """Cancel an order and restore stock for its items.
+
+    Used when a Stripe session expires or payment fails.
+    """
+    # Restore stock for each order item
+    cursor = await db.execute(
+        "SELECT variant_id, quantity FROM order_items WHERE order_id = ?", (order_id,)
+    )
+    items = await cursor.fetchall()
+
+    for item in items:
+        if item["variant_id"]:
+            await db.execute(
+                "UPDATE product_variants SET stock_quantity = stock_quantity + ? WHERE id = ?",
+                (item["quantity"], item["variant_id"]),
+            )
+
+    await db.execute(
+        """UPDATE orders
+           SET status = 'cancelled',
+               payment_status = ?,
+               cancelled_at = datetime('now'),
+               updated_at = datetime('now')
+           WHERE id = ?""",
+        (reason, order_id),
+    )
+    await db.commit()
+    logger.info("Order %d cancelled (reason: %s), stock restored", order_id, reason)
+
+
 def _generate_order_number(prefix: str) -> str:
     """Generate a unique order number like ELD-A3X7K9."""
     chars = string.ascii_uppercase + string.digits

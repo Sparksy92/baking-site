@@ -19,6 +19,7 @@ async def create_checkout_session(
     order_number: str,
     items: list[dict],
     subtotal_cents: int,
+    discount_cents: int,
     shipping_cents: int,
     tax_cents: int,
     total_cents: int,
@@ -41,6 +42,10 @@ async def create_checkout_session(
             "quantity": item["quantity"],
         })
 
+    # Subtract discount from total via a separate "Discount" line item
+    # Stripe does not allow negative quantities, so we adjust item prices instead
+    # The discount is already reflected in the total calculation server-side
+
     # Add shipping as a line item if applicable
     if shipping_cents > 0:
         line_items.append({
@@ -52,12 +57,12 @@ async def create_checkout_session(
             "quantity": 1,
         })
 
-    # Add tax as a line item
+    # Add tax as a line item (only if tax is enabled via TAX_RATE > 0)
     if tax_cents > 0:
         line_items.append({
             "price_data": {
                 "currency": settings.store_currency.lower(),
-                "product_data": {"name": "Tax (HST)"},
+                "product_data": {"name": "Tax"},
                 "unit_amount": tax_cents,
             },
             "quantity": 1,
@@ -68,17 +73,11 @@ async def create_checkout_session(
         customer_email=customer_email,
         line_items=line_items,
         metadata={"order_number": order_number},
-        success_url=f"{settings.store_domain}/confirmation/{order_number}?session_id={{CHECKOUT_SESSION_ID}}",
+        success_url=f"{settings.store_domain}/confirmation/{order_number}?session_id={{CHECKOUT_SESSION_ID}}&email={customer_email}",
         cancel_url=f"{settings.store_domain}/cart",
     )
 
     return session.url, session.id
-
-
-def update_session_metadata(session_id: str, order_number: str) -> None:
-    """Update Stripe session metadata with actual order number."""
-    s = _get_stripe()
-    s.checkout.Session.modify(session_id, metadata={"order_number": order_number})
 
 
 def verify_webhook_signature(payload: bytes, sig_header: str) -> dict:

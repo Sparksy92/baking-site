@@ -28,6 +28,15 @@ logger = logging.getLogger(__name__)
 async def lifespan(app: FastAPI):
     setup_logging()
     logger.info("Starting clothing-ecommerce API")
+
+    # Guard against running with default JWT secret
+    settings = get_settings()
+    if not settings.dev_mode and settings.admin_jwt_secret == "CHANGE_ME":
+        raise RuntimeError(
+            "ADMIN_JWT_SECRET is set to the default value. "
+            "Generate a real secret: openssl rand -base64 32"
+        )
+
     await init_db()
     logger.info("Database initialized")
     yield
@@ -37,12 +46,17 @@ async def lifespan(app: FastAPI):
 def create_app() -> FastAPI:
     app_settings = get_settings()
 
+    # Disable API docs in production
+    docs_url = "/api/docs" if app_settings.dev_mode else None
+    redoc_url = "/api/redoc" if app_settings.dev_mode else None
+    openapi_url = "/api/openapi.json" if app_settings.dev_mode else None
+
     app = FastAPI(
         title=f"{app_settings.brand_name} API",
         version=app_settings.app_version,
-        docs_url="/api/docs",
-        redoc_url="/api/redoc",
-        openapi_url="/api/openapi.json",
+        docs_url=docs_url,
+        redoc_url=redoc_url,
+        openapi_url=openapi_url,
         lifespan=lifespan,
     )
 

@@ -1,25 +1,59 @@
 'use client';
 
-import { useEffect, useState } from 'react';
+import { useEffect, useState, useRef } from 'react';
 import { useParams, useSearchParams } from 'next/navigation';
 import Link from 'next/link';
 import { CheckCircle } from 'lucide-react';
 import { api, type OrderLookup } from '@/lib/api';
 import { formatCents } from '@/lib/format';
+import { cart } from '@/lib/cart';
 
 export default function ConfirmationPage() {
   const params = useParams<{ orderNumber: string }>();
   const searchParams = useSearchParams();
   const orderNumber = params.orderNumber;
-  const email = searchParams.get('email') || '';
   const [order, setOrder] = useState<OrderLookup | null>(null);
+  const cartCleared = useRef(false);
+
+  // Get email from URL params (Stripe redirect) or sessionStorage (fallback)
+  const urlEmail = searchParams.get('email') || '';
+  const [email, setEmail] = useState(urlEmail);
+
+  useEffect(() => {
+    if (!urlEmail) {
+      try {
+        const pending = sessionStorage.getItem('pending_order');
+        if (pending) {
+          const data = JSON.parse(pending);
+          if (data.order_number === orderNumber && data.email) {
+            setEmail(data.email);
+          }
+        }
+      } catch { /* ignore */ }
+    }
+  }, [orderNumber, urlEmail]);
 
   useEffect(() => {
     if (!orderNumber || !email) return;
     api.get<OrderLookup>(`/api/orders/${orderNumber}?email=${encodeURIComponent(email)}`)
-      .then(setOrder)
-      .catch(() => {});
-  }, [orderNumber, email]);
+      .then((data) => {
+        setOrder(data);
+        // Clear cart only after successfully verifying the order exists
+        if (!cartCleared.current) {
+          cart.clear();
+          sessionStorage.removeItem('pending_order');
+          cartCleared.current = true;
+        }
+      })
+      .catch(() => {
+        // Order found via Stripe redirect — clear cart even if lookup fails
+        if (!cartCleared.current && searchParams.get('session_id')) {
+          cart.clear();
+          sessionStorage.removeItem('pending_order');
+          cartCleared.current = true;
+        }
+      });
+  }, [orderNumber, email, searchParams]);
 
   return (
     <div className="max-w-2xl mx-auto px-4 py-12 text-center">

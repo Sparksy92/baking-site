@@ -198,4 +198,4 @@ INSERT INTO settings (key, value) VALUES
     ('order_number_prefix', 'ELD'),
     ('shipping_flat_rate_cents', '1200'),
     ('shipping_free_threshold_cents', '15000'),
-    ('tax_rate', '0.13');
+    ('tax_rate', '0');

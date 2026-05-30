@@ -38,7 +38,7 @@ async def send_order_confirmation(order_data: dict, items: list[dict]) -> None:
     </table>
     <p><strong>Subtotal:</strong> ${order_data['subtotal_cents']/100:.2f}</p>
     <p><strong>Shipping:</strong> ${order_data['shipping_cents']/100:.2f}</p>
-    <p><strong>Tax:</strong> ${order_data['tax_cents']/100:.2f}</p>
+    {"<p><strong>Tax:</strong> $" + f"{order_data['tax_cents']/100:.2f}</p>" if order_data.get('tax_cents', 0) > 0 else ""}
     <p><strong>Total:</strong> ${order_data['total_cents']/100:.2f}</p>
     <p>We'll email you when your order ships.</p>
     """
