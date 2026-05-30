@@ -35,7 +35,7 @@
 - [x] **Canada Post shipping API** — Rate service, `/api/shipping/rates` endpoint, checkout integration with fallback, storefront rate picker, 7 tests
 - [x] **Admin category management page** — Full CRUD API + admin UI (list, create, edit, delete, product unlinking), 14 tests
 
-## Remaining — Tier 2 (nice to have)
+## Completed — Tier 2 (nice to have)
 
 - [x] **Admin dashboard stats endpoint** — Server-side aggregation: revenue, orders, top products, low stock, customers, subscribers, 3 tests
 - [x] **Admin image management** — List, reorder (PATCH sort_order), toggle primary, 7 tests
@@ -43,7 +43,49 @@
 - [x] **Product CSV import/export** — Export all products+variants, import with slug dedup, 6 tests
 - [x] **Wishlist / favorites** — Add/remove/list with customer auth, storefront UI, 6 tests
 - [x] **Product reviews** — Submit (1 per customer per product), moderation (approve/reject), public listing with summary, admin CRUD, 12 tests
+
+---
+
+## ~~Tier 3: Tax~~ — SKIPPED (no taxes charged for any province)
+
+## Completed — Tier 4: Revenue Optimization
+
+- [x] **Abandoned cart recovery** — Server-side cart persistence, timed email triggers (1h/24h/72h), one-click return link, admin stats, 12 tests
+- [x] **Related / recommended products** — Manual picks, co-purchase rebuild, category fallback, admin CRUD, 6 tests
+- [x] **Back-in-stock notifications** — Subscribe to OOS variant, auto-email on restock via variant update hook, 5 tests
+- [x] **Automatic discounts** — Percentage/fixed/buy-X-get-Y, scoped to collection/category/product, evaluation engine, admin CRUD, 7 tests
+- [x] **Variant-specific images** — `variant_id` column on product_images, included in product detail response
+
+## Completed — Tier 5: Operational Tooling
+
+- [x] **Packing slip / invoice** — Printable HTML with @media print, checkbox column for packing, 4 tests
+- [x] **Partial fulfillment** — Multiple shipments per order, quantity validation, auto order status update, 6 tests
+- [x] **Bulk order actions** — Batch status update (up to 100), CSV export with filters, 4 tests
+- [x] **Staff roles & permissions** — 8 permissions, owner-only management, `require_permission()` factory, JWT integration, 7 tests
+- [x] **Order editing** — Edit qty / remove / add items pre-fulfillment, auto stock + total recalculation, 5 tests
 - [ ] Playwright E2E in CI (needs headless browser in runner)
+
+## Completed — Tier 6: Content & Marketing
+
+- [x] **Blog / CMS pages** — Page + blog_post types, draft/published workflow, public + admin CRUD, 10 tests
+- [x] **Customer segments** — Auto-segmentation rules (JSON), manual membership, admin CRUD, 8 tests
+- [x] **Product tags** — Tag CRUD, add/remove from products, product count per tag, 8 tests
+- [x] **Size guide** — Per-product → per-category → default fallback, JSON measurements, admin CRUD, 8 tests
+- [ ] **Social proof widgets** — "X people viewing" / "Y sold this week" on PDP (storefront-only, deferred)
+
+## Completed — Tier 7: Differentiation & Growth
+
+- [x] **Gift cards** — Auto-generated codes, balance tracking, admin adjust/deactivate, public balance check, 9 tests
+- [x] **Loyalty / points program** — Earn on purchase, admin adjust, customer balance/history, configurable rules, stats, 8 tests
+- [x] **Product bundles** — Percentage or fixed discount, calculated pricing, public listing + detail, admin CRUD, 8 tests
+- [ ] **Community pricing** — Member vs non-member pricing (deferred — needs segment integration)
+- [ ] **Indigenous language support** — UI strings in Kanien'kéha/Mohawk (deferred — requires language consultant)
+- [ ] **Cultural content protection** — Watermarked images, download prevention (deferred — storefront-only)
+- [ ] **Multi-currency support** — Currently CAD only (deferred — future international expansion)
+- [ ] **Keycloak OIDC integration** — Optional SSO (deferred — needs Keycloak instance)
+- [ ] **Subscription / recurring orders** — Low priority for clothing
+
+---
 
 ## Deploy Checklist (per brand fork)
 
@@ -60,13 +102,3 @@ Email and Stripe gracefully degrade when unconfigured (emails skip, Stripe fails
 - [ ] Set `DEV_MODE=false`, `TAX_RATE` to applicable rate
 - [ ] Set up crontab for `scripts/backup-db.sh`
 - [ ] Review CSP policy in storefront middleware for production domain
-
-## Remaining — Tier 3 (future differentiation)
-
-- [ ] **Gift cards** — Adds a revenue channel
-- [ ] **Loyalty / points program** — Requires customer accounts (now available)
-- [ ] **Product bundles** — Upsell/cross-sell capability
-- [ ] **Abandoned cart emails** — Capture email pre-checkout, send reminders
-- [ ] **Subscription / recurring orders** — Low priority for clothing
-- [ ] **Multi-currency support** — Currently CAD only, future international expansion
-- [ ] **Keycloak OIDC integration** — Optional SSO auth provider (AUTH_PROVIDER=local|oidc)
