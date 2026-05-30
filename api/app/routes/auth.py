@@ -46,6 +46,7 @@ async def login(
         username=user["username"],
         role=user["role"],
         display_name=user["display_name"],
+        permissions=user["permissions"] if "permissions" in user.keys() else "all",
         settings=settings,
     )
 

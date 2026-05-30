@@ -26,6 +26,7 @@ def create_access_token(
     username: str,
     role: str,
     display_name: str | None = None,
+    permissions: str = "all",
     settings: Settings | None = None,
 ) -> str:
     if settings is None:
@@ -35,6 +36,7 @@ def create_access_token(
         "sub": username,
         "role": role,
         "display_name": display_name or username,
+        "permissions": permissions,
         "exp": expire,
         "iat": datetime.now(timezone.utc),
     }
@@ -74,3 +76,23 @@ async def require_admin(user: dict = Depends(get_current_user)) -> dict:
             detail="Admin access required",
         )
     return user
+
+
+def require_permission(permission: str):
+    """Factory: create a dependency that checks a specific permission.
+
+    Usage: user: dict = Depends(require_permission("orders"))
+    Owners and staff with 'all' permissions pass automatically.
+    """
+    async def _check(user: dict = Depends(require_admin)) -> dict:
+        perms = user.get("permissions", "all")
+        if perms == "all" or user.get("role") == "owner":
+            return user
+        allowed = {p.strip() for p in perms.split(",")}
+        if permission not in allowed:
+            raise HTTPException(
+                status_code=status.HTTP_403_FORBIDDEN,
+                detail=f"Permission '{permission}' required",
+            )
+        return user
+    return _check
