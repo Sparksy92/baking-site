@@ -11,7 +11,8 @@ from app.config import get_settings
 from app.database import init_db
 from app.middleware.logging import setup_logging
 from app.middleware.rate_limit import RateLimitMiddleware
-from app.routes import health, products, settings, auth, checkout, webhooks, promos, newsletter, customers, contact, shipping, wishlist, reviews, related_products, back_in_stock, cart, pages, size_guides, gift_cards, loyalty, bundles
+from app.middleware.request_id import RequestIdMiddleware
+from app.routes import health, products, settings, auth, checkout, webhooks, promos, newsletter, customers, contact, shipping, wishlist, reviews, related_products, back_in_stock, cart, pages, size_guides, gift_cards, loyalty, bundles, sitemap, events, returns
 from app.routes.admin import (
     products as admin_products,
     collections as admin_collections,
@@ -38,6 +39,10 @@ from app.routes.admin import (
     gift_cards as admin_gift_cards,
     loyalty as admin_loyalty,
     bundles as admin_bundles,
+    events as admin_events,
+    reports as admin_reports,
+    returns as admin_returns,
+    webhooks as admin_webhooks,
 )
 
 logger = logging.getLogger(__name__)
@@ -93,6 +98,7 @@ def create_app() -> FastAPI:
         allow_headers=["Content-Type"],
     )
     app.add_middleware(RateLimitMiddleware)
+    app.add_middleware(RequestIdMiddleware)
 
     # ── Public routes ──────────────────────────────────────────
     app.include_router(health.router, prefix="/api")
@@ -129,6 +135,11 @@ def create_app() -> FastAPI:
     app.include_router(loyalty.router, prefix="/api")
     app.include_router(bundles.router, prefix="/api")
 
+    # ── Events, Returns & Sitemap ─────────────────────────────
+    app.include_router(events.router, prefix="/api")
+    app.include_router(returns.router, prefix="/api")
+    app.include_router(sitemap.router, prefix="/api")
+
     # ── Admin routes ───────────────────────────────────────────
     app.include_router(admin_products.router, prefix="/api")
     app.include_router(admin_collections.router, prefix="/api")
@@ -155,6 +166,10 @@ def create_app() -> FastAPI:
     app.include_router(admin_gift_cards.router, prefix="/api")
     app.include_router(admin_loyalty.router, prefix="/api")
     app.include_router(admin_bundles.router, prefix="/api")
+    app.include_router(admin_events.router, prefix="/api")
+    app.include_router(admin_reports.router, prefix="/api")
+    app.include_router(admin_returns.router, prefix="/api")
+    app.include_router(admin_webhooks.router, prefix="/api")
 
     # ── Static files (uploaded images) ─────────────────────────
     uploads_dir = app_settings.uploads_dir
