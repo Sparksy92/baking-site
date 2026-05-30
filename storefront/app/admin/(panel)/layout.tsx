@@ -3,7 +3,7 @@
 import { useEffect, useState } from 'react';
 import { useRouter, usePathname } from 'next/navigation';
 import Link from 'next/link';
-import { LayoutDashboard, Package, ShoppingCart, Layers, Tag, Settings, LogOut, Mail } from 'lucide-react';
+import { LayoutDashboard, Package, ShoppingCart, Layers, FolderOpen, Tag, Settings, LogOut, Mail } from 'lucide-react';
 import { api } from '@/lib/api';
 import { Toaster } from '@/components/Toaster';
 
@@ -28,6 +28,7 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
     { label: 'Orders', to: '/admin/orders', icon: ShoppingCart },
     { label: 'Products', to: '/admin/products', icon: Package },
     { label: 'Collections', to: '/admin/collections', icon: Layers },
+    { label: 'Categories', to: '/admin/categories', icon: FolderOpen },
     { label: 'Promos', to: '/admin/promos', icon: Tag },
     { label: 'Newsletter', to: '/admin/newsletter', icon: Mail },
     { label: 'Settings', to: '/admin/settings', icon: Settings },
