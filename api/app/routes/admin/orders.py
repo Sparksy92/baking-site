@@ -7,8 +7,9 @@ import aiosqlite
 
 from app.auth import require_admin
 from app.database import get_db
-from app.models.schemas import OrderStatusUpdate
-from app.services.email_service import send_shipping_notification
+from app.models.schemas import OrderStatusUpdate, RefundRequest
+from app.services.email_service import send_shipping_notification, send_refund_confirmation
+from app.services.stripe_service import create_refund
 
 logger = logging.getLogger(__name__)
 
@@ -111,3 +112,90 @@ async def update_order(
             logger.exception("Failed to send shipping notification for order %d", order_id)
 
     return {"updated": True}
+
+
+@router.post("/{order_id}/refund")
+async def refund_order(
+    order_id: int,
+    body: RefundRequest,
+    db: aiosqlite.Connection = Depends(get_db),
+    user: dict = Depends(require_admin),
+):
+    """Issue a full or partial refund via Stripe and update order status."""
+    cursor = await db.execute("SELECT * FROM orders WHERE id = ?", (order_id,))
+    order = await cursor.fetchone()
+    if not order:
+        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Order not found")
+
+    # Must have a confirmed payment with a payment intent
+    if order["payment_status"] != "confirmed":
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail=f"Cannot refund order with payment status '{order['payment_status']}'. Payment must be confirmed.",
+        )
+
+    if not order["stripe_payment_intent_id"]:
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail="No Stripe payment intent found for this order. Cannot process refund.",
+        )
+
+    if order["status"] == "refunded":
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail="Order has already been refunded.",
+        )
+
+    # Determine refund amount
+    refund_amount = body.amount_cents if body.amount_cents else order["total_cents"]
+    if refund_amount > order["total_cents"]:
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail=f"Refund amount ({refund_amount}) exceeds order total ({order['total_cents']}).",
+        )
+
+    # Call Stripe
+    try:
+        stripe_refund_id = await create_refund(
+            payment_intent_id=order["stripe_payment_intent_id"],
+            amount_cents=body.amount_cents,
+            reason=body.reason,
+        )
+    except Exception as e:
+        logger.exception("Stripe refund failed for order %d", order_id)
+        raise HTTPException(
+            status_code=status.HTTP_502_BAD_GATEWAY,
+            detail=f"Stripe refund failed: {str(e)}",
+        )
+
+    # Update order in DB
+    await db.execute(
+        """UPDATE orders
+           SET status = 'refunded',
+               payment_status = 'refunded',
+               refund_amount_cents = ?,
+               stripe_refund_id = ?,
+               refunded_at = datetime('now'),
+               refund_reason = ?,
+               updated_at = datetime('now')
+           WHERE id = ?""",
+        (refund_amount, stripe_refund_id, body.reason, order_id),
+    )
+    await db.commit()
+
+    logger.info(
+        "Order %s refunded: %d cents (Stripe refund: %s)",
+        order["order_number"], refund_amount, stripe_refund_id,
+    )
+
+    # Send refund email
+    try:
+        await send_refund_confirmation(dict(order), refund_amount)
+    except Exception:
+        logger.exception("Failed to send refund email for order %s", order["order_number"])
+
+    return {
+        "refunded": True,
+        "refund_amount_cents": refund_amount,
+        "stripe_refund_id": stripe_refund_id,
+    }

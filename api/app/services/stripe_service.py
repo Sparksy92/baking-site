@@ -42,10 +42,6 @@ async def create_checkout_session(
             "quantity": item["quantity"],
         })
 
-    # Subtract discount from total via a separate "Discount" line item
-    # Stripe does not allow negative quantities, so we adjust item prices instead
-    # The discount is already reflected in the total calculation server-side
-
     # Add shipping as a line item if applicable
     if shipping_cents > 0:
         line_items.append({
@@ -68,16 +64,54 @@ async def create_checkout_session(
             "quantity": 1,
         })
 
-    session = s.checkout.Session.create(
-        mode="payment",
-        customer_email=customer_email,
-        line_items=line_items,
-        metadata={"order_number": order_number},
-        success_url=f"{settings.store_domain}/confirmation/{order_number}?session_id={{CHECKOUT_SESSION_ID}}&email={customer_email}",
-        cancel_url=f"{settings.store_domain}/cart",
-    )
+    # Apply discount via a one-time Stripe coupon so checkout total is correct
+    session_params: dict = {
+        "mode": "payment",
+        "customer_email": customer_email,
+        "line_items": line_items,
+        "metadata": {"order_number": order_number},
+        "success_url": f"{settings.store_domain}/confirmation/{order_number}?session_id={{CHECKOUT_SESSION_ID}}",
+        "cancel_url": f"{settings.store_domain}/cart",
+    }
+
+    if discount_cents > 0:
+        coupon = s.Coupon.create(
+            amount_off=discount_cents,
+            currency=settings.store_currency.lower(),
+            duration="once",
+            name=f"Promo discount — {order_number}",
+        )
+        session_params["discounts"] = [{"coupon": coupon.id}]
+
+    session = s.checkout.Session.create(**session_params)
 
     return session.url, session.id
+
+
+async def create_refund(
+    payment_intent_id: str,
+    amount_cents: int | None = None,
+    reason: str = "requested_by_customer",
+) -> str:
+    """Create a Stripe refund. Returns refund ID.
+
+    If amount_cents is None, refunds the full amount.
+    reason must be one of: duplicate, fraudulent, requested_by_customer
+    """
+    s = _get_stripe()
+
+    params: dict = {"payment_intent": payment_intent_id}
+    if amount_cents is not None:
+        params["amount"] = amount_cents
+    if reason in ("duplicate", "fraudulent", "requested_by_customer"):
+        params["reason"] = reason
+
+    refund = s.Refund.create(**params)
+    logger.info(
+        "Stripe refund created: %s (amount: %s, PI: %s)",
+        refund.id, amount_cents or "full", payment_intent_id,
+    )
+    return refund.id
 
 
 def verify_webhook_signature(payload: bytes, sig_header: str) -> dict:
