@@ -71,36 +71,24 @@
 - [x] **Customer segments** — Auto-segmentation rules (JSON), manual membership, admin CRUD, 8 tests
 - [x] **Product tags** — Tag CRUD, add/remove from products, product count per tag, 8 tests
 - [x] **Size guide** — Per-product → per-category → default fallback, JSON measurements, admin CRUD, 8 tests
-- [ ] **Social proof widgets** — "X people viewing" / "Y sold this week" on PDP (storefront-only, deferred)
 
 ## Completed — Tier 7: Differentiation & Growth
 
 - [x] **Gift cards** — Auto-generated codes, balance tracking, admin adjust/deactivate, public balance check, 9 tests
 - [x] **Loyalty / points program** — Earn on purchase, admin adjust, customer balance/history, configurable rules, stats, 8 tests
 - [x] **Product bundles** — Percentage or fixed discount, calculated pricing, public listing + detail, admin CRUD, 8 tests
-- [ ] **Community pricing** — Member vs non-member pricing (deferred — needs segment integration)
-- [ ] **Indigenous language support** — UI strings in Kanien'kéha/Mohawk (deferred — requires language consultant)
-- [ ] **Cultural content protection** — Watermarked images, download prevention (deferred — storefront-only)
-- [ ] **Multi-currency support** — Currently CAD only (deferred — future international expansion)
-- [ ] **Keycloak OIDC integration** — Optional SSO (deferred — needs Keycloak instance)
-- [ ] **Subscription / recurring orders** — Low priority for clothing
 
-## Remaining — Tier 8: Platform Hardening & Gaps
+## Completed — Tier 8: Platform Hardening & Gaps
 
-### Operations & Reliability
-- [ ] **Global exception handler + request ID** — Catch-all 500 handler with correlation ID in `X-Request-Id` header for log tracing
-- [ ] **Return/exchange workflow** — Customer self-serve return request, admin approve/deny, auto restock on receipt
+- [x] **Global exception handler + request ID** — `X-Request-Id` on every response, catch-all 500 handler, log correlation, 2 tests
+- [x] **UTM capture on orders** — `utm_source/medium/campaign` on orders table + checkout schema, marketing attribution in reports
+- [x] **SEO sitemap.xml** — Auto-generated from products, categories, collections, blog posts, 3 tests
+- [x] **Server-side event log** — `events` table, public fire-and-forget tracking, admin conversion funnel + top products, 6 tests
+- [x] **Admin reports with date-range** — Revenue, AOV, refunds, repeat %, daily breakdown, UTM attribution, top products, 2 tests
+- [x] **Return/exchange workflow** — Customer self-serve request, admin approve/reject/receive, auto-restock, status machine, 7 tests
+- [x] **Event webhook system** — Admin CRUD, HMAC signatures, delivery logging, 9 event types, 7 tests
 
-### Analytics & Attribution
-- [ ] **Server-side event log** — Lightweight `events` table tracking `product_viewed`, `add_to_cart`, `checkout_started`, `checkout_completed` for conversion funnel
-- [ ] **UTM capture on orders** — Store `utm_source`, `utm_medium`, `utm_campaign` from checkout for marketing attribution
-- [ ] **Admin reports with date-range** — Extend dashboard: filter by date, refund totals, repeat customer %, conversion rate
-
-### SEO & Marketing
-- [ ] **SEO sitemap.xml** — Auto-generated from products, categories, collections, blog posts
-- [ ] **Event webhook system** — Admin-configurable outbound webhooks (`customer.created`, `order.completed`, `newsletter.subscribed`) for Mailchimp/Klaviyo/etc.
-
-### Previously Deferred
+### Deferred
 - [ ] **Social proof widgets** — "X people viewing" / "Y sold this week" on PDP (storefront-only)
 - [ ] **Community pricing** — Member vs non-member pricing (needs segment integration)
 - [ ] **Indigenous language support** — UI strings in Kanien'kéha/Mohawk (requires language consultant)
