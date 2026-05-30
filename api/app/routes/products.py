@@ -163,6 +163,7 @@ async def get_product(slug: str, db: aiosqlite.Connection = Depends(get_db)):
         id=i["id"], product_id=i["product_id"], url=i["url"],
         alt_text=i["alt_text"], sort_order=i["sort_order"],
         is_primary=bool(i["is_primary"]),
+        variant_id=i["variant_id"],
     ) for i in img_rows]
 
     return ProductResponse(

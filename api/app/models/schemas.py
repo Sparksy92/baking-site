@@ -75,6 +75,7 @@ class ImageResponse(BaseModel):
     alt_text: str | None = None
     sort_order: int
     is_primary: bool
+    variant_id: int | None = None
 
 
 class ProductResponse(BaseModel):
