@@ -3,15 +3,18 @@
 import { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
 import { useCart } from '@/lib/cart';
-import { api, type CheckoutResponse, type PublicSettings } from '@/lib/api';
+import { useCustomer } from '@/lib/customer';
+import { api, type CheckoutResponse, type PublicSettings, type CustomerAddress } from '@/lib/api';
 import { formatCents } from '@/lib/format';
 
 export default function CheckoutPage() {
   const { items, subtotal } = useCart();
+  const { customer } = useCustomer();
   const router = useRouter();
   const [settings, setSettings] = useState<PublicSettings | null>(null);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
+  const [savedAddresses, setSavedAddresses] = useState<CustomerAddress[]>([]);
 
   const [name, setName] = useState('');
   const [email, setEmail] = useState('');
@@ -27,9 +30,64 @@ export default function CheckoutPage() {
   const [promoError, setPromoError] = useState('');
   const [promoLoading, setPromoLoading] = useState(false);
 
+  // Shipping rate state
+  const [shippingRates, setShippingRates] = useState<{ service_code: string; service_name: string; price_cents: number; expected_transit_days: number | null }[]>([]);
+  const [shippingSource, setShippingSource] = useState<'flat_rate' | 'canadapost'>('flat_rate');
+  const [shippingLoading, setShippingLoading] = useState(false);
+  const [selectedShipping, setSelectedShipping] = useState<string>('');
+
   useEffect(() => {
     api.get<PublicSettings>('/api/settings/public').then(setSettings).catch(() => {});
   }, []);
+
+  // Pre-fill from customer account
+  useEffect(() => {
+    if (customer) {
+      if (!name) setName(`${customer.first_name} ${customer.last_name}`);
+      if (!email) setEmail(customer.email);
+      if (!phone && customer.phone) setPhone(customer.phone);
+      // Load saved addresses
+      api.get<CustomerAddress[]>('/api/customers/me/addresses')
+        .then((addrs) => {
+          setSavedAddresses(addrs);
+          // Auto-fill default address if shipping fields are empty
+          const defaultAddr = addrs.find((a) => a.is_default) || addrs[0];
+          if (defaultAddr && !line1) {
+            applyAddress(defaultAddr);
+          }
+        })
+        .catch(() => {});
+    }
+  }, [customer]); // eslint-disable-line react-hooks/exhaustive-deps
+
+  function applyAddress(addr: CustomerAddress) {
+    setLine1(addr.line1);
+    setLine2(addr.line2 || '');
+    setCity(addr.city);
+    setProvince(addr.province);
+    setPostal(addr.postal_code);
+    if (addr.phone && !phone) setPhone(addr.phone);
+  }
+
+  // Fetch shipping rates when postal code changes
+  useEffect(() => {
+    const normalizedPostal = postal.replace(/\s/g, '');
+    if (normalizedPostal.length >= 6) {
+      setShippingLoading(true);
+      api.get<{ rates: typeof shippingRates; source: string }>(
+        `/api/shipping/rates?postal_code=${encodeURIComponent(normalizedPostal)}&subtotal_cents=${subtotal}`
+      )
+        .then((data) => {
+          setShippingRates(data.rates);
+          setShippingSource(data.source as 'flat_rate' | 'canadapost');
+          if (data.rates.length > 0 && !selectedShipping) {
+            setSelectedShipping(data.rates[0].service_code);
+          }
+        })
+        .catch(() => {})
+        .finally(() => setShippingLoading(false));
+    }
+  }, [postal, subtotal]); // eslint-disable-line react-hooks/exhaustive-deps
 
   useEffect(() => {
     if (items.length === 0 && !loading) router.push('/');
@@ -38,7 +96,8 @@ export default function CheckoutPage() {
   if (!settings) return null;
 
   const freeThreshold = settings.shipping_free_threshold_cents;
-  const shippingCost = subtotal >= freeThreshold ? 0 : settings.shipping_flat_rate_cents;
+  const selectedRate = shippingRates.find((r) => r.service_code === selectedShipping);
+  const shippingCost = subtotal >= freeThreshold ? 0 : (selectedRate?.price_cents ?? settings.shipping_flat_rate_cents);
 
   let discount = 0;
   if (promoApplied) {
@@ -133,6 +192,25 @@ export default function CheckoutPage() {
         </section>
         <section>
           <h2 className="text-sm font-semibold text-gray-900 mb-3">Shipping Address</h2>
+          {savedAddresses.length > 0 && (
+            <div className="mb-3">
+              <select
+                onChange={(e) => {
+                  const addr = savedAddresses.find((a) => a.id === Number(e.target.value));
+                  if (addr) applyAddress(addr);
+                }}
+                className={`${inputClass} bg-white`}
+                defaultValue=""
+              >
+                <option value="" disabled>Use a saved address...</option>
+                {savedAddresses.map((addr) => (
+                  <option key={addr.id} value={addr.id}>
+                    {addr.label} — {addr.line1}, {addr.city} {addr.province}
+                  </option>
+                ))}
+              </select>
+            </div>
+          )}
           <div className="space-y-3">
             <div>
               <label htmlFor="checkout-address" className="sr-only">Address</label>
@@ -193,7 +271,25 @@ export default function CheckoutPage() {
         <section className="bg-gray-50 rounded-xl p-5 space-y-2">
           <div className="flex justify-between text-sm"><span>Subtotal</span><span>{formatCents(subtotal)}</span></div>
           {discount > 0 && <div className="flex justify-between text-sm text-green-700"><span>Discount</span><span>-{formatCents(discount)}</span></div>}
-          <div className="flex justify-between text-sm"><span>Shipping</span><span>{shippingCost === 0 ? 'Free' : formatCents(shippingCost)}</span></div>
+          <div className="flex justify-between text-sm">
+            <span>Shipping{selectedRate && shippingSource === 'canadapost' && selectedRate.expected_transit_days ? ` (${selectedRate.expected_transit_days} days)` : ''}</span>
+            <span>{shippingLoading ? '...' : shippingCost === 0 ? 'Free' : formatCents(shippingCost)}</span>
+          </div>
+          {shippingRates.length > 1 && subtotal < freeThreshold && (
+            <div className="pt-1">
+              <select
+                value={selectedShipping}
+                onChange={(e) => setSelectedShipping(e.target.value)}
+                className="w-full text-xs px-2 py-1.5 rounded border border-gray-200 bg-white"
+              >
+                {shippingRates.map((r) => (
+                  <option key={r.service_code} value={r.service_code}>
+                    {r.service_name} — {formatCents(r.price_cents)}{r.expected_transit_days ? ` (${r.expected_transit_days} days)` : ''}
+                  </option>
+                ))}
+              </select>
+            </div>
+          )}
           {tax > 0 && <div className="flex justify-between text-sm"><span>Tax</span><span>{formatCents(tax)}</span></div>}
           <div className="flex justify-between font-bold text-base pt-2 border-t border-gray-200"><span>Total</span><span>{formatCents(total)}</span></div>
         </section>

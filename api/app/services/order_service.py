@@ -75,11 +75,13 @@ async def validate_checkout(db: aiosqlite.Connection, body: CheckoutRequest) -> 
         else:
             raise CheckoutError(promo_result.message or "Invalid promo code")
 
-    # Shipping
+    # Shipping — use Canada Post real rates if configured, else flat rate
     if subtotal_cents >= settings.shipping_free_threshold_cents:
         shipping_cents = 0
     else:
-        shipping_cents = settings.shipping_flat_rate_cents
+        from app.services.canadapost_service import get_cheapest_rate
+        cp_rate = await get_cheapest_rate(body.shipping_address.postal_code)
+        shipping_cents = cp_rate if cp_rate is not None else settings.shipping_flat_rate_cents
 
     # Tax (on subtotal after discount)
     taxable = subtotal_cents - discount_cents
