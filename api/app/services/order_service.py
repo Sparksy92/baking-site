@@ -175,6 +175,30 @@ async def create_order(
             (item["quantity"], item["variant_id"]),
         )
 
+    # Check for low-stock variants after decrement
+    low_stock_variants = []
+    for item in validated["order_items"]:
+        cursor = await db.execute(
+            "SELECT stock_quantity FROM product_variants WHERE id = ?",
+            (item["variant_id"],),
+        )
+        row = await cursor.fetchone()
+        if row and row["stock_quantity"] <= settings.low_stock_threshold:
+            low_stock_variants.append({
+                "product_name": item["product_name"],
+                "size": item["variant_size"],
+                "color": item["variant_color"],
+                "stock_quantity": row["stock_quantity"],
+            })
+
+    # Send alert asynchronously (don't block order creation)
+    if low_stock_variants:
+        try:
+            from app.services.email_service import send_low_stock_alert
+            await send_low_stock_alert(low_stock_variants)
+        except Exception:
+            logger.exception("Failed to send low-stock alert email")
+
     # Note: caller is responsible for commit (allows wrapping in exclusive transaction)
     logger.info("Order created: %s (total: %d cents)", order_number, validated["total_cents"])
     return order_number

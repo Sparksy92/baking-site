@@ -222,3 +222,45 @@ async def send_password_reset(email: str, first_name: str, reset_url: str) -> No
     })
 
     logger.info("Password reset email sent to %s", email)
+
+
+async def send_low_stock_alert(variants: list[dict]) -> None:
+    """Send low-stock alert email to admin.
+
+    variants: list of dicts with product_name, size, color, stock_quantity
+    """
+    settings = get_settings()
+    recipient = settings.low_stock_alert_email or settings.contact_email
+    if not settings.resend_api_key or not recipient:
+        return
+
+    _init_resend()
+
+    rows_html = "".join(
+        f"<tr><td style='padding:6px 12px;border-bottom:1px solid #eee'>{v['product_name']}</td>"
+        f"<td style='padding:6px 12px;border-bottom:1px solid #eee'>{v['size']}/{v['color']}</td>"
+        f"<td style='padding:6px 12px;border-bottom:1px solid #eee;font-weight:bold;"
+        f"color:{'#dc2626' if v['stock_quantity'] == 0 else '#ea580c'}'>{v['stock_quantity']}</td></tr>"
+        for v in variants
+    )
+
+    resend.Emails.send({
+        "from": settings.email_from,
+        "to": recipient,
+        "subject": f"Low Stock Alert — {settings.brand_name}",
+        "html": f"""
+        <h2>Low Stock Alert</h2>
+        <p>The following variants have dropped below the threshold ({settings.low_stock_threshold} units):</p>
+        <table style="border-collapse:collapse;width:100%">
+        <tr style="background:#f9fafb">
+            <th style="padding:8px 12px;text-align:left">Product</th>
+            <th style="padding:8px 12px;text-align:left">Variant</th>
+            <th style="padding:8px 12px;text-align:left">Stock</th>
+        </tr>
+        {rows_html}
+        </table>
+        <p style="margin-top:16px"><a href="{settings.store_domain}/admin/products" style="display:inline-block;padding:10px 20px;background:#1A1A1A;color:#fff;text-decoration:none;border-radius:6px">View Products</a></p>
+        """,
+    })
+
+    logger.info("Low stock alert sent for %d variants", len(variants))

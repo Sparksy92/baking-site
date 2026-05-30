@@ -49,6 +49,10 @@ class Settings(BaseSettings):
     default_parcel_width_cm: float = 25.0
     default_parcel_height_cm: float = 5.0
 
+    # ── Inventory Alerts ───────────────────────────────────────
+    low_stock_threshold: int = 5
+    low_stock_alert_email: str = ""
+
     # ── Tax ───────────────────────────────────────────────────────
     tax_rate: float = 0.0
     store_currency: str = "CAD"
