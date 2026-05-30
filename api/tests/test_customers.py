@@ -350,3 +350,93 @@ async def test_reset_password_expired_token(client: AsyncClient):
     })
     assert resp.status_code == 400
     assert "expired" in resp.json()["detail"].lower()
+
+
+# ── Authenticated Order Detail ─────────────────────────────────
+
+@pytest.mark.asyncio
+async def test_order_detail_authenticated(client: AsyncClient):
+    """Logged-in customer can view their order without providing email."""
+    import os, aiosqlite
+    resp = await client.post("/api/customers/register", json={
+        "email": "orderdetail@example.com",
+        "password": "SecurePass1",
+        "first_name": "Order",
+        "last_name": "Detail",
+    })
+    customer_id = resp.json()["id"]
+
+    # Insert order + item directly in DB
+    db_path = os.environ["DATABASE_PATH"]
+    async with aiosqlite.connect(db_path) as db:
+        cursor = await db.execute("""
+            INSERT INTO orders (order_number, customer_name, customer_email, customer_id,
+                               status, payment_status, subtotal_cents, shipping_cents, discount_cents,
+                               tax_cents, total_cents, shipping_address_line1, shipping_address_city,
+                               shipping_address_province, shipping_address_postal)
+            VALUES ('ORD-DETAIL-1', 'Order Detail', 'orderdetail@example.com', ?,
+                    'processing', 'confirmed', 3000, 0, 0, 390, 3390, '1 Test St', 'Ottawa', 'ON', 'K1A0A0')
+        """, (customer_id,))
+        order_id = cursor.lastrowid
+        await db.execute("""
+            INSERT INTO order_items (order_id, product_id, variant_id, product_name,
+                                    variant_size, variant_color, quantity, unit_price_cents, line_total_cents)
+            VALUES (?, 1, 1, 'Detail Tee', 'M', 'Black', 1, 3000, 3000)
+        """, (order_id,))
+        await db.commit()
+
+    resp = await client.get("/api/customers/me/orders/ORD-DETAIL-1")
+    assert resp.status_code == 200
+    data = resp.json()
+    assert data["order_number"] == "ORD-DETAIL-1"
+    assert len(data["items"]) == 1
+    assert data["items"][0]["product_name"] == "Detail Tee"
+    assert data["total_cents"] == 3390
+    assert "tracking_number" in data
+
+
+@pytest.mark.asyncio
+async def test_order_detail_unauthenticated(client: AsyncClient):
+    """Unauthenticated request to order detail returns 401."""
+    resp = await client.get("/api/customers/me/orders/FAKE-ORDER")
+    assert resp.status_code == 401
+
+
+@pytest.mark.asyncio
+async def test_order_detail_wrong_customer(client: AsyncClient):
+    """Customer cannot view another customer's order."""
+    import os, aiosqlite
+    # Customer A registers
+    resp = await client.post("/api/customers/register", json={
+        "email": "custA@example.com",
+        "password": "SecurePass1",
+        "first_name": "A",
+        "last_name": "Customer",
+    })
+    cust_a_id = resp.json()["id"]
+
+    # Insert order belonging to Customer A
+    db_path = os.environ["DATABASE_PATH"]
+    async with aiosqlite.connect(db_path) as db:
+        await db.execute("""
+            INSERT INTO orders (order_number, customer_name, customer_email, customer_id,
+                               status, payment_status, subtotal_cents, shipping_cents, discount_cents,
+                               tax_cents, total_cents, shipping_address_line1, shipping_address_city,
+                               shipping_address_province, shipping_address_postal)
+            VALUES ('ORD-SECRET-1', 'A Customer', 'custA@example.com', ?,
+                    'processing', 'confirmed', 2500, 0, 0, 325, 2825, '2 Test St', 'Toronto', 'ON', 'M5V1A1')
+        """, (cust_a_id,))
+        await db.commit()
+
+    # Customer B registers (new session)
+    await client.post("/api/customers/logout")
+    await client.post("/api/customers/register", json={
+        "email": "custB@example.com",
+        "password": "SecurePass1",
+        "first_name": "B",
+        "last_name": "Customer",
+    })
+
+    # Customer B tries to access Customer A's order
+    resp = await client.get("/api/customers/me/orders/ORD-SECRET-1")
+    assert resp.status_code == 404

@@ -441,3 +441,57 @@ async def list_orders(
         })
 
     return {"orders": orders}
+
+
+@router.get("/me/orders/{order_number}")
+async def get_order_detail(
+    order_number: str,
+    db: aiosqlite.Connection = Depends(get_db),
+    customer: dict = Depends(get_current_customer),
+):
+    """Get full order details for the logged-in customer. No email required."""
+    customer_id = int(customer["sub"])
+    email = customer["email"]
+
+    cursor = await db.execute(
+        """SELECT * FROM orders
+           WHERE order_number = ?
+             AND (customer_id = ? OR (customer_id IS NULL AND customer_email = ? COLLATE NOCASE))""",
+        (order_number, customer_id, email),
+    )
+    order = await cursor.fetchone()
+
+    if not order:
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND,
+            detail="Order not found",
+        )
+
+    cursor = await db.execute("SELECT * FROM order_items WHERE order_id = ?", (order["id"],))
+    item_rows = await cursor.fetchall()
+
+    return {
+        "order_number": order["order_number"],
+        "status": order["status"],
+        "payment_status": order["payment_status"],
+        "items": [
+            {
+                "product_name": item["product_name"],
+                "variant_size": item["variant_size"],
+                "variant_color": item["variant_color"],
+                "quantity": item["quantity"],
+                "unit_price_cents": item["unit_price_cents"],
+                "line_total_cents": item["line_total_cents"],
+            }
+            for item in item_rows
+        ],
+        "subtotal_cents": order["subtotal_cents"],
+        "discount_cents": order["discount_cents"],
+        "shipping_cents": order["shipping_cents"],
+        "tax_cents": order["tax_cents"],
+        "total_cents": order["total_cents"],
+        "promo_code": order["promo_code"],
+        "tracking_number": order["tracking_number"],
+        "tracking_carrier": order["tracking_carrier"],
+        "created_at": order["created_at"],
+    }

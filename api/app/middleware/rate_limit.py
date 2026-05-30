@@ -32,6 +32,8 @@ class RateLimitMiddleware(BaseHTTPMiddleware):
             return 5, 900
         if method == "POST" and path.startswith("/api/checkout"):
             return 10, 60
+        if method == "GET" and path.startswith("/api/orders/"):
+            return 10, 900
         return 100, 60
 
     def _get_client_ip(self, request: Request) -> str:

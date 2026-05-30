@@ -60,8 +60,9 @@ class CartStore {
     return this.items;
   }
 
+  private static _emptyItems: CartItem[] = [];
   getServerSnapshot(): CartItem[] {
-    return [];
+    return CartStore._emptyItems;
   }
 
   addItem(item: Omit<CartItem, 'quantity'>) {

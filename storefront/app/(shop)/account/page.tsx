@@ -84,7 +84,7 @@ export default function AccountPage() {
           {orders.map((order) => (
             <Link
               key={order.order_number}
-              href={`/order-lookup?order=${order.order_number}`}
+              href={`/account/orders/${order.order_number}`}
               className="block p-4 bg-white border border-gray-100 rounded-xl hover:border-gray-200 transition-colors"
             >
               <div className="flex items-center justify-between">
