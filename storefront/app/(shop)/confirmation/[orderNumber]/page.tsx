@@ -15,45 +15,42 @@ export default function ConfirmationPage() {
   const [order, setOrder] = useState<OrderLookup | null>(null);
   const cartCleared = useRef(false);
 
-  // Get email from URL params (Stripe redirect) or sessionStorage (fallback)
-  const urlEmail = searchParams.get('email') || '';
-  const [email, setEmail] = useState(urlEmail);
-
   useEffect(() => {
-    if (!urlEmail) {
-      try {
-        const pending = sessionStorage.getItem('pending_order');
-        if (pending) {
-          const data = JSON.parse(pending);
-          if (data.order_number === orderNumber && data.email) {
-            setEmail(data.email);
+    if (!orderNumber) return;
+
+    // Try to get email from sessionStorage (set during checkout)
+    let email = '';
+    try {
+      const pending = sessionStorage.getItem('pending_order');
+      if (pending) {
+        const data = JSON.parse(pending);
+        if (data.order_number === orderNumber && data.email) {
+          email = data.email;
+        }
+      }
+    } catch { /* ignore */ }
+
+    if (email) {
+      // Look up order with email
+      api.get<OrderLookup>(`/api/orders/${orderNumber}?email=${encodeURIComponent(email)}`)
+        .then((data) => {
+          setOrder(data);
+          if (!cartCleared.current) {
+            cart.clear();
+            sessionStorage.removeItem('pending_order');
+            cartCleared.current = true;
           }
-        }
-      } catch { /* ignore */ }
+        })
+        .catch(() => {});
     }
-  }, [orderNumber, urlEmail]);
 
-  useEffect(() => {
-    if (!orderNumber || !email) return;
-    api.get<OrderLookup>(`/api/orders/${orderNumber}?email=${encodeURIComponent(email)}`)
-      .then((data) => {
-        setOrder(data);
-        // Clear cart only after successfully verifying the order exists
-        if (!cartCleared.current) {
-          cart.clear();
-          sessionStorage.removeItem('pending_order');
-          cartCleared.current = true;
-        }
-      })
-      .catch(() => {
-        // Order found via Stripe redirect — clear cart even if lookup fails
-        if (!cartCleared.current && searchParams.get('session_id')) {
-          cart.clear();
-          sessionStorage.removeItem('pending_order');
-          cartCleared.current = true;
-        }
-      });
-  }, [orderNumber, email, searchParams]);
+    // Always clear cart when arriving from Stripe redirect with session_id
+    if (!cartCleared.current && searchParams.get('session_id')) {
+      cart.clear();
+      sessionStorage.removeItem('pending_order');
+      cartCleared.current = true;
+    }
+  }, [orderNumber, searchParams]);
 
   return (
     <div className="max-w-2xl mx-auto px-4 py-12 text-center">

@@ -10,6 +10,20 @@ export function middleware(request: NextRequest) {
   response.headers.set('Referrer-Policy', 'strict-origin-when-cross-origin');
   response.headers.set('X-DNS-Prefetch-Control', 'on');
   response.headers.set('Permissions-Policy', 'camera=(), microphone=(), geolocation=()');
+  response.headers.set(
+    'Content-Security-Policy',
+    [
+      "default-src 'self'",
+      "script-src 'self' 'unsafe-inline' https://js.stripe.com",
+      "style-src 'self' 'unsafe-inline'",
+      "img-src 'self' data: blob: https://*.rez-hub.com https://*.clancollection.ca",
+      "font-src 'self' data:",
+      "connect-src 'self' https://api.stripe.com",
+      "frame-src 'self' https://js.stripe.com https://hooks.stripe.com",
+      "base-uri 'self'",
+      "form-action 'self'",
+    ].join('; ')
+  );
 
   // HSTS — only in production
   if (request.nextUrl.protocol === 'https:') {

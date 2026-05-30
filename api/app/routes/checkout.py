@@ -2,9 +2,10 @@ from __future__ import annotations
 
 import logging
 
-from fastapi import APIRouter, Depends, HTTPException, Query, status
+from fastapi import APIRouter, Depends, HTTPException, Query, Request, status
 import aiosqlite
 
+from app.customer_auth import get_optional_customer
 from app.database import get_db
 from app.models.schemas import CheckoutRequest, CheckoutResponse, OrderResponse, OrderItemResponse
 from app.services.order_service import CheckoutError, create_order, validate_checkout
@@ -19,7 +20,9 @@ router = APIRouter(tags=["checkout"])
 @router.post("/checkout", response_model=CheckoutResponse, status_code=status.HTTP_201_CREATED)
 async def checkout(
     body: CheckoutRequest,
+    request: Request,
     db: aiosqlite.Connection = Depends(get_db),
+    customer: dict | None = Depends(get_optional_customer),
 ):
     """Create order and redirect to Stripe Checkout.
 
@@ -56,17 +59,24 @@ async def checkout(
             customer_email=body.customer_email,
         )
     except Exception:
+        await db.rollback()
         logger.exception("Stripe session creation failed")
         raise HTTPException(
             status_code=status.HTTP_502_BAD_GATEWAY,
             detail="Payment service unavailable. Please try again.",
         )
 
-    # Link Stripe session to order
-    await db.execute(
-        "UPDATE orders SET stripe_session_id = ? WHERE order_number = ?",
-        (session_id, order_number),
-    )
+    # Link Stripe session (and customer account if logged in) to order
+    if customer:
+        await db.execute(
+            "UPDATE orders SET stripe_session_id = ?, customer_id = ? WHERE order_number = ?",
+            (session_id, int(customer["sub"]), order_number),
+        )
+    else:
+        await db.execute(
+            "UPDATE orders SET stripe_session_id = ? WHERE order_number = ?",
+            (session_id, order_number),
+        )
     await db.commit()
 
     # Send order confirmation email (order received, payment still pending)
@@ -100,7 +110,7 @@ async def lookup_order(
 ):
     """Public order lookup — requires matching email."""
     cursor = await db.execute(
-        "SELECT * FROM orders WHERE order_number = ? AND customer_email = ?",
+        "SELECT * FROM orders WHERE order_number = ? AND customer_email = ? COLLATE NOCASE",
         (order_number, email),
     )
     order = await cursor.fetchone()

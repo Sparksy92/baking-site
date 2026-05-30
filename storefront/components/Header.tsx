@@ -4,13 +4,15 @@ import { useState, useEffect } from 'react';
 import Link from 'next/link';
 import Image from 'next/image';
 import { usePathname } from 'next/navigation';
-import { ShoppingBag, Search, Menu, X } from 'lucide-react';
+import { ShoppingBag, Search, Menu, X, User } from 'lucide-react';
 import { useCart } from '@/lib/cart';
+import { useCustomer } from '@/lib/customer';
 import { api, type PublicSettings } from '@/lib/api';
 import { brandName, brandLogo, formatCents } from '@/lib/format';
 
 export function Header() {
   const { count, subtotal } = useCart();
+  const { customer } = useCustomer();
   const pathname = usePathname();
   const isCheckout = ['/cart', '/checkout'].includes(pathname);
   const [mobileOpen, setMobileOpen] = useState(false);
@@ -83,6 +85,13 @@ export function Header() {
               aria-label="Search"
             >
               <Search size={20} />
+            </Link>
+            <Link
+              href={customer ? '/account' : '/account/login'}
+              className="w-10 h-10 flex items-center justify-center rounded-full text-gray-600 hover:bg-gray-100 transition-colors"
+              aria-label={customer ? 'Account' : 'Sign in'}
+            >
+              <User size={20} />
             </Link>
             <Link
               href="/cart"

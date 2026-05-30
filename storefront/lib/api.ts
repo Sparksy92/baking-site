@@ -171,3 +171,37 @@ export interface OrderLookup {
   tracking_carrier: string | null;
   created_at: string;
 }
+
+export interface Customer {
+  id: number;
+  email: string;
+  first_name: string;
+  last_name: string;
+  phone: string | null;
+}
+
+export interface CustomerAddress {
+  id: number;
+  label: string;
+  first_name: string;
+  last_name: string;
+  line1: string;
+  line2: string | null;
+  city: string;
+  province: string;
+  postal_code: string;
+  country: string;
+  phone: string | null;
+  is_default: boolean;
+}
+
+export interface CustomerOrder {
+  order_number: string;
+  status: string;
+  payment_status: string;
+  total_cents: number;
+  tracking_number: string | null;
+  tracking_carrier: string | null;
+  created_at: string;
+  item_count: number;
+}
