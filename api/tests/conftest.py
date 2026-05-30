@@ -5,6 +5,7 @@ from httpx import AsyncClient, ASGITransport
 
 # Set test environment BEFORE any app imports
 os.environ["ADMIN_JWT_SECRET"] = "test-secret-key"
+os.environ["CUSTOMER_JWT_SECRET"] = "test-customer-secret-key"
 os.environ["STRIPE_SECRET_KEY"] = "sk_test_fake"
 os.environ["STRIPE_WEBHOOK_SECRET"] = "whsec_fake"
 os.environ["RESEND_API_KEY"] = "re_test_fake"
@@ -12,6 +13,7 @@ os.environ["STORE_DOMAIN"] = "http://localhost:5173"
 os.environ["BRAND_NAME"] = "TestBrand"
 os.environ["STORE_CURRENCY"] = "CAD"
 os.environ["ORDER_NUMBER_PREFIX"] = "TST"
+os.environ["CONTACT_EMAIL"] = "contact@testbrand.com"
 os.environ["DEV_MODE"] = "true"
 
 
@@ -75,4 +77,17 @@ async def admin_client(client: AsyncClient):
 
     resp = await client.post("/api/auth/login", json={"username": "admin", "password": "admin123"})
     assert resp.status_code == 200
+    yield client
+
+
+@pytest.fixture
+async def customer_client(client: AsyncClient):
+    """Provide an authenticated customer client."""
+    resp = await client.post("/api/customers/register", json={
+        "email": "customer@test.com",
+        "password": "TestPass123",
+        "first_name": "Test",
+        "last_name": "Customer",
+    })
+    assert resp.status_code == 201
     yield client

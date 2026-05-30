@@ -97,3 +97,128 @@ async def send_shipping_notification(order_data: dict) -> None:
     })
 
     logger.info("Shipping notification sent: %s", order_data["order_number"])
+
+
+async def send_order_cancelled(order_data: dict, reason: str = "expired") -> None:
+    """Send order cancellation email to customer."""
+    settings = get_settings()
+    if not settings.resend_api_key:
+        return
+
+    _init_resend()
+
+    reason_text = {
+        "expired": "Your payment session expired before it could be completed.",
+        "cancelled": "Your order has been cancelled.",
+    }.get(reason, "Your order has been cancelled.")
+
+    resend.Emails.send({
+        "from": settings.email_from,
+        "to": order_data["customer_email"],
+        "subject": f"Order {order_data['order_number']} cancelled — {settings.brand_name}",
+        "html": f"""
+        <h2>Order Cancelled</h2>
+        <p>Order <strong>{order_data['order_number']}</strong> has been cancelled.</p>
+        <p>{reason_text}</p>
+        <p>No charges were made. If you'd like to try again, please visit our store.</p>
+        <p><a href="{settings.store_domain}">Return to Store</a></p>
+        """,
+    })
+
+    logger.info("Order cancelled email sent: %s (reason: %s)", order_data["order_number"], reason)
+
+
+async def send_refund_confirmation(order_data: dict, refund_amount_cents: int) -> None:
+    """Send refund confirmation email to customer."""
+    settings = get_settings()
+    if not settings.resend_api_key:
+        return
+
+    _init_resend()
+
+    resend.Emails.send({
+        "from": settings.email_from,
+        "to": order_data["customer_email"],
+        "subject": f"Refund processed — {order_data['order_number']}",
+        "html": f"""
+        <h2>Refund Processed</h2>
+        <p>Hi {order_data['customer_name']},</p>
+        <p>A refund of <strong>${refund_amount_cents / 100:.2f} {settings.store_currency}</strong>
+        has been issued for order <strong>{order_data['order_number']}</strong>.</p>
+        <p>It may take 5–10 business days for the refund to appear on your statement,
+        depending on your bank.</p>
+        <p>If you have any questions, please <a href="{settings.store_domain}/contact">contact us</a>.</p>
+        """,
+    })
+
+    logger.info("Refund email sent: %s ($%.2f)", order_data["order_number"], refund_amount_cents / 100)
+
+
+async def send_contact_form(name: str, email: str, subject: str, message: str, order_number: str | None = None) -> None:
+    """Send contact form submission to the store's contact email."""
+    settings = get_settings()
+    if not settings.resend_api_key:
+        logger.warning("RESEND_API_KEY not set — skipping contact form email")
+        return
+
+    to_email = settings.contact_email
+    if not to_email:
+        logger.warning("CONTACT_EMAIL not set — skipping contact form email")
+        return
+
+    _init_resend()
+
+    order_html = ""
+    if order_number:
+        order_html = f"<p><strong>Order Number:</strong> {order_number}</p>"
+
+    html = f"""
+    <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto; color: #333;">
+        <h2 style="border-bottom: 2px solid #eee; padding-bottom: 10px;">New Contact Form Inquiry</h2>
+        <p><strong>Name:</strong> {name}</p>
+        <p><strong>Email:</strong> {email}</p>
+        <p><strong>Subject:</strong> {subject}</p>
+        {order_html}
+        <h3 style="margin-top: 20px;">Message:</h3>
+        <div style="background-color: #f9f9f9; padding: 15px; border-radius: 8px; border: 1px solid #eee;">
+            <p style="margin: 0; white-space: pre-wrap;">{message}</p>
+        </div>
+        <p style="margin-top: 30px; font-size: 12px; color: #999;">
+            Sent from the {settings.brand_name} website contact form
+        </p>
+    </div>
+    """
+
+    resend.Emails.send({
+        "from": settings.email_from,
+        "to": to_email,
+        "reply_to": email,
+        "subject": f"Contact: {subject} — {settings.brand_name}",
+        "html": html,
+    })
+
+    logger.info("Contact form email sent from %s (subject: %s)", email, subject)
+
+
+async def send_password_reset(email: str, first_name: str, reset_url: str) -> None:
+    """Send password reset email to customer."""
+    settings = get_settings()
+    if not settings.resend_api_key:
+        return
+
+    _init_resend()
+
+    resend.Emails.send({
+        "from": settings.email_from,
+        "to": email,
+        "subject": f"Reset your password — {settings.brand_name}",
+        "html": f"""
+        <h2>Password Reset</h2>
+        <p>Hi {first_name},</p>
+        <p>We received a request to reset your password. Click the link below to set a new one:</p>
+        <p><a href="{reset_url}" style="display:inline-block;padding:12px 24px;background:#1A1A1A;color:#fff;text-decoration:none;border-radius:8px;font-weight:bold;">Reset Password</a></p>
+        <p>This link expires in 1 hour. If you didn't request this, you can safely ignore this email.</p>
+        """,
+    })
+
+    logger.info("Password reset email sent to %s", email)

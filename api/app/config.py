@@ -25,6 +25,8 @@ class Settings(BaseSettings):
     admin_jwt_secret: str = "CHANGE_ME"
     admin_jwt_lifetime_hours: int = 8
     admin_jwt_algorithm: str = "HS256"
+    customer_jwt_secret: str = "CHANGE_ME_CUSTOMER"
+    customer_jwt_lifetime_hours: int = 72
 
     # ── Stripe ───────────────────────────────────────────────────
     stripe_secret_key: str = ""
@@ -36,6 +38,17 @@ class Settings(BaseSettings):
     shipping_free_threshold_cents: int = 15000
     shipping_description: str = "Flat rate shipping across Canada"
 
+    # ── Canada Post ────────────────────────────────────────────
+    canadapost_api_key: str = ""
+    canadapost_api_secret: str = ""
+    canadapost_customer_number: str = ""
+    canadapost_contract_number: str = ""
+    origin_postal_code: str = ""
+    default_parcel_weight_kg: float = 0.5
+    default_parcel_length_cm: float = 30.0
+    default_parcel_width_cm: float = 25.0
+    default_parcel_height_cm: float = 5.0
+
     # ── Tax ───────────────────────────────────────────────────────
     tax_rate: float = 0.0
     store_currency: str = "CAD"
@@ -43,6 +56,7 @@ class Settings(BaseSettings):
     # ── Email (Resend) ───────────────────────────────────────────
     resend_api_key: str = ""
     email_from: str = "Elder <orders@example.com>"
+    contact_email: str = ""
 
     # ── Store ────────────────────────────────────────────────────
     order_number_prefix: str = "ELD"

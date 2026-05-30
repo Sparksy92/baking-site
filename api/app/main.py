@@ -11,10 +11,11 @@ from app.config import get_settings
 from app.database import init_db
 from app.middleware.logging import setup_logging
 from app.middleware.rate_limit import RateLimitMiddleware
-from app.routes import health, products, settings, auth, checkout, webhooks, promos, newsletter
+from app.routes import health, products, settings, auth, checkout, webhooks, promos, newsletter, customers, contact, shipping
 from app.routes.admin import (
     products as admin_products,
     collections as admin_collections,
+    categories as admin_categories,
     orders as admin_orders,
     settings as admin_settings,
     promos as admin_promos,
@@ -34,6 +35,11 @@ async def lifespan(app: FastAPI):
     if not settings.dev_mode and settings.admin_jwt_secret == "CHANGE_ME":
         raise RuntimeError(
             "ADMIN_JWT_SECRET is set to the default value. "
+            "Generate a real secret: openssl rand -base64 32"
+        )
+    if not settings.dev_mode and settings.customer_jwt_secret == "CHANGE_ME_CUSTOMER":
+        raise RuntimeError(
+            "CUSTOMER_JWT_SECRET is set to the default value. "
             "Generate a real secret: openssl rand -base64 32"
         )
 
@@ -74,19 +80,25 @@ def create_app() -> FastAPI:
     app.include_router(health.router, prefix="/api")
     app.include_router(products.router, prefix="/api")
     app.include_router(settings.router, prefix="/api")
+    app.include_router(shipping.router, prefix="/api")
 
-    # ── Checkout, Promos, Newsletter & Webhooks ──────────────────
+    # ── Checkout, Promos, Newsletter, Contact & Webhooks ────────
     app.include_router(checkout.router, prefix="/api")
     app.include_router(promos.router, prefix="/api")
     app.include_router(newsletter.router, prefix="/api")
+    app.include_router(contact.router, prefix="/api")
     app.include_router(webhooks.router, prefix="/api")
 
     # ── Auth ───────────────────────────────────────────────────
     app.include_router(auth.router, prefix="/api")
 
+    # ── Customer accounts ────────────────────────────────────────
+    app.include_router(customers.router, prefix="/api")
+
     # ── Admin routes ───────────────────────────────────────────
     app.include_router(admin_products.router, prefix="/api")
     app.include_router(admin_collections.router, prefix="/api")
+    app.include_router(admin_categories.router, prefix="/api")
     app.include_router(admin_orders.router, prefix="/api")
     app.include_router(admin_settings.router, prefix="/api")
     app.include_router(admin_promos.router, prefix="/api")

@@ -243,6 +243,11 @@ class OrderStatusUpdate(BaseModel):
     admin_notes: str | None = None
 
 
+class RefundRequest(BaseModel):
+    amount_cents: int | None = None
+    reason: str = Field(default="requested_by_customer", pattern="^(duplicate|fraudulent|requested_by_customer)$")
+
+
 # ── Promo Codes ──────────────────────────────────────────────────
 
 class PromoCodeCreate(BaseModel):
@@ -286,3 +291,99 @@ class PublicSettingsResponse(BaseModel):
     tax_rate: float
     currency: str
     analytics_id: str = ""
+
+
+# ── Contact ────────────────────────────────────────────────────
+
+class ContactRequest(BaseModel):
+    name: str = Field(min_length=1, max_length=200)
+    email: EmailStr
+    subject: str = Field(default="General Inquiry", max_length=300)
+    message: str = Field(min_length=10, max_length=5000)
+    order_number: str | None = None
+
+
+# ── Customer Accounts ──────────────────────────────────────────
+
+class CustomerRegister(BaseModel):
+    email: EmailStr
+    password: str = Field(min_length=8, max_length=128)
+    first_name: str = Field(min_length=1, max_length=100)
+    last_name: str = Field(min_length=1, max_length=100)
+    phone: str | None = None
+
+
+class CustomerLogin(BaseModel):
+    email: EmailStr
+    password: str
+
+
+class CustomerResponse(BaseModel):
+    id: int
+    email: str
+    first_name: str
+    last_name: str
+    phone: str | None = None
+
+
+class CustomerUpdate(BaseModel):
+    first_name: str | None = None
+    last_name: str | None = None
+    phone: str | None = None
+
+
+class CustomerPasswordChange(BaseModel):
+    current_password: str
+    new_password: str = Field(min_length=8, max_length=128)
+
+
+class CustomerPasswordResetRequest(BaseModel):
+    email: EmailStr
+
+
+class CustomerPasswordReset(BaseModel):
+    token: str
+    new_password: str = Field(min_length=8, max_length=128)
+
+
+class AddressCreate(BaseModel):
+    label: str = Field(default="Home", max_length=50)
+    first_name: str = Field(min_length=1, max_length=100)
+    last_name: str = Field(min_length=1, max_length=100)
+    line1: str = Field(min_length=1, max_length=500)
+    line2: str | None = None
+    city: str = Field(min_length=1, max_length=200)
+    province: str = Field(min_length=1, max_length=100)
+    postal_code: str = Field(min_length=1, max_length=20)
+    country: str = Field(default="CA", max_length=2)
+    phone: str | None = None
+    is_default: bool = False
+
+
+class AddressUpdate(BaseModel):
+    label: str | None = None
+    first_name: str | None = None
+    last_name: str | None = None
+    line1: str | None = None
+    line2: str | None = None
+    city: str | None = None
+    province: str | None = None
+    postal_code: str | None = None
+    country: str | None = None
+    phone: str | None = None
+    is_default: bool | None = None
+
+
+class AddressResponse(BaseModel):
+    id: int
+    label: str
+    first_name: str
+    last_name: str
+    line1: str
+    line2: str | None = None
+    city: str
+    province: str
+    postal_code: str
+    country: str
+    phone: str | None = None
+    is_default: bool
