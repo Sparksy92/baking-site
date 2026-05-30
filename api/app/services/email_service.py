@@ -264,3 +264,41 @@ async def send_low_stock_alert(variants: list[dict]) -> None:
     })
 
     logger.info("Low stock alert sent for %d variants", len(variants))
+
+
+async def send_back_in_stock_notification(
+    email: str,
+    product_name: str,
+    variant_desc: str,
+    product_slug: str,
+) -> None:
+    """Send back-in-stock notification to subscriber."""
+    settings = get_settings()
+    if not settings.resend_api_key:
+        logger.warning("Resend not configured — skipping back-in-stock email")
+        return
+
+    _init_resend()
+
+    product_url = f"{settings.store_domain}/product/{product_slug}"
+
+    resend.Emails.send({
+        "from": settings.email_from,
+        "to": email,
+        "subject": f"{product_name} is back in stock! — {settings.brand_name}",
+        "html": f"""
+        <h2>Good news!</h2>
+        <p><strong>{product_name}</strong> ({variant_desc}) is back in stock.</p>
+        <p>Grab it before it sells out again:</p>
+        <p style="margin-top:16px">
+            <a href="{product_url}" style="display:inline-block;padding:12px 24px;background:#C53030;color:#fff;text-decoration:none;border-radius:6px;font-weight:bold">
+                Shop Now
+            </a>
+        </p>
+        <p style="margin-top:24px;font-size:12px;color:#666">
+            You received this because you signed up for a back-in-stock notification at {settings.brand_name}.
+        </p>
+        """,
+    })
+
+    logger.info("Back-in-stock notification sent to %s for %s", email, product_name)

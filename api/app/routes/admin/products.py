@@ -11,6 +11,7 @@ from app.database import get_db
 from app.models.schemas import (
     ProductCreate, ProductUpdate, VariantCreate, VariantUpdate,
 )
+from app.services.back_in_stock_service import notify_back_in_stock
 
 logger = logging.getLogger(__name__)
 
@@ -143,6 +144,17 @@ async def update_variant(
     if not updates:
         raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail="No fields to update")
 
+    # Check if restocking (was 0, now > 0) for back-in-stock notifications
+    trigger_back_in_stock = False
+    if "stock_quantity" in updates and updates["stock_quantity"] > 0:
+        cursor = await db.execute(
+            "SELECT stock_quantity FROM product_variants WHERE id = ? AND product_id = ?",
+            (variant_id, product_id),
+        )
+        current = await cursor.fetchone()
+        if current and current["stock_quantity"] == 0:
+            trigger_back_in_stock = True
+
     if "is_active" in updates:
         updates["is_active"] = int(updates["is_active"])
 
@@ -154,6 +166,14 @@ async def update_variant(
         values,
     )
     await db.commit()
+
+    # Fire back-in-stock notifications if restocked
+    if trigger_back_in_stock:
+        try:
+            await notify_back_in_stock(db, variant_id)
+        except Exception:
+            logger.exception("Back-in-stock notification failed for variant %d", variant_id)
+
     return {"updated": True}
 
 
