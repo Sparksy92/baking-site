@@ -37,12 +37,12 @@
 
 ## Remaining — Tier 2 (nice to have)
 
-- [ ] **Admin image management** — Can upload/delete but cannot reorder or toggle primary
-- [ ] **Admin dashboard stats endpoint** — Dashboard calculates stats client-side, needs server-side aggregation
-- [ ] **Wishlist / favorites** — Requires customer account (now available)
-- [ ] **Inventory low-stock alerts** — Admin email when variant stock drops below threshold
-- [ ] **Product reviews** — Requires customer account (now available)
-- [ ] Product CSV import/export
+- [x] **Admin dashboard stats endpoint** — Server-side aggregation: revenue, orders, top products, low stock, customers, subscribers, 3 tests
+- [x] **Admin image management** — List, reorder (PATCH sort_order), toggle primary, 7 tests
+- [x] **Inventory low-stock alerts** — Email alert when stock drops below threshold on order create
+- [x] **Product CSV import/export** — Export all products+variants, import with slug dedup, 6 tests
+- [x] **Wishlist / favorites** — Add/remove/list with customer auth, storefront UI, 6 tests
+- [x] **Product reviews** — Submit (1 per customer per product), moderation (approve/reject), public listing with summary, admin CRUD, 12 tests
 - [ ] Playwright E2E in CI (needs headless browser in runner)
 
 ## Deploy Checklist (per brand fork)
