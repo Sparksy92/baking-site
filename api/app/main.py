@@ -26,6 +26,11 @@ from app.routes.admin import (
     related_products as admin_related,
     auto_discounts as admin_auto_discounts,
     abandoned_carts as admin_abandoned_carts,
+    fulfillments as admin_fulfillments,
+    bulk_orders as admin_bulk_orders,
+    staff as admin_staff,
+    order_edit as admin_order_edit,
+    packing_slip as admin_packing_slip,
 )
 
 logger = logging.getLogger(__name__)
@@ -122,6 +127,11 @@ def create_app() -> FastAPI:
     app.include_router(admin_related.router, prefix="/api")
     app.include_router(admin_auto_discounts.router, prefix="/api")
     app.include_router(admin_abandoned_carts.router, prefix="/api")
+    app.include_router(admin_fulfillments.router, prefix="/api")
+    app.include_router(admin_bulk_orders.router, prefix="/api")
+    app.include_router(admin_staff.router, prefix="/api")
+    app.include_router(admin_order_edit.router, prefix="/api")
+    app.include_router(admin_packing_slip.router, prefix="/api")
 
     # ── Static files (uploaded images) ─────────────────────────
     uploads_dir = app_settings.uploads_dir
