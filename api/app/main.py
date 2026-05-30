@@ -11,7 +11,7 @@ from app.config import get_settings
 from app.database import init_db
 from app.middleware.logging import setup_logging
 from app.middleware.rate_limit import RateLimitMiddleware
-from app.routes import health, products, settings, auth, checkout, webhooks, promos, newsletter, customers, contact, shipping, wishlist, reviews
+from app.routes import health, products, settings, auth, checkout, webhooks, promos, newsletter, customers, contact, shipping, wishlist, reviews, related_products, back_in_stock, cart
 from app.routes.admin import (
     products as admin_products,
     collections as admin_collections,
@@ -23,6 +23,9 @@ from app.routes.admin import (
     dashboard as admin_dashboard,
     csv_io as admin_csv,
     reviews as admin_reviews,
+    related_products as admin_related,
+    auto_discounts as admin_auto_discounts,
+    abandoned_carts as admin_abandoned_carts,
 )
 
 logger = logging.getLogger(__name__)
@@ -100,6 +103,11 @@ def create_app() -> FastAPI:
     app.include_router(wishlist.router, prefix="/api")
     app.include_router(reviews.router, prefix="/api")
 
+    # ── Cart & Notifications ─────────────────────────────────────
+    app.include_router(cart.router, prefix="/api")
+    app.include_router(related_products.router, prefix="/api")
+    app.include_router(back_in_stock.router, prefix="/api")
+
     # ── Admin routes ───────────────────────────────────────────
     app.include_router(admin_products.router, prefix="/api")
     app.include_router(admin_collections.router, prefix="/api")
@@ -111,6 +119,9 @@ def create_app() -> FastAPI:
     app.include_router(admin_dashboard.router, prefix="/api")
     app.include_router(admin_csv.router, prefix="/api")
     app.include_router(admin_reviews.router, prefix="/api")
+    app.include_router(admin_related.router, prefix="/api")
+    app.include_router(admin_auto_discounts.router, prefix="/api")
+    app.include_router(admin_abandoned_carts.router, prefix="/api")
 
     # ── Static files (uploaded images) ─────────────────────────
     uploads_dir = app_settings.uploads_dir
