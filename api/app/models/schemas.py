@@ -203,6 +203,9 @@ class CheckoutRequest(BaseModel):
     items: list[CheckoutItem] = Field(min_length=1)
     promo_code: str | None = None
     customer_notes: str | None = None
+    utm_source: str | None = None
+    utm_medium: str | None = None
+    utm_campaign: str | None = None
 
 
 class CheckoutResponse(BaseModel):

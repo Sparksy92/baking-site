@@ -130,8 +130,8 @@ async def create_order(
             shipping_address_city, shipping_address_province,
             shipping_address_postal, shipping_address_country,
             subtotal_cents, discount_cents, shipping_cents, tax_cents, total_cents,
-            promo_code, customer_notes)
-           VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)""",
+            promo_code, customer_notes, utm_source, utm_medium, utm_campaign)
+           VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)""",
         (
             order_number, "stripe", payment_status, stripe_session_id,
             body.customer_name, body.customer_email, body.customer_phone,
@@ -141,6 +141,7 @@ async def create_order(
             validated["subtotal_cents"], validated["discount_cents"],
             validated["shipping_cents"], validated["tax_cents"], validated["total_cents"],
             validated["promo_code"], body.customer_notes,
+            body.utm_source, body.utm_medium, body.utm_campaign,
         ),
     )
 
