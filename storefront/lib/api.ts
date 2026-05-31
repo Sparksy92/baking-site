@@ -107,6 +107,8 @@ export interface Product {
   is_featured: boolean;
   sort_order: number;
   weight_g: number | null;
+  meta_title: string | null;
+  meta_description: string | null;
   variants: Variant[];
   images: ProductImage[];
 }

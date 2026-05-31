@@ -170,7 +170,9 @@ async def get_product(slug: str, db: aiosqlite.Connection = Depends(get_db)):
         id=product["id"], name=product["name"], slug=product["slug"],
         description=product["description"], category=category,
         is_active=bool(product["is_active"]), is_featured=bool(product["is_featured"]),
-        sort_order=product["sort_order"], variants=variants, images=images,
+        sort_order=product["sort_order"],
+        meta_title=product["meta_title"], meta_description=product["meta_description"],
+        variants=variants, images=images,
     )
 
 

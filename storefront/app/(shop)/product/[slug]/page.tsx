@@ -15,16 +15,17 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
   const { slug } = await params;
   try {
     const product = await apiFetch<Product>(`/api/products/${slug}`);
-    const price = product.variants[0]?.price_cents;
     const image = product.images[0]?.url;
     const url = `${siteUrl()}/product/${slug}`;
+    const title = product.meta_title || product.name;
+    const description = product.meta_description || product.description || `Shop ${product.name} from ${brandName()}`;
 
     return {
-      title: product.name,
-      description: product.description || `Shop ${product.name} from ${brandName()}`,
+      title,
+      description,
       openGraph: {
-        title: product.name,
-        description: product.description || `Shop ${product.name}`,
+        title,
+        description,
         url,
         type: 'website',
         images: image ? [{ url: image, alt: product.name }] : [],

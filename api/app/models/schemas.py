@@ -87,6 +87,8 @@ class ProductResponse(BaseModel):
     is_active: bool
     is_featured: bool
     sort_order: int
+    meta_title: str | None = None
+    meta_description: str | None = None
     variants: list[VariantResponse] = []
     images: list[ImageResponse] = []
 

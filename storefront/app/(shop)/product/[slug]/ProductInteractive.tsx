@@ -56,7 +56,10 @@ export function ProductInteractive({ product }: { product: Product }) {
       )}
 
       {product.description && (
-        <p className="mt-4 text-gray-600 leading-relaxed">{product.description}</p>
+        <div
+          className="mt-4 text-gray-600 leading-relaxed prose prose-sm max-w-none"
+          dangerouslySetInnerHTML={{ __html: product.description }}
+        />
       )}
 
       {/* Color selector */}
