@@ -76,12 +76,14 @@ export default function VariantMatrixBuilder({ productId, existingVariants, onVa
           price_cents: priceCents,
           stock_quantity: stock,
         });
+        console.log('[VariantMatrix] API returned:', JSON.stringify(v));
         created.push(v);
       } catch (err) {
         console.error('Failed to create variant:', combo, err);
       }
     }
 
+    console.log('[VariantMatrix] All created variants:', JSON.stringify(created));
     if (created.length > 0) {
       onVariantsCreated(created);
     }
