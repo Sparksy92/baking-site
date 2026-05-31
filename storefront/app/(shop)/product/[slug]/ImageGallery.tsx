@@ -1,12 +1,26 @@
 'use client';
 
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import Image from 'next/image';
 import type { ProductImage } from '@/lib/api';
 
-export function ImageGallery({ images, productName }: { images: ProductImage[]; productName: string }) {
+export function ImageGallery({ images, productName, selectedColor }: { images: ProductImage[]; productName: string; selectedColor?: string }) {
+  // Reorder: color-matched images first, then untagged, then other colors
+  const sortedImages = selectedColor
+    ? [
+        ...images.filter((img) => img.color === selectedColor),
+        ...images.filter((img) => !img.color),
+        ...images.filter((img) => img.color && img.color !== selectedColor),
+      ]
+    : images;
+
   const [activeIndex, setActiveIndex] = useState(0);
-  const activeImage = images[activeIndex];
+
+  useEffect(() => {
+    setActiveIndex(0);
+  }, [selectedColor]);
+
+  const activeImage = sortedImages[activeIndex];
 
   if (images.length === 0) {
     return (
@@ -29,9 +43,9 @@ export function ImageGallery({ images, productName }: { images: ProductImage[]; 
         />
       </div>
 
-      {images.length > 1 && (
+      {sortedImages.length > 1 && (
         <div className="flex gap-2 overflow-x-auto pb-1">
-          {images.map((img, i) => (
+          {sortedImages.map((img, i) => (
             <button
               key={img.id}
               onClick={() => setActiveIndex(i)}

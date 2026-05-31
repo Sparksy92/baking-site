@@ -5,7 +5,6 @@ import { formatCents, brandName, siteUrl } from '@/lib/format';
 import { JsonLd } from '@/components/JsonLd';
 import { ProductCard } from '@/components/ProductCard';
 import { ProductInteractive } from './ProductInteractive';
-import { ImageGallery } from './ImageGallery';
 
 interface Props {
   params: Promise<{ slug: string }>;
@@ -81,13 +80,7 @@ export default async function ProductPage({ params }: Props) {
         })),
       }} />
 
-      <div className="grid grid-cols-1 lg:grid-cols-2 gap-8 lg:gap-12">
-        {/* Image gallery — interactive with all images */}
-        <ImageGallery images={product.images} productName={product.name} />
-
-        {/* Interactive product info — client component */}
-        <ProductInteractive product={product} />
-      </div>
+      <ProductInteractive product={product} />
 
       {/* Related products */}
       <RelatedProducts categorySlug={product.category?.slug ?? null} currentSlug={slug} />

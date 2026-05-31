@@ -94,6 +94,7 @@ export interface ProductImage {
   alt_text: string | null;
   sort_order: number;
   is_primary: boolean;
+  color: string | null;
 }
 
 export interface Product {

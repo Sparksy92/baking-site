@@ -52,7 +52,7 @@ export default function SortableImageGallery({ productId, images, onImagesChange
       fd.append('file', file);
       try {
         const res = await api.upload<{ id: number; url: string }>(`/api/admin/products/${productId}/images`, fd);
-        newImages.push({ id: res.id, product_id: Number(productId), url: res.url, alt_text: file.name, sort_order: images.length + newImages.length, is_primary: images.length === 0 && newImages.length === 0 });
+        newImages.push({ id: res.id, product_id: Number(productId), url: res.url, alt_text: file.name, sort_order: images.length + newImages.length, is_primary: images.length === 0 && newImages.length === 0, color: null });
       } catch (err) {
         console.error('Upload failed:', err);
       }

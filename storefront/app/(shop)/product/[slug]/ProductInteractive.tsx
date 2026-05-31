@@ -7,6 +7,7 @@ import { formatCents } from '@/lib/format';
 import { addToast } from '@/lib/toast';
 import { SizeGuide } from '@/components/SizeGuide';
 import { SocialProof } from '@/components/SocialProof';
+import { ImageGallery } from './ImageGallery';
 
 export function ProductInteractive({ product }: { product: Product }) {
   const sizes = [...new Set(product.variants.map((v) => v.size))];
@@ -38,7 +39,9 @@ export function ProductInteractive({ product }: { product: Product }) {
   }
 
   return (
-    <div className="flex flex-col">
+    <div className="grid grid-cols-1 lg:grid-cols-2 gap-8 lg:gap-12">
+      <ImageGallery images={product.images} productName={product.name} selectedColor={selectedColor} />
+      <div className="flex flex-col">
       <h1 className="text-2xl md:text-3xl font-bold text-gray-900">{product.name}</h1>
       <SocialProof productId={product.id} />
 
@@ -73,7 +76,18 @@ export function ProductInteractive({ product }: { product: Product }) {
               return (
                 <button
                   key={color}
-                  onClick={() => setSelectedColor(color)}
+                  onClick={() => {
+                    setSelectedColor(color);
+                    const hasCurrentSize = product.variants.find(
+                      (v) => v.color === color && v.size === selectedSize && v.stock_quantity > 0
+                    );
+                    if (!hasCurrentSize) {
+                      const firstAvailable = product.variants.find(
+                        (v) => v.color === color && v.stock_quantity > 0
+                      );
+                      if (firstAvailable) setSelectedSize(firstAvailable.size);
+                    }
+                  }}
                   className={`w-10 h-10 rounded-full border-2 transition-all ${
                     selectedColor === color ? 'border-brand scale-110' : 'border-gray-200'
                   }`}
@@ -157,6 +171,7 @@ export function ProductInteractive({ product }: { product: Product }) {
       >
         {added ? 'Added to Cart' : inStock ? 'Add to Cart' : 'Sold Out'}
       </button>
+      </div>
     </div>
   );
 }
