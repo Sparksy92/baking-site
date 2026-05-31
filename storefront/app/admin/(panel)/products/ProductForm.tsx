@@ -222,9 +222,10 @@ export default function ProductForm({ productId }: Props) {
                     <input
                       type="number"
                       step="0.01"
-                      value={(v.price_cents / 100).toFixed(2)}
-                      onChange={(e) => updateVariantLocal(v.id, { price_cents: Math.round(Number(e.target.value) * 100) })}
-                      onBlur={(e) => saveVariant(v.id, { price_cents: Math.round(Number(e.target.value) * 100) })}
+                      min="0"
+                      defaultValue={v.price_cents ? (v.price_cents / 100).toFixed(2) : ''}
+                      key={`price-${v.id}`}
+                      onBlur={(e) => { const cents = Math.round(Number(e.target.value) * 100); if (!isNaN(cents) && cents >= 0) saveVariant(v.id, { price_cents: cents }); }}
                       placeholder="0.00"
                       className="pl-7 pr-3 py-2 border border-gray-200 rounded-lg text-sm w-full"
                     />
