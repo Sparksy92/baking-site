@@ -120,7 +120,7 @@ export default function ProductForm({ productId }: Props) {
   async function addTag(tagId: number) {
     if (isNew) return;
     try {
-      await api.post(`/api/admin/products/${productId}/tags/${tagId}`, {});
+      await api.post(`/api/admin/tags/products/${productId}/tags/${tagId}`, {});
       const tag = allTags.find((t) => t.id === tagId);
       if (tag) setTags((prev) => [...prev, tag]);
     } catch (err) { console.error(err); }
@@ -129,7 +129,7 @@ export default function ProductForm({ productId }: Props) {
   async function removeTag(tagId: number) {
     if (isNew) return;
     try {
-      await api.delete(`/api/admin/products/${productId}/tags/${tagId}`);
+      await api.delete(`/api/admin/tags/products/${productId}/tags/${tagId}`);
       setTags((prev) => prev.filter((t) => t.id !== tagId));
     } catch (err) { console.error(err); }
   }
@@ -208,26 +208,30 @@ export default function ProductForm({ productId }: Props) {
               <VariantMatrixBuilder productId={productId!} existingVariants={variants} onVariantsCreated={(created) => setVariants((prev) => [...prev, ...created])} />
             </div>
             {variants.length > 0 && (
-              <div className="text-xs text-gray-400 grid grid-cols-[1fr_1fr_1fr_1fr_auto] gap-2 mb-2 px-1">
-                <span>Size</span><span>Color</span><span>Price ($)</span><span>Stock</span><span></span>
+              <div className="flex gap-2 text-xs text-gray-400 mb-2">
+                <span className="flex-1">Size</span>
+                <span className="flex-1">Color</span>
+                <span className="w-24">Price ($)</span>
+                <span className="w-20">Stock</span>
+                <span className="w-8"></span>
               </div>
             )}
             <div className="space-y-2">
               {variants.map((v) => (
-                <div key={v.id} className="grid grid-cols-[1fr_1fr_1fr_1fr_auto] gap-2 items-center">
-                  <input value={v.size} onChange={(e) => updateVariantLocal(v.id, { size: e.target.value })} onBlur={(e) => saveVariant(v.id, { size: e.target.value })} placeholder="Size" className="px-3 py-2 border border-gray-200 rounded-lg text-sm" />
-                  <input value={v.color} onChange={(e) => updateVariantLocal(v.id, { color: e.target.value })} onBlur={(e) => saveVariant(v.id, { color: e.target.value })} placeholder="Color" className="px-3 py-2 border border-gray-200 rounded-lg text-sm" />
+                <div key={v.id} className="flex gap-2 items-center">
+                  <input value={v.size} onChange={(e) => updateVariantLocal(v.id, { size: e.target.value })} onBlur={(e) => saveVariant(v.id, { size: e.target.value })} placeholder="Size" className="flex-1 px-3 py-2 border border-gray-200 rounded-lg text-sm" />
+                  <input value={v.color} onChange={(e) => updateVariantLocal(v.id, { color: e.target.value })} onBlur={(e) => saveVariant(v.id, { color: e.target.value })} placeholder="Color" className="flex-1 px-3 py-2 border border-gray-200 rounded-lg text-sm" />
                   <input
                     type="text"
                     inputMode="decimal"
                     value={((v.price_cents ?? 0) / 100).toFixed(2)}
                     onChange={(e) => { const n = Number(e.target.value); if (!isNaN(n)) updateVariantLocal(v.id, { price_cents: Math.round(n * 100) }); }}
                     onBlur={(e) => { const n = Number(e.target.value); if (!isNaN(n)) saveVariant(v.id, { price_cents: Math.round(n * 100) }); }}
-                    placeholder="$0.00"
-                    className="px-3 py-2 border border-gray-200 rounded-lg text-sm"
+                    placeholder="0.00"
+                    className="w-24 px-3 py-2 border border-gray-200 rounded-lg text-sm"
                   />
-                  <input type="number" value={v.stock_quantity} onChange={(e) => updateVariantLocal(v.id, { stock_quantity: Number(e.target.value) })} onBlur={(e) => saveVariant(v.id, { stock_quantity: Number(e.target.value) })} placeholder="Stock" className="px-3 py-2 border border-gray-200 rounded-lg text-sm" />
-                  <button type="button" onClick={() => deleteVariant(v.id)} className="text-red-400 hover:text-red-600"><Trash2 size={16} /></button>
+                  <input type="text" inputMode="numeric" value={v.stock_quantity} onChange={(e) => { const n = Number(e.target.value); if (!isNaN(n)) updateVariantLocal(v.id, { stock_quantity: n }); }} onBlur={(e) => { const n = Number(e.target.value); if (!isNaN(n)) saveVariant(v.id, { stock_quantity: n }); }} placeholder="0" className="w-20 px-3 py-2 border border-gray-200 rounded-lg text-sm" />
+                  <button type="button" onClick={() => deleteVariant(v.id)} className="w-8 text-red-400 hover:text-red-600 flex items-center justify-center"><Trash2 size={16} /></button>
                 </div>
               ))}
               {variants.length === 0 && <p className="text-sm text-gray-400">No variants yet. Use the matrix builder above to bulk-create all size/color combinations.</p>}
