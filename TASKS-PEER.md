@@ -37,7 +37,7 @@ Move them into `api/app/services/email_templates.py` following the same pattern 
 ### 3. ✅ Cart page polish
 `storefront/app/(shop)/cart/page.tsx` — improve UX, empty cart state, quantity controls, mobile layout.
 
-### 4. Checkout flow
+### 4. ✅ Checkout flow
 `storefront/app/(shop)/checkout/` — test the full flow, fix CSS issues, improve form validation UX.
 
 ### 5. Order confirmation page
