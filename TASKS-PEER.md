@@ -40,7 +40,7 @@ Move them into `api/app/services/email_templates.py` following the same pattern 
 ### 4. ✅ Checkout flow
 `storefront/app/(shop)/checkout/` — test the full flow, fix CSS issues, improve form validation UX.
 
-### 5. Order confirmation page
+### 5. ✅ Order confirmation page
 `storefront/app/(shop)/confirmation/[orderNumber]/page.tsx` — make it look polished, show order summary.
 
 ### 6. Search page
