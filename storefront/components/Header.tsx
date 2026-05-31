@@ -17,6 +17,9 @@ export function Header() {
   const isCheckout = ['/cart', '/checkout'].includes(pathname);
   const [mobileOpen, setMobileOpen] = useState(false);
   const [announcement, setAnnouncement] = useState('');
+  const [mounted, setMounted] = useState(false);
+
+  useEffect(() => { setMounted(true); }, []);
 
   useEffect(() => {
     api.get<PublicSettings>('/api/settings/public')
@@ -99,7 +102,7 @@ export function Header() {
               aria-label="Cart"
             >
               <ShoppingBag size={20} />
-              {count > 0 && (
+              {mounted && count > 0 && (
                 <span className="absolute -top-0.5 -right-0.5 bg-accent text-white text-[10px] font-bold rounded-full min-w-[18px] h-[18px] flex items-center justify-center px-1">
                   {count}
                 </span>
