@@ -26,4 +26,5 @@ async def get_public_settings(db: aiosqlite.Connection = Depends(get_db)):
         tax_rate=float(store_settings.get("tax_rate", str(settings.tax_rate))),
         currency=settings.store_currency,
         analytics_id=store_settings.get("analytics_id", ""),
+        etransfer_email=settings.etransfer_email,
     )

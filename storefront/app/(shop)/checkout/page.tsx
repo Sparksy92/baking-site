@@ -28,6 +28,7 @@ export default function CheckoutPage() {
   const [province, setProvince] = useState('');
   const [postal, setPostal] = useState('');
   const [notes, setNotes] = useState('');
+  const [paymentMethod, setPaymentMethod] = useState<'stripe' | 'etransfer'>('stripe');
   
   // Promo State
   const [promoCode, setPromoCode] = useState('');
@@ -152,12 +153,17 @@ export default function CheckoutPage() {
         items: items.map((i) => ({ variant_id: i.variantId, quantity: i.quantity })),
         promo_code: promoApplied?.code || null,
         customer_notes: notes.trim() || null,
+        payment_method: paymentMethod,
       });
       sessionStorage.setItem('pending_order', JSON.stringify({
         order_number: resp.order_number,
         email: email.trim(),
       }));
-      window.location.href = resp.stripe_checkout_url;
+      if (resp.stripe_checkout_url) {
+        window.location.href = resp.stripe_checkout_url;
+      } else {
+        router.push(`/confirmation/${resp.order_number}`);
+      }
     } catch (err: unknown) {
       setError(err instanceof Error ? err.message : 'Something went wrong');
     } finally {
@@ -395,6 +401,38 @@ export default function CheckoutPage() {
                 />
               </section>
 
+              {/* Payment Method */}
+              <section className="bg-white p-6 sm:p-8 rounded-2xl shadow-sm border border-gray-100">
+                <h2 className="text-xl font-bold text-gray-900 mb-6">Payment Method</h2>
+                <div className="space-y-3">
+                  <label className={`flex items-center gap-3 p-4 border rounded-xl cursor-pointer transition-colors ${paymentMethod === 'stripe' ? 'border-brand bg-brand/5' : 'border-gray-200 hover:border-gray-300'}`}>
+                    <input 
+                      type="radio" 
+                      name="payment_method" 
+                      value="stripe" 
+                      checked={paymentMethod === 'stripe'} 
+                      onChange={() => setPaymentMethod('stripe')}
+                      className="text-brand focus:ring-brand w-4 h-4 cursor-pointer"
+                    />
+                    <span className="font-medium text-gray-900">Credit Card</span>
+                  </label>
+                  <label className={`flex items-center gap-3 p-4 border rounded-xl cursor-pointer transition-colors ${paymentMethod === 'etransfer' ? 'border-brand bg-brand/5' : 'border-gray-200 hover:border-gray-300'}`}>
+                    <input 
+                      type="radio" 
+                      name="payment_method" 
+                      value="etransfer" 
+                      checked={paymentMethod === 'etransfer'} 
+                      onChange={() => setPaymentMethod('etransfer')}
+                      className="text-brand focus:ring-brand w-4 h-4 cursor-pointer"
+                    />
+                    <div>
+                      <span className="font-medium text-gray-900 block">Interac e-Transfer</span>
+                      <span className="text-sm text-gray-500">Send an e-Transfer manually through your online banking.</span>
+                    </div>
+                  </label>
+                </div>
+              </section>
+
               {error && (
                 <div className="p-4 bg-red-50 border border-red-200 text-red-700 rounded-xl flex items-start gap-3">
                   <AlertCircle className="shrink-0 mt-0.5" size={18} />
@@ -416,7 +454,7 @@ export default function CheckoutPage() {
                 ) : (
                   <>
                     <Lock size={18} className="text-white" />
-                    Pay {formatCents(total)}
+                    {paymentMethod === 'stripe' ? `Pay ${formatCents(total)}` : `Place Order ${formatCents(total)}`}
                   </>
                 )}
               </button>

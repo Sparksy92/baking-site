@@ -126,7 +126,7 @@ export default async function CollectionPage({ params, searchParams }: Props) {
                   if (p > 1) params.set('page', String(p));
                   if (sort) params.set('sort', sort);
                   const qs = params.toString();
-                  return `/collections/${slug}${qs ? \`?\${qs}\` : ''}`;
+                  return `/collections/${slug}${qs ? `?${qs}` : ''}`;
                 }}
               />
             </div>

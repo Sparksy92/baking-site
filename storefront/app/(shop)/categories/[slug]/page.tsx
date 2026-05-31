@@ -95,7 +95,7 @@ export default async function CategoryPage({ params, searchParams }: Props) {
                   if (p > 1) params.set('page', String(p));
                   if (sort) params.set('sort', sort);
                   const qs = params.toString();
-                  return `/categories/${slug}${qs ? \`?\${qs}\` : ''}`;
+                  return `/categories/${slug}${qs ? `?${qs}` : ''}`;
                 }}
               />
             </div>

@@ -13,12 +13,15 @@ export default function ConfirmationPage() {
   const searchParams = useSearchParams();
   const orderNumber = params.orderNumber;
   const [order, setOrder] = useState<OrderLookup | null>(null);
+  const [settings, setSettings] = useState<{ etransfer_email?: string } | null>(null);
   const [loading, setLoading] = useState(true);
   const [emailUsed, setEmailUsed] = useState('');
   const cartCleared = useRef(false);
 
   useEffect(() => {
     if (!orderNumber) return;
+
+    api.get<any>('/api/settings/public').then(setSettings).catch(() => {});
 
     let email = '';
     try {
@@ -88,9 +91,23 @@ export default function ConfirmationPage() {
         </div>
 
         {order ? (
-          <div className="bg-white rounded-3xl shadow-xl shadow-gray-200/40 border border-gray-100 overflow-hidden">
+          <div className="space-y-8">
+            {order.payment_method === 'etransfer' && order.payment_status === 'pending' && (
+              <div className="bg-yellow-50 border-2 border-yellow-200 rounded-3xl p-6 sm:p-8 text-center shadow-sm">
+                <h2 className="text-xl font-bold text-yellow-900 mb-2">Payment Required: Interac e-Transfer</h2>
+                <p className="text-yellow-800 mb-4">Your order is received, but we need your payment to fulfill it.</p>
+                <div className="bg-white rounded-2xl p-4 inline-block text-left shadow-sm border border-yellow-100">
+                  <p className="text-gray-600 mb-2">1. Log into your online banking and send an e-Transfer to:</p>
+                  <p className="font-bold text-lg text-gray-900 mb-4">{settings?.etransfer_email || 'payments@example.com'}</p>
+                  <p className="text-gray-600 mb-2">2. Include your order number in the message/memo:</p>
+                  <p className="font-bold text-lg text-gray-900">#{order.order_number}</p>
+                </div>
+              </div>
+            )}
             
-            {/* Status Bar */}
+            <div className="bg-white rounded-3xl shadow-xl shadow-gray-200/40 border border-gray-100 overflow-hidden">
+              
+              {/* Status Bar */}
             <div className="bg-gray-50/80 px-6 py-4 border-b border-gray-100 flex flex-col sm:flex-row gap-4 justify-between sm:items-center text-sm">
               <div className="flex items-center gap-2">
                 <Receipt size={18} className="text-gray-400" />
@@ -158,6 +175,7 @@ export default function ConfirmationPage() {
               </div>
             </div>
 
+          </div>
           </div>
         ) : (
           <div className="bg-white rounded-3xl p-8 text-center shadow-sm border border-gray-100">

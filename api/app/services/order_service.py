@@ -114,6 +114,7 @@ async def create_order(
     db: aiosqlite.Connection,
     body: CheckoutRequest,
     validated: dict,
+    payment_method: str = "stripe",
     payment_status: str = "pending",
     stripe_session_id: str | None = None,
 ) -> str:
@@ -143,7 +144,7 @@ async def create_order(
             promo_code, customer_notes, utm_source, utm_medium, utm_campaign)
            VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)""",
         (
-            order_number, "stripe", payment_status, stripe_session_id,
+            order_number, payment_method, payment_status, stripe_session_id,
             body.customer_name, body.customer_email, body.customer_phone,
             body.shipping_address.line1, body.shipping_address.line2,
             body.shipping_address.city, body.shipping_address.province,
