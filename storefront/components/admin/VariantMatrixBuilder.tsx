@@ -13,6 +13,7 @@ interface Props {
 export default function VariantMatrixBuilder({ productId, existingVariants, onVariantsCreated }: Props) {
   const [sizes, setSizes] = useState<string[]>([]);
   const [colors, setColors] = useState<string[]>([]);
+  const [colorHexMap, setColorHexMap] = useState<Record<string, string>>({});
   const [sizeInput, setSizeInput] = useState('');
   const [colorInput, setColorInput] = useState('');
   const [bulkPrice, setBulkPrice] = useState('');
@@ -73,6 +74,7 @@ export default function VariantMatrixBuilder({ productId, existingVariants, onVa
         const v = await api.post<Variant>(`/api/admin/products/${productId}/variants`, {
           size: combo.size,
           color: combo.color,
+          color_hex: colorHexMap[combo.color] || null,
           price_cents: priceCents,
           stock_quantity: stock,
         });
@@ -140,9 +142,16 @@ export default function VariantMatrixBuilder({ productId, existingVariants, onVa
         <label className="text-xs font-medium text-gray-700 block mb-1">Colors</label>
         <div className="flex flex-wrap gap-1.5 mb-2">
           {colors.map((c) => (
-            <span key={c} className="inline-flex items-center gap-1 px-2 py-0.5 bg-white border border-gray-200 rounded text-xs">
+            <span key={c} className="inline-flex items-center gap-1.5 px-2 py-0.5 bg-white border border-gray-200 rounded text-xs">
+              <input
+                type="color"
+                value={colorHexMap[c] || '#000000'}
+                onChange={(e) => setColorHexMap({ ...colorHexMap, [c]: e.target.value })}
+                className="w-4 h-4 rounded-full border-0 p-0 cursor-pointer"
+                title={`Pick hex for ${c}`}
+              />
               {c}
-              <button type="button" onClick={() => setColors(colors.filter((x) => x !== c))} className="text-gray-400 hover:text-red-500"><X size={10} /></button>
+              <button type="button" onClick={() => { setColors(colors.filter((x) => x !== c)); const m = { ...colorHexMap }; delete m[c]; setColorHexMap(m); }} className="text-gray-400 hover:text-red-500"><X size={10} /></button>
             </span>
           ))}
         </div>

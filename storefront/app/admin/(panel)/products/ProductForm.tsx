@@ -214,6 +214,7 @@ export default function ProductForm({ productId }: Props) {
               <div className="flex gap-2 text-xs text-gray-400 mb-2">
                 <span className="flex-1">Size</span>
                 <span className="flex-1">Color</span>
+                <span className="w-8">Hex</span>
                 <span className="w-24">Price ($)</span>
                 <span className="w-20">Stock</span>
                 <span className="w-8"></span>
@@ -224,6 +225,13 @@ export default function ProductForm({ productId }: Props) {
                 <div key={v.id} className="flex gap-2 items-center">
                   <input value={v.size} onChange={(e) => updateVariantLocal(v.id, { size: e.target.value })} onBlur={(e) => saveVariant(v.id, { size: e.target.value })} placeholder="Size" className="flex-1 px-3 py-2 border border-gray-200 rounded-lg text-sm" />
                   <input value={v.color} onChange={(e) => updateVariantLocal(v.id, { color: e.target.value })} onBlur={(e) => saveVariant(v.id, { color: e.target.value })} placeholder="Color" className="flex-1 px-3 py-2 border border-gray-200 rounded-lg text-sm" />
+                  <input
+                    type="color"
+                    value={v.color_hex || '#000000'}
+                    onChange={(e) => { updateVariantLocal(v.id, { color_hex: e.target.value }); saveVariant(v.id, { color_hex: e.target.value }); }}
+                    title="Pick swatch color"
+                    className="w-8 h-8 rounded-full border border-gray-200 cursor-pointer p-0 overflow-hidden"
+                  />
                   <input
                     type="text"
                     inputMode="decimal"
