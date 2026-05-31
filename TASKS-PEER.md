@@ -60,7 +60,7 @@ Polish layout, add filtering, improve product grid.
 
 Add real content structure, make them look professional.
 
-### 9. Admin pages (NOT products)
+### 9. ✅ Admin pages (NOT products)
 Safe to work on:
 - `storefront/app/admin/(panel)/orders/`
 - `storefront/app/admin/(panel)/returns/`
