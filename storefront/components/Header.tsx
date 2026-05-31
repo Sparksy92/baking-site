@@ -130,7 +130,7 @@ export function Header() {
       </header>
 
       {/* Floating cart bar — mobile only */}
-      {count > 0 && !isCheckout && (
+      {mounted && count > 0 && !isCheckout && (
         <div className="fixed bottom-0 left-0 right-0 z-50 p-3 bg-white/90 backdrop-blur border-t border-gray-200 md:hidden">
           <Link
             href="/cart"
