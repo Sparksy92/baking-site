@@ -4,7 +4,7 @@ test.describe('Admin Panel (A5-A11)', () => {
   test('A5-A11: Complete Admin Flow', async ({ page }) => {
     // A1: Login
     await page.goto('/admin/login');
-    await page.getByPlaceholder(/username/i).fill('testadmin');
+    await page.getByLabel(/email/i).fill('testadmin');
     await page.getByPlaceholder(/password/i).fill('admin123');
     await page.getByRole('button', { name: /login|sign in/i }).click();
     await page.waitForURL('**/admin');

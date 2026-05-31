@@ -5,8 +5,13 @@ import logging
 import resend
 
 from app.config import get_settings
-from app.services.email_templates import order_confirmation_template, shipping_notification_template
-
+from app.services.email_templates import (
+    order_confirmation_template,
+    shipping_notification_template,
+    order_cancelled_template,
+    refund_confirmation_template,
+    password_reset_template,
+)
 logger = logging.getLogger(__name__)
 
 
@@ -84,22 +89,13 @@ async def send_order_cancelled(order_data: dict, reason: str = "expired") -> Non
 
     _init_resend()
 
-    reason_text = {
-        "expired": "Your payment session expired before it could be completed.",
-        "cancelled": "Your order has been cancelled.",
-    }.get(reason, "Your order has been cancelled.")
+    html = order_cancelled_template(order_data, reason, settings)
 
     resend.Emails.send({
         "from": settings.email_from,
         "to": order_data["customer_email"],
         "subject": f"Order {order_data['order_number']} cancelled — {settings.brand_name}",
-        "html": f"""
-        <h2>Order Cancelled</h2>
-        <p>Order <strong>{order_data['order_number']}</strong> has been cancelled.</p>
-        <p>{reason_text}</p>
-        <p>No charges were made. If you'd like to try again, please visit our store.</p>
-        <p><a href="{settings.store_domain}">Return to Store</a></p>
-        """,
+        "html": html,
     })
 
     logger.info("Order cancelled email sent: %s (reason: %s)", order_data["order_number"], reason)
@@ -113,19 +109,13 @@ async def send_refund_confirmation(order_data: dict, refund_amount_cents: int) -
 
     _init_resend()
 
+    html = refund_confirmation_template(order_data, refund_amount_cents, settings)
+
     resend.Emails.send({
         "from": settings.email_from,
         "to": order_data["customer_email"],
         "subject": f"Refund processed — {order_data['order_number']}",
-        "html": f"""
-        <h2>Refund Processed</h2>
-        <p>Hi {order_data['customer_name']},</p>
-        <p>A refund of <strong>${refund_amount_cents / 100:.2f} {settings.store_currency}</strong>
-        has been issued for order <strong>{order_data['order_number']}</strong>.</p>
-        <p>It may take 5–10 business days for the refund to appear on your statement,
-        depending on your bank.</p>
-        <p>If you have any questions, please <a href="{settings.store_domain}/contact">contact us</a>.</p>
-        """,
+        "html": html,
     })
 
     logger.info("Refund email sent: %s ($%.2f)", order_data["order_number"], refund_amount_cents / 100)
@@ -185,17 +175,13 @@ async def send_password_reset(email: str, first_name: str, reset_url: str) -> No
 
     _init_resend()
 
+    html = password_reset_template(first_name, reset_url, settings)
+
     resend.Emails.send({
         "from": settings.email_from,
         "to": email,
         "subject": f"Reset your password — {settings.brand_name}",
-        "html": f"""
-        <h2>Password Reset</h2>
-        <p>Hi {first_name},</p>
-        <p>We received a request to reset your password. Click the link below to set a new one:</p>
-        <p><a href="{reset_url}" style="display:inline-block;padding:12px 24px;background:#1A1A1A;color:#fff;text-decoration:none;border-radius:8px;font-weight:bold;">Reset Password</a></p>
-        <p>This link expires in 1 hour. If you didn't request this, you can safely ignore this email.</p>
-        """,
+        "html": html,
     })
 
     logger.info("Password reset email sent to %s", email)
