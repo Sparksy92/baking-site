@@ -46,7 +46,7 @@ Move them into `api/app/services/email_templates.py` following the same pattern 
 ### 6. ✅ Search page
 `storefront/app/(shop)/search/page.tsx` — improve results display, empty state, loading state.
 
-### 7. Collections & Categories pages
+### 7. ✅ Collections & Categories pages
 - `storefront/app/(shop)/collections/[slug]/page.tsx`
 - `storefront/app/(shop)/categories/[slug]/page.tsx`
 
