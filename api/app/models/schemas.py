@@ -115,6 +115,8 @@ class ProductCreate(BaseModel):
     is_featured: bool = False
     sort_order: int = 0
     weight_g: int | None = None
+    meta_title: str | None = None
+    meta_description: str | None = None
 
 
 class ProductUpdate(BaseModel):
@@ -126,6 +128,8 @@ class ProductUpdate(BaseModel):
     is_featured: bool | None = None
     sort_order: int | None = None
     weight_g: int | None = None
+    meta_title: str | None = None
+    meta_description: str | None = None
 
 
 class VariantCreate(BaseModel):

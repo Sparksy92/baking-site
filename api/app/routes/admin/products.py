@@ -45,10 +45,11 @@ async def create_product(
     """Create a new product."""
     try:
         cursor = await db.execute(
-            """INSERT INTO products (name, slug, description, category_id, is_active, is_featured, sort_order, weight_g)
-               VALUES (?, ?, ?, ?, ?, ?, ?, ?)""",
+            """INSERT INTO products (name, slug, description, category_id, is_active, is_featured, sort_order, weight_g, meta_title, meta_description)
+               VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)""",
             (body.name, body.slug, body.description, body.category_id,
-             int(body.is_active), int(body.is_featured), body.sort_order, body.weight_g),
+             int(body.is_active), int(body.is_featured), body.sort_order, body.weight_g,
+             body.meta_title, body.meta_description),
         )
         await db.commit()
         return {"id": cursor.lastrowid, "slug": body.slug}
@@ -89,6 +90,16 @@ async def get_product(
         (product_id,),
     )
     result["images"] = [dict(r) for r in await cursor.fetchall()]
+
+    # Tags
+    cursor = await db.execute(
+        """SELECT t.id, t.name FROM tags t
+           JOIN product_tags pt ON pt.tag_id = t.id
+           WHERE pt.product_id = ?
+           ORDER BY t.name""",
+        (product_id,),
+    )
+    result["tags"] = [dict(r) for r in await cursor.fetchall()]
 
     return result
 
