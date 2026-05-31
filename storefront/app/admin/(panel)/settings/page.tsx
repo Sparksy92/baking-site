@@ -5,6 +5,7 @@ import { api } from '@/lib/api';
 import { addToast } from '@/lib/toast';
 
 const settingsMeta: Record<string, { label: string; hint?: string; type?: string }> = {
+  brand_name: { label: 'Brand Name', hint: 'The name of your store (overrides .env).' },
   store_announcement: { label: 'Store Announcement', hint: 'Displayed at the top of the site. Leave empty to hide.' },
   order_number_prefix: { label: 'Order Number Prefix', hint: 'e.g. ELD, CC, MM' },
   shipping_flat_rate_cents: { label: 'Flat Rate Shipping (cents)', hint: 'e.g. 1200 = $12.00', type: 'number' },
@@ -20,7 +21,14 @@ export default function AdminSettings() {
 
   useEffect(() => {
     api.get<{ key: string; value: string }[]>('/api/admin/settings')
-      .then(setSettings)
+      .then((data) => {
+        const dbMap = new Map(data.map(s => [s.key, s.value]));
+        const fullSettings = Object.keys(settingsMeta).map(key => ({
+          key,
+          value: dbMap.get(key) || ''
+        }));
+        setSettings(fullSettings);
+      })
       .catch(console.error)
       .finally(() => setLoading(false));
   }, []);
