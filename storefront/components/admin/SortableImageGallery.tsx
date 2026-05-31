@@ -51,8 +51,8 @@ export default function SortableImageGallery({ productId, images, onImagesChange
       const fd = new FormData();
       fd.append('file', file);
       try {
-        const img = await api.upload<ProductImage>(`/api/admin/products/${productId}/images`, fd);
-        newImages.push(img);
+        const res = await api.upload<{ id: number; url: string }>(`/api/admin/products/${productId}/images`, fd);
+        newImages.push({ id: res.id, product_id: Number(productId), url: res.url, alt_text: file.name, sort_order: images.length + newImages.length, is_primary: images.length === 0 && newImages.length === 0 });
       } catch (err) {
         console.error('Upload failed:', err);
       }
@@ -89,8 +89,8 @@ export default function SortableImageGallery({ productId, images, onImagesChange
 
     // Persist sort order
     try {
-      await api.patch(`/api/admin/products/${productId}/images`, {
-        order: reordered.map((img, idx) => ({ id: img.id, sort_order: idx })),
+      await api.patch(`/api/admin/products/${productId}/images/reorder`, {
+        image_ids: reordered.map((img) => img.id),
       });
     } catch (err) {
       console.error('Reorder failed:', err);
@@ -108,7 +108,7 @@ export default function SortableImageGallery({ productId, images, onImagesChange
 
   async function handleSetPrimary(id: number) {
     try {
-      await api.patch(`/api/admin/products/${productId}/images/${id}`, { is_primary: true });
+      await api.patch(`/api/admin/products/${productId}/images/${id}/primary`, {});
       onImagesChange(images.map((img) => ({ ...img, is_primary: img.id === id })));
     } catch (err) {
       console.error('Set primary failed:', err);
