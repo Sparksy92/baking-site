@@ -18,7 +18,7 @@ export default function VariantMatrixBuilder({ productId, existingVariants, onVa
   const [bulkPrice, setBulkPrice] = useState('');
   const [bulkStock, setBulkStock] = useState('');
   const [generating, setGenerating] = useState(false);
-  const [open, setOpen] = useState(false);
+  const [open, setOpen] = useState(existingVariants.length === 0);
 
   function addSize() {
     const val = sizeInput.trim();
