@@ -52,7 +52,7 @@ Move them into `api/app/services/email_templates.py` following the same pattern 
 
 Polish layout, add filtering, improve product grid.
 
-### 8. Static content pages
+### 8. ✅ Static content pages
 - `storefront/app/(shop)/about/page.tsx`
 - `storefront/app/(shop)/faq/page.tsx`
 - `storefront/app/(shop)/shipping-policy/page.tsx`
