@@ -1,12 +1,12 @@
 import type { Metadata } from 'next';
-import Link from 'next/link';
 import { notFound } from 'next/navigation';
 import { apiFetch, type ProductListItem, type Collection } from '@/lib/api';
-import { formatCents, brandName, siteUrl } from '@/lib/format';
+import { brandName, siteUrl } from '@/lib/format';
 import { ProductCard } from '@/components/ProductCard';
 import { JsonLd } from '@/components/JsonLd';
 import { Pagination } from '@/components/Pagination';
 import { SortSelect } from '@/components/SortSelect';
+import { SlidersHorizontal } from 'lucide-react';
 
 const PRODUCTS_PER_PAGE = 24;
 
@@ -62,7 +62,7 @@ export default async function CollectionPage({ params, searchParams }: Props) {
   const totalPages = Math.ceil(total / PRODUCTS_PER_PAGE);
 
   return (
-    <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8 md:py-12">
+    <div className="min-h-screen bg-gray-50/30 pb-20">
       <JsonLd data={{
         '@context': 'https://schema.org',
         '@type': 'BreadcrumbList',
@@ -79,39 +79,60 @@ export default async function CollectionPage({ params, searchParams }: Props) {
         url: `${siteUrl()}/collections/${slug}`,
       }} />
 
-      <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
-        <div>
-          <h1 className="text-3xl font-bold text-gray-900">{collection.name}</h1>
+      {/* Hero Section */}
+      <div className="bg-white border-b border-gray-200">
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-16 md:py-24 flex flex-col items-center text-center">
+          <h1 className="text-4xl md:text-5xl font-extrabold text-gray-900 tracking-tight mb-4">{collection.name}</h1>
           {collection.description && (
-            <p className="mt-2 text-gray-600 max-w-2xl">{collection.description}</p>
+            <p className="mt-2 text-lg text-gray-600 max-w-2xl">{collection.description}</p>
           )}
-          <p className="mt-1 text-sm text-gray-400">{total} product{total !== 1 ? 's' : ''}</p>
         </div>
-        <SortSelect />
       </div>
 
-      {products.length === 0 ? (
-        <p className="mt-8 text-gray-500">No products in this collection yet.</p>
-      ) : (
-        <>
-          <div className="mt-8 grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4 md:gap-6">
-            {products.map((product) => (
-              <ProductCard key={product.id} product={product} />
-            ))}
+      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8 md:py-12">
+        {/* Toolbar */}
+        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 bg-white p-4 rounded-2xl shadow-sm border border-gray-100 mb-8">
+          <p className="text-sm text-gray-600 font-medium">
+            Showing <span className="text-gray-900 font-bold">{total}</span> product{total !== 1 ? 's' : ''}
+          </p>
+          <div className="flex items-center gap-3">
+            <button className="flex items-center gap-2 px-4 py-2 bg-gray-50 hover:bg-gray-100 text-gray-700 rounded-xl text-sm font-medium border border-gray-200 transition-colors">
+              <SlidersHorizontal size={16} /> Filters
+            </button>
+            <div className="h-6 w-[1px] bg-gray-200"></div>
+            <SortSelect />
           </div>
-          <Pagination
-            currentPage={page}
-            totalPages={totalPages}
-            buildHref={(p) => {
-              const params = new URLSearchParams();
-              if (p > 1) params.set('page', String(p));
-              if (sort) params.set('sort', sort);
-              const qs = params.toString();
-              return `/collections/${slug}${qs ? `?${qs}` : ''}`;
-            }}
-          />
-        </>
-      )}
+        </div>
+
+        {/* Product Grid */}
+        {products.length === 0 ? (
+          <div className="py-20 text-center bg-white rounded-3xl border border-gray-100 border-dashed">
+            <p className="text-gray-500 text-lg">No products found in this collection.</p>
+          </div>
+        ) : (
+          <>
+            <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4 md:gap-6 lg:gap-8">
+              {products.map((product) => (
+                <ProductCard key={product.id} product={product} />
+              ))}
+            </div>
+            
+            <div className="mt-12 flex justify-center">
+              <Pagination
+                currentPage={page}
+                totalPages={totalPages}
+                buildHref={(p) => {
+                  const params = new URLSearchParams();
+                  if (p > 1) params.set('page', String(p));
+                  if (sort) params.set('sort', sort);
+                  const qs = params.toString();
+                  return `/collections/${slug}${qs ? \`?\${qs}\` : ''}`;
+                }}
+              />
+            </div>
+          </>
+        )}
+      </div>
     </div>
   );
 }

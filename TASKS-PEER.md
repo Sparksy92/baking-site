@@ -43,7 +43,7 @@ Move them into `api/app/services/email_templates.py` following the same pattern 
 ### 5. ✅ Order confirmation page
 `storefront/app/(shop)/confirmation/[orderNumber]/page.tsx` — make it look polished, show order summary.
 
-### 6. Search page
+### 6. ✅ Search page
 `storefront/app/(shop)/search/page.tsx` — improve results display, empty state, loading state.
 
 ### 7. Collections & Categories pages
