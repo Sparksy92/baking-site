@@ -26,10 +26,12 @@ export function dismissToast(id: string) {
   emit();
 }
 
+const SERVER_SNAPSHOT: Toast[] = [];
+
 export function useToasts(): Toast[] {
   return useSyncExternalStore(
     (cb) => { listeners.push(cb); return () => { listeners = listeners.filter((l) => l !== cb); }; },
     () => toasts,
-    () => [],
+    () => SERVER_SNAPSHOT,
   );
 }
