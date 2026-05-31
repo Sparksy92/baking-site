@@ -217,19 +217,15 @@ export default function ProductForm({ productId }: Props) {
                 <div key={v.id} className="grid grid-cols-[1fr_1fr_1fr_1fr_auto] gap-2 items-center">
                   <input value={v.size} onChange={(e) => updateVariantLocal(v.id, { size: e.target.value })} onBlur={(e) => saveVariant(v.id, { size: e.target.value })} placeholder="Size" className="px-3 py-2 border border-gray-200 rounded-lg text-sm" />
                   <input value={v.color} onChange={(e) => updateVariantLocal(v.id, { color: e.target.value })} onBlur={(e) => saveVariant(v.id, { color: e.target.value })} placeholder="Color" className="px-3 py-2 border border-gray-200 rounded-lg text-sm" />
-                  <div className="relative">
-                    <span className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400 text-sm">$</span>
-                    <input
-                      type="number"
-                      step="0.01"
-                      min="0"
-                      value={(v.price_cents ?? 0) / 100}
-                      onChange={(e) => updateVariantLocal(v.id, { price_cents: Math.round(Number(e.target.value) * 100) })}
-                      onBlur={(e) => saveVariant(v.id, { price_cents: Math.round(Number(e.target.value) * 100) })}
-                      placeholder="0.00"
-                      className="pl-7 pr-3 py-2 border border-gray-200 rounded-lg text-sm w-full"
-                    />
-                  </div>
+                  <input
+                    type="text"
+                    inputMode="decimal"
+                    value={((v.price_cents ?? 0) / 100).toFixed(2)}
+                    onChange={(e) => { const n = Number(e.target.value); if (!isNaN(n)) updateVariantLocal(v.id, { price_cents: Math.round(n * 100) }); }}
+                    onBlur={(e) => { const n = Number(e.target.value); if (!isNaN(n)) saveVariant(v.id, { price_cents: Math.round(n * 100) }); }}
+                    placeholder="$0.00"
+                    className="px-3 py-2 border border-gray-200 rounded-lg text-sm"
+                  />
                   <input type="number" value={v.stock_quantity} onChange={(e) => updateVariantLocal(v.id, { stock_quantity: Number(e.target.value) })} onBlur={(e) => saveVariant(v.id, { stock_quantity: Number(e.target.value) })} placeholder="Stock" className="px-3 py-2 border border-gray-200 rounded-lg text-sm" />
                   <button type="button" onClick={() => deleteVariant(v.id)} className="text-red-400 hover:text-red-600"><Trash2 size={16} /></button>
                 </div>
