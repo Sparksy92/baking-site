@@ -23,10 +23,10 @@ These paths are being actively worked on. **Do not modify any files in these dir
 
 ## Tasks
 
-### 1. Fix e2e admin test (your code)
+### 1. ✅ Fix e2e admin test (your code)
 Your `storefront/e2e/admin.spec.ts` uses `getByPlaceholder(/username/i)` but our login form uses **"Email"** not "Username". Fix the selector so the test passes.
 
-### 2. Email templates — remaining functions
+### 2. ✅ Email templates — remaining functions
 You did order confirmation and shipping. These still use inline HTML in `api/app/services/email_service.py`:
 - `send_order_cancelled`
 - `send_refund_confirmation`
@@ -34,7 +34,7 @@ You did order confirmation and shipping. These still use inline HTML in `api/app
 
 Move them into `api/app/services/email_templates.py` following the same pattern you used. Add tests in `api/tests/test_email_templates.py`.
 
-### 3. Cart page polish
+### 3. ✅ Cart page polish
 `storefront/app/(shop)/cart/page.tsx` — improve UX, empty cart state, quantity controls, mobile layout.
 
 ### 4. Checkout flow
