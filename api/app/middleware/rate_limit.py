@@ -30,7 +30,7 @@ class RateLimitMiddleware(BaseHTTPMiddleware):
     def _get_limit(self, method: str, path: str) -> tuple[int, int]:
         """Returns (max_requests, window_seconds) for the given endpoint."""
         if method == "POST" and path in ("/api/auth/login", "/api/customers/login"):
-            return 500, 900
+            return 5, 900
         if method == "POST" and path.startswith("/api/checkout"):
             return 10, 60
         if method == "GET" and path.startswith("/api/orders/"):
