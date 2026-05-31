@@ -136,7 +136,7 @@ class VariantCreate(BaseModel):
     size: str = Field(min_length=1, max_length=50)
     color: str = Field(min_length=1, max_length=100)
     color_hex: str | None = None
-    price_cents: int = Field(gt=0)
+    price_cents: int = Field(ge=0)
     compare_at_price_cents: int | None = None
     sku: str | None = None
     stock_quantity: int = Field(ge=0, default=0)
