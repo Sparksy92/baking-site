@@ -176,7 +176,10 @@ async def create_variant(
          int(body.is_active), body.sort_order),
     )
     await db.commit()
-    return {"id": cursor.lastrowid}
+    variant_id = cursor.lastrowid
+    cursor = await db.execute("SELECT * FROM product_variants WHERE id = ?", (variant_id,))
+    row = await cursor.fetchone()
+    return dict(row)
 
 
 @router.patch("/{product_id}/variants/{variant_id}")
