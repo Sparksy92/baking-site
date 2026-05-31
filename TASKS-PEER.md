@@ -71,7 +71,7 @@ Safe to work on:
 
 Add empty states, loading skeletons, toast notifications, mobile responsiveness.
 
-### 10. 404 page
+### 10. ✅ 404 page
 Design a branded 404 page at `storefront/app/not-found.tsx`.
 
 ---

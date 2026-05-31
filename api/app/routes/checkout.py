@@ -90,6 +90,12 @@ async def checkout(
                 "shipping_cents": validated["shipping_cents"],
                 "tax_cents": validated["tax_cents"],
                 "total_cents": validated["total_cents"],
+                "shipping_address_line1": body.shipping_address_line1,
+                "shipping_address_line2": body.shipping_address_line2,
+                "shipping_city": body.shipping_city,
+                "shipping_state": body.shipping_state,
+                "shipping_postal_code": body.shipping_postal_code,
+                "shipping_country": body.shipping_country,
             },
             validated["order_items"],
         )

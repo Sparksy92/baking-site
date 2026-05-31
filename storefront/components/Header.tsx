@@ -17,8 +17,10 @@ export function Header() {
   const isCheckout = ['/cart', '/checkout'].includes(pathname);
   const [mobileOpen, setMobileOpen] = useState(false);
   const [announcement, setAnnouncement] = useState('');
+  const [mounted, setMounted] = useState(false);
 
   useEffect(() => {
+    setMounted(true);
     api.get<PublicSettings>('/api/settings/public')
       .then((s) => { if (s.store_announcement) setAnnouncement(s.store_announcement); })
       .catch(() => {});
@@ -99,7 +101,7 @@ export function Header() {
               aria-label="Cart"
             >
               <ShoppingBag size={20} />
-              {count > 0 && (
+              {mounted && count > 0 && (
                 <span className="absolute -top-0.5 -right-0.5 bg-accent text-white text-[10px] font-bold rounded-full min-w-[18px] h-[18px] flex items-center justify-center px-1">
                   {count}
                 </span>
@@ -127,7 +129,7 @@ export function Header() {
       </header>
 
       {/* Floating cart bar — mobile only */}
-      {count > 0 && !isCheckout && (
+      {mounted && count > 0 && !isCheckout && (
         <div className="fixed bottom-0 left-0 right-0 z-50 p-3 bg-white/90 backdrop-blur border-t border-gray-200 md:hidden">
           <Link
             href="/cart"
