@@ -254,7 +254,7 @@ export default function ProductForm({ productId }: Props) {
         {!isNew && (
           <div className="bg-white rounded-xl border border-gray-200 p-6">
             <h2 className="font-semibold text-gray-900 mb-4">Images</h2>
-            <SortableImageGallery productId={productId!} images={images} onImagesChange={setImages} />
+            <SortableImageGallery productId={productId!} images={images} variants={variants} onImagesChange={setImages} />
           </div>
         )}
 

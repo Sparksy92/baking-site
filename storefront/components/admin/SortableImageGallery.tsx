@@ -5,15 +5,18 @@ import { DndContext, closestCenter, DragEndEvent, PointerSensor, useSensor, useS
 import { SortableContext, rectSortingStrategy, useSortable, arrayMove } from '@dnd-kit/sortable';
 import { CSS } from '@dnd-kit/utilities';
 import { Upload, X, Star, GripVertical } from 'lucide-react';
-import { api, type ProductImage } from '@/lib/api';
+import { api, type ProductImage, type Variant } from '@/lib/api';
 
 interface Props {
   productId: string;
   images: ProductImage[];
+  variants: Variant[];
   onImagesChange: (images: ProductImage[]) => void;
 }
 
-function SortableImage({ image, onDelete, onSetPrimary }: { image: ProductImage; onDelete: () => void; onSetPrimary: () => void }) {
+interface ColorOption { variantId: number | null; color: string; hex: string | null }
+
+function SortableImage({ image, onDelete, onSetPrimary, colorOptions, onColorChange }: { image: ProductImage; onDelete: () => void; onSetPrimary: () => void; colorOptions: ColorOption[]; onColorChange: (variantId: number | null) => void }) {
   const { attributes, listeners, setNodeRef, transform, transition, isDragging } = useSortable({ id: image.id });
   const style = {
     transform: CSS.Transform.toString(transform),
@@ -34,14 +37,60 @@ function SortableImage({ image, onDelete, onSetPrimary }: { image: ProductImage;
       <button type="button" onClick={onDelete} className="absolute top-1 right-1 opacity-0 group-hover:opacity-100 bg-red-500 text-white rounded-full w-5 h-5 flex items-center justify-center" title="Delete">
         <X size={12} />
       </button>
+      {colorOptions.length > 0 && (() => {
+        const tagged = colorOptions.find((c) => c.variantId === image.variant_id);
+        return (
+          <>
+            {tagged && tagged.hex && (
+              <span
+                className="absolute top-1 right-7 w-4 h-4 rounded-full border-2 border-white shadow-sm"
+                style={{ backgroundColor: tagged.hex }}
+                title={tagged.color}
+              />
+            )}
+            <select
+              value={image.variant_id ?? ''}
+              onChange={(e) => onColorChange(e.target.value ? Number(e.target.value) : null)}
+              className="absolute bottom-1 right-1 opacity-0 group-hover:opacity-100 bg-white/90 text-[10px] rounded px-1 py-0.5 border border-gray-300 max-w-[90%] cursor-pointer"
+              title="Tag with color"
+            >
+              <option value="">All colors</option>
+              {colorOptions.map((c) => (
+                <option key={c.variantId} value={c.variantId ?? ''}>{c.color}</option>
+              ))}
+            </select>
+          </>
+        );
+      })()}
     </div>
   );
 }
 
-export default function SortableImageGallery({ productId, images, onImagesChange }: Props) {
+export default function SortableImageGallery({ productId, images, variants, onImagesChange }: Props) {
   const [uploading, setUploading] = useState(false);
   const [dragOver, setDragOver] = useState(false);
   const sensors = useSensors(useSensor(PointerSensor, { activationConstraint: { distance: 5 } }));
+
+  // Build unique color options from variants (one per color name, picks first variant ID)
+  const uniqueColors: ColorOption[] = [];
+  const seenColors = new Set<string>();
+  for (const v of variants) {
+    if (!seenColors.has(v.color)) {
+      seenColors.add(v.color);
+      uniqueColors.push({ variantId: v.id, color: v.color, hex: v.color_hex });
+    }
+  }
+
+  async function handleSetColor(imageId: number, variantId: number | null) {
+    try {
+      await api.patch(`/api/admin/products/${productId}/images/${imageId}`, { variant_id: variantId });
+      onImagesChange(images.map((img) =>
+        img.id === imageId ? { ...img, variant_id: variantId } : img
+      ));
+    } catch (err) {
+      console.error('Failed to set image color:', err);
+    }
+  }
 
   async function uploadFiles(files: FileList | File[]) {
     setUploading(true);
@@ -52,7 +101,7 @@ export default function SortableImageGallery({ productId, images, onImagesChange
       fd.append('file', file);
       try {
         const res = await api.upload<{ id: number; url: string }>(`/api/admin/products/${productId}/images`, fd);
-        newImages.push({ id: res.id, product_id: Number(productId), url: res.url, alt_text: file.name, sort_order: images.length + newImages.length, is_primary: images.length === 0 && newImages.length === 0, color: null });
+        newImages.push({ id: res.id, product_id: Number(productId), url: res.url, alt_text: file.name, sort_order: images.length + newImages.length, is_primary: images.length === 0 && newImages.length === 0, color: null, variant_id: null });
       } catch (err) {
         console.error('Upload failed:', err);
       }
@@ -123,9 +172,19 @@ export default function SortableImageGallery({ productId, images, onImagesChange
       <DndContext sensors={sensors} collisionDetection={closestCenter} onDragEnd={handleDragEnd}>
         <SortableContext items={images.map((i) => i.id)} strategy={rectSortingStrategy}>
           <div className="flex flex-wrap gap-3">
-            {images.map((img) => (
-              <SortableImage key={img.id} image={img} onDelete={() => handleDelete(img.id)} onSetPrimary={() => handleSetPrimary(img.id)} />
-            ))}
+            {images.map((img) => {
+              const colorOptions: ColorOption[] = uniqueColors;
+              return (
+                <SortableImage
+                  key={img.id}
+                  image={img}
+                  onDelete={() => handleDelete(img.id)}
+                  onSetPrimary={() => handleSetPrimary(img.id)}
+                  colorOptions={colorOptions}
+                  onColorChange={(variantId) => handleSetColor(img.id, variantId)}
+                />
+              );
+            })}
           </div>
         </SortableContext>
       </DndContext>

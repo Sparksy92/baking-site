@@ -95,6 +95,7 @@ export interface ProductImage {
   sort_order: number;
   is_primary: boolean;
   color: string | null;
+  variant_id: number | null;
 }
 
 export interface Product {

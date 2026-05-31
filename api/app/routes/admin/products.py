@@ -387,3 +387,27 @@ async def reorder_images(
         )
     await db.commit()
     return {"reordered": True}
+
+
+@router.patch("/{product_id}/images/{image_id}")
+async def update_image(
+    product_id: int,
+    image_id: int,
+    body: dict,
+    db: aiosqlite.Connection = Depends(get_db),
+    user: dict = Depends(require_admin),
+):
+    """Update image metadata (variant_id, alt_text)."""
+    allowed = {"variant_id", "alt_text"}
+    updates = {k: v for k, v in body.items() if k in allowed}
+    if not updates:
+        raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail="No valid fields to update")
+
+    set_clause = ", ".join(f"{k} = ?" for k in updates)
+    values = list(updates.values()) + [image_id, product_id]
+    await db.execute(
+        f"UPDATE product_images SET {set_clause} WHERE id = ? AND product_id = ?",
+        values,
+    )
+    await db.commit()
+    return {"updated": True}
