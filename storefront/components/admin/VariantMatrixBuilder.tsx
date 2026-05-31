@@ -21,17 +21,17 @@ export default function VariantMatrixBuilder({ productId, existingVariants, onVa
   const [open, setOpen] = useState(existingVariants.length === 0);
 
   function addSize() {
-    const val = sizeInput.trim();
-    if (val && !sizes.includes(val)) {
-      setSizes([...sizes, val]);
+    const values = sizeInput.split(',').map((s) => s.trim()).filter((s) => s && !sizes.includes(s));
+    if (values.length > 0) {
+      setSizes([...sizes, ...values]);
     }
     setSizeInput('');
   }
 
   function addColor() {
-    const val = colorInput.trim();
-    if (val && !colors.includes(val)) {
-      setColors([...colors, val]);
+    const values = colorInput.split(',').map((s) => s.trim()).filter((s) => s && !colors.includes(s));
+    if (values.length > 0) {
+      setColors([...colors, ...values]);
     }
     setColorInput('');
   }
