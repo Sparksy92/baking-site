@@ -12,7 +12,7 @@ A lightweight, white-label ecommerce platform purpose-built for **clothing and a
                      │ /api/* (proxy rewrite)
 ┌────────────────────▼────────────────────────────┐
 │  API (Python 3.12 + FastAPI + SQLite)           │
-│  60+ endpoints • 27 migration files • 334 tests│
+│  60+ endpoints • 29 migration files • 337 tests│
 └────────────────────┬────────────────────────────┘
                      │
 ┌────────────────────▼────────────────────────────┐
@@ -45,17 +45,17 @@ A lightweight, white-label ecommerce platform purpose-built for **clothing and a
 ### 1. Clone & Configure
 
 ```bash
-git clone <repo-url> clothing-ecommerce-baseline
+git clone https://gitlab.turtleislandsupply.com/rezhub/clothing-ecommerce-baseline.git
 cd clothing-ecommerce-baseline
 cp .env.example .env
 ```
 
-Edit `.env` — for local dev the defaults work fine. The only thing you _may_ want to set:
+Edit `.env` — for local dev the defaults work fine. Set these at minimum:
 
 ```bash
-DEV_MODE=true                  # Enables Swagger docs + relaxed security
-ADMIN_JWT_SECRET=dev-secret    # Any non-default value works for local
-CUSTOMER_JWT_SECRET=dev-cust   # Any non-default value works for local
+DEV_MODE=true                  # Enables Swagger docs at /api/docs
+ADMIN_JWT_SECRET=dev-secret    # Any string works for local
+CUSTOMER_JWT_SECRET=dev-cust   # Any string works for local
 ```
 
 ### 2. Backend (API)
@@ -66,20 +66,19 @@ python3 -m venv .venv
 source .venv/bin/activate
 pip install -r requirements.txt
 
-# Seed sample data (6 products, 3 categories, 2 collections)
-python cli.py seed
+# Start the API server (auto-creates DB + runs migrations on first boot)
+uvicorn app.main:create_app --factory --reload --port 8100
 
-# Create an admin user (interactive)
-python cli.py create-admin
-
-# Start the API server
-uvicorn app.main:app --reload --port 8100
+# In another terminal — seed sample data & create admin user:
+cd api && source .venv/bin/activate
+python cli.py seed           # 6 products, 3 categories, 2 collections
+python cli.py create-admin   # interactive prompt for email/password
 ```
 
 The API will:
 - Auto-create `data/store.db` on first run
-- Run all 27 SQL migrations automatically
-- Serve Swagger docs at `http://localhost:8100/api/docs`
+- Run all 29 SQL migrations automatically
+- Serve Swagger docs at `http://localhost:8100/api/docs` (when `DEV_MODE=true`)
 
 ### 3. Storefront (Next.js)
 
@@ -89,8 +88,11 @@ npm install
 npm run dev
 ```
 
-- Storefront: **http://localhost:5173**
-- Admin panel: **http://localhost:5173/admin**
+The storefront `.env.local` is already committed with local defaults. If you need to change the API URL or brand settings, edit `storefront/.env.local`.
+
+- **Storefront:** http://localhost:5173
+- **Admin panel:** http://localhost:5173/admin
+- **API docs:** http://localhost:8100/api/docs
 
 The storefront proxies `/api/*` to `http://localhost:8100` via `next.config.ts` rewrites.
 
@@ -190,7 +192,7 @@ source .venv/bin/activate
 python -m pytest tests/ -v
 ```
 
-**334 tests** covering all features: health, auth, products, categories, collections, orders, promos, checkout, shipping, customers, wishlist, reviews, related products, back-in-stock, cart, pages, tags, segments, size guides, gift cards, loyalty, bundles, events, analytics, reports, returns, webhooks, social proof, sitemap, request ID.
+**337 tests** covering: health, auth, products, categories, collections, orders, promos, checkout, shipping, customers, wishlist, reviews, related products, back-in-stock, cart, pages, tags, segments, size guides, gift cards, loyalty, bundles, events, analytics, reports, returns, webhooks, social proof, sitemap, CSV import/export, request ID.
 
 ### Storefront Unit Tests (Vitest)
 
@@ -238,7 +240,7 @@ See `infra/` for Docker and nginx configuration.
 │   │   ├── auth.py              # Admin JWT auth
 │   │   ├── customer_auth.py     # Customer JWT auth
 │   │   ├── middleware/          # Rate limiting, request ID, logging
-│   │   ├── migrations/          # 001-027 SQL schema files
+│   │   ├── migrations/          # 001-029 SQL schema files
 │   │   ├── models/schemas.py    # Pydantic models
 │   │   ├── routes/              # Public API routes
 │   │   ├── routes/admin/        # Admin API routes
@@ -266,9 +268,46 @@ See `infra/` for Docker and nginx configuration.
 1. Fork/copy this repo
 2. Update `.env` with brand name, colors, domain
 3. Replace `storefront/public/images/brand/` assets
-4. `cd api && python cli.py seed` (or add products via admin UI)
-5. `python cli.py create-admin`
-6. Deploy
+4. Update `storefront/.env.local` with brand name + colors
+5. `cd api && python cli.py seed` (or add products via admin UI)
+6. `python cli.py create-admin`
+7. Deploy
+
+---
+
+## Development Workflow
+
+**Branch strategy:** feature branches → `staging` → `main`. Never commit directly to `staging` or `main`.
+
+```bash
+# Create a feature branch
+git checkout -b feature/your-feature
+
+# Work, commit, push
+git push -u origin feature/your-feature
+
+# Create MR to staging when ready
+```
+
+**Running tests before pushing:**
+
+```bash
+cd api && source .venv/bin/activate && python -m pytest tests/ -q
+cd ../storefront && npx tsc --noEmit
+```
+
+**Key directories for common tasks:**
+
+| Task | Directory |
+|------|----------|
+| Add/edit API endpoints | `api/app/routes/` or `api/app/routes/admin/` |
+| Change DB schema | `api/app/migrations/` (add new numbered .sql file) |
+| Frontend pages (shop) | `storefront/app/(shop)/` |
+| Admin panel pages | `storefront/app/admin/(panel)/` |
+| Shared components | `storefront/components/` |
+| API client + types | `storefront/lib/api.ts` |
+| Business logic | `api/app/services/` |
+| Tests | `api/tests/` |
 
 ---
 
