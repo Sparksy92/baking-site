@@ -172,9 +172,12 @@ def _parse_rates_response(xml_text: str) -> list[ShippingRate]:
     return rates
 
 
-async def get_cheapest_rate(destination_postal_code: str) -> int | None:
+async def get_cheapest_rate(
+    destination_postal_code: str,
+    weight_kg: float | None = None,
+) -> int | None:
     """Get the cheapest Canada Post rate for a destination. Returns cents or None."""
-    rates = await get_shipping_rates(destination_postal_code)
+    rates = await get_shipping_rates(destination_postal_code, weight_kg=weight_kg)
     if not rates:
         return None
     return rates[0].price_cents

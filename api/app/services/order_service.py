@@ -30,7 +30,7 @@ async def validate_checkout(db: aiosqlite.Connection, body: CheckoutRequest) -> 
 
     for item in body.items:
         cursor = await db.execute(
-            """SELECT pv.*, p.name as product_name
+            """SELECT pv.*, p.name as product_name, p.weight_g
                FROM product_variants pv
                JOIN products p ON p.id = pv.product_id
                WHERE pv.id = ? AND pv.is_active = 1 AND p.is_active = 1""",
@@ -75,12 +75,22 @@ async def validate_checkout(db: aiosqlite.Connection, body: CheckoutRequest) -> 
         else:
             raise CheckoutError(promo_result.message or "Invalid promo code")
 
+    # Calculate total order weight for shipping
+    total_weight_g = 0
+    for oi in order_items:
+        cursor = await db.execute("SELECT weight_g FROM products WHERE id = ?", (oi["product_id"],))
+        row = await cursor.fetchone()
+        item_weight_g = (row["weight_g"] if row and row["weight_g"] else None)
+        if item_weight_g:
+            total_weight_g += item_weight_g * oi["quantity"]
+    order_weight_kg = (total_weight_g / 1000.0) if total_weight_g > 0 else None
+
     # Shipping — use Canada Post real rates if configured, else flat rate
     if subtotal_cents >= settings.shipping_free_threshold_cents:
         shipping_cents = 0
     else:
         from app.services.canadapost_service import get_cheapest_rate
-        cp_rate = await get_cheapest_rate(body.shipping_address.postal_code)
+        cp_rate = await get_cheapest_rate(body.shipping_address.postal_code, weight_kg=order_weight_kg)
         shipping_cents = cp_rate if cp_rate is not None else settings.shipping_flat_rate_cents
 
     # Tax (on subtotal after discount)

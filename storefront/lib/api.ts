@@ -106,6 +106,7 @@ export interface Product {
   is_active: boolean;
   is_featured: boolean;
   sort_order: number;
+  weight_g: number | null;
   variants: Variant[];
   images: ProductImage[];
 }

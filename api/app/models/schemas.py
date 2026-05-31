@@ -114,6 +114,7 @@ class ProductCreate(BaseModel):
     is_active: bool = True
     is_featured: bool = False
     sort_order: int = 0
+    weight_g: int | None = None
 
 
 class ProductUpdate(BaseModel):
@@ -124,6 +125,7 @@ class ProductUpdate(BaseModel):
     is_active: bool | None = None
     is_featured: bool | None = None
     sort_order: int | None = None
+    weight_g: int | None = None
 
 
 class VariantCreate(BaseModel):

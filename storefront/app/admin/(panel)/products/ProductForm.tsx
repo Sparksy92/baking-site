@@ -19,6 +19,7 @@ export default function ProductForm({ productId }: Props) {
   const [categoryId, setCategoryId] = useState<number | null>(null);
   const [isActive, setIsActive] = useState(true);
   const [isFeatured, setIsFeatured] = useState(false);
+  const [weightG, setWeightG] = useState<number | null>(null);
   const [categories, setCategories] = useState<Category[]>([]);
   const [variants, setVariants] = useState<Variant[]>([]);
   const [images, setImages] = useState<ProductImage[]>([]);
@@ -36,6 +37,7 @@ export default function ProductForm({ productId }: Props) {
           setCategoryId(p.category_id);
           setIsActive(p.is_active);
           setIsFeatured(p.is_featured);
+          setWeightG(p.weight_g ?? null);
           setVariants(p.variants);
           setImages(p.images);
         })
@@ -48,7 +50,7 @@ export default function ProductForm({ productId }: Props) {
     e.preventDefault();
     setSaving(true);
     try {
-      const body = { name, slug, description: description || null, category_id: categoryId, is_active: isActive, is_featured: isFeatured };
+      const body = { name, slug, description: description || null, category_id: categoryId, is_active: isActive, is_featured: isFeatured, weight_g: weightG };
       if (isNew) {
         const created = await api.post<{ id: number }>('/api/admin/products', body);
         router.push(`/admin/products/${created.id}`);
@@ -132,6 +134,11 @@ export default function ProductForm({ productId }: Props) {
               <option value="">No category</option>
               {categories.map((c) => <option key={c.id} value={c.id}>{c.name}</option>)}
             </select>
+          </div>
+          <div>
+            <label className="text-sm font-medium text-gray-700 block mb-1">Weight (grams)</label>
+            <input type="number" value={weightG ?? ''} onChange={(e) => setWeightG(e.target.value ? Number(e.target.value) : null)} placeholder="e.g. 350" className={inputClass} />
+            <p className="text-xs text-gray-400 mt-1">Used for Canada Post shipping rates. Enter the packaged weight in grams. Examples: T-shirt ≈ 200g, Hoodie ≈ 500g, Cap ≈ 100g. Leave blank to use the store default ({(0.5 * 1000).toFixed(0)}g).</p>
           </div>
           <div className="flex gap-6">
             <label className="flex items-center gap-2 text-sm"><input type="checkbox" checked={isActive} onChange={(e) => setIsActive(e.target.checked)} /> Active</label>

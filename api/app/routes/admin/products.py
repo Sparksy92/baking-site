@@ -45,15 +45,52 @@ async def create_product(
     """Create a new product."""
     try:
         cursor = await db.execute(
-            """INSERT INTO products (name, slug, description, category_id, is_active, is_featured, sort_order)
-               VALUES (?, ?, ?, ?, ?, ?, ?)""",
+            """INSERT INTO products (name, slug, description, category_id, is_active, is_featured, sort_order, weight_g)
+               VALUES (?, ?, ?, ?, ?, ?, ?, ?)""",
             (body.name, body.slug, body.description, body.category_id,
-             int(body.is_active), int(body.is_featured), body.sort_order),
+             int(body.is_active), int(body.is_featured), body.sort_order, body.weight_g),
         )
         await db.commit()
         return {"id": cursor.lastrowid, "slug": body.slug}
     except aiosqlite.IntegrityError:
         raise HTTPException(status_code=status.HTTP_409_CONFLICT, detail="Product slug already exists")
+
+
+@router.get("/{product_id}")
+async def get_product(
+    product_id: int,
+    db: aiosqlite.Connection = Depends(get_db),
+    user: dict = Depends(require_admin),
+):
+    """Get a single product with its variants and images."""
+    cursor = await db.execute(
+        """SELECT p.*, c.name as category_name
+           FROM products p
+           LEFT JOIN categories c ON c.id = p.category_id
+           WHERE p.id = ?""",
+        (product_id,),
+    )
+    product = await cursor.fetchone()
+    if not product:
+        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Product not found")
+
+    result = dict(product)
+
+    # Variants
+    cursor = await db.execute(
+        "SELECT * FROM product_variants WHERE product_id = ? ORDER BY sort_order, id",
+        (product_id,),
+    )
+    result["variants"] = [dict(r) for r in await cursor.fetchall()]
+
+    # Images
+    cursor = await db.execute(
+        "SELECT * FROM product_images WHERE product_id = ? ORDER BY sort_order",
+        (product_id,),
+    )
+    result["images"] = [dict(r) for r in await cursor.fetchall()]
+
+    return result
 
 
 @router.patch("/{product_id}")

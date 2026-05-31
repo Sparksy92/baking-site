@@ -142,6 +142,7 @@ def create_app() -> FastAPI:
     app.include_router(social_proof.router, prefix="/api")
 
     # ── Admin routes ───────────────────────────────────────────
+    app.include_router(admin_csv.router, prefix="/api")  # must be before admin_products (static paths before {product_id})
     app.include_router(admin_products.router, prefix="/api")
     app.include_router(admin_collections.router, prefix="/api")
     app.include_router(admin_categories.router, prefix="/api")
@@ -150,7 +151,6 @@ def create_app() -> FastAPI:
     app.include_router(admin_promos.router, prefix="/api")
     app.include_router(admin_newsletter.router, prefix="/api")
     app.include_router(admin_dashboard.router, prefix="/api")
-    app.include_router(admin_csv.router, prefix="/api")
     app.include_router(admin_reviews.router, prefix="/api")
     app.include_router(admin_related.router, prefix="/api")
     app.include_router(admin_auto_discounts.router, prefix="/api")
