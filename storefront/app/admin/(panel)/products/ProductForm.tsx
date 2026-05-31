@@ -1,10 +1,11 @@
 'use client';
 
-import { useEffect, useState, useRef, useCallback } from 'react';
+import { useEffect, useState } from 'react';
 import { useRouter } from 'next/navigation';
 import dynamic from 'next/dynamic';
 import { Trash2, Tag, X, ChevronDown, ChevronUp } from 'lucide-react';
 import { api, type Product, type Category, type Variant, type ProductImage } from '@/lib/api';
+import { addToast } from '@/lib/toast';
 import SortableImageGallery from '@/components/admin/SortableImageGallery';
 import VariantMatrixBuilder from '@/components/admin/VariantMatrixBuilder';
 
@@ -78,12 +79,15 @@ export default function ProductForm({ productId }: Props) {
       };
       if (isNew) {
         const created = await api.post<{ id: number }>('/api/admin/products', body);
+        addToast('Product created', 'success');
         router.push(`/admin/products/${created.id}`);
       } else {
         await api.patch(`/api/admin/products/${productId}`, body);
+        addToast('Product saved', 'success');
       }
     } catch (err) {
       console.error(err);
+      addToast('Failed to save product', 'error');
     } finally {
       setSaving(false);
     }
@@ -101,8 +105,7 @@ export default function ProductForm({ productId }: Props) {
 
   async function saveVariant(id: number, data: Partial<Variant>) {
     try {
-      const updated = await api.patch<Variant>(`/api/admin/products/${productId}/variants/${id}`, data);
-      setVariants((prev) => prev.map((v) => (v.id === id ? updated : v)));
+      await api.patch(`/api/admin/products/${productId}/variants/${id}`, data);
     } catch (err) { console.error(err); }
   }
 
