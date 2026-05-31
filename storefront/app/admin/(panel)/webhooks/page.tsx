@@ -12,13 +12,14 @@ export default function WebhooksPage() {
   const [loading, setLoading] = useState(true);
   const [showForm, setShowForm] = useState(false);
   const [form, setForm] = useState({ url: '', events: [] as string[], secret: '' });
+  const [helpOpen, setHelpOpen] = useState(false);
 
   useEffect(() => { load(); }, []);
 
   async function load() {
     try {
       const data = await api.get<WebhookItem[]>('/api/admin/webhooks');
-      setHooks(data);
+      setHooks(Array.isArray(data) ? data : []);
     } catch {} finally { setLoading(false); }
   }
 
@@ -44,7 +45,11 @@ export default function WebhooksPage() {
   return (
     <div>
       <div className="flex items-center justify-between mb-6">
-        <h1 className="text-2xl font-bold text-gray-900">Webhooks</h1>
+        <div>
+          <h1 className="text-2xl font-bold text-gray-900">Webhooks</h1>
+          <button onClick={() => setHelpOpen(!helpOpen)} className="text-xs text-blue-600 hover:underline mt-0.5">What are webhooks?</button>
+          {helpOpen && <p className="text-sm text-gray-500 mt-2 bg-blue-50 border border-blue-100 rounded-lg p-3">Webhooks send real-time HTTP notifications to external services when events happen in your store (e.g. new order, return requested). Use them to integrate with shipping providers, accounting software, or custom automation.</p>}
+        </div>
         <button onClick={() => setShowForm(!showForm)} className="px-4 py-2 bg-brand text-white rounded-lg text-sm font-medium">+ Add Webhook</button>
       </div>
 

@@ -18,13 +18,14 @@ export default function GiftCardsPage() {
   const [loading, setLoading] = useState(true);
   const [showCreate, setShowCreate] = useState(false);
   const [amount, setAmount] = useState('25.00');
+  const [helpOpen, setHelpOpen] = useState(false);
 
   useEffect(() => { load(); }, []);
 
   async function load() {
     try {
       const data = await api.get<{ gift_cards: GiftCard[] }>('/api/admin/gift-cards');
-      setCards(data.gift_cards);
+      setCards(data.gift_cards ?? []);
     } catch {} finally { setLoading(false); }
   }
 
@@ -45,7 +46,11 @@ export default function GiftCardsPage() {
   return (
     <div>
       <div className="flex items-center justify-between mb-6">
-        <h1 className="text-2xl font-bold text-gray-900">Gift Cards</h1>
+        <div>
+          <h1 className="text-2xl font-bold text-gray-900">Gift Cards</h1>
+          <button onClick={() => setHelpOpen(!helpOpen)} className="text-xs text-blue-600 hover:underline mt-0.5">How do gift cards work?</button>
+          {helpOpen && <p className="text-sm text-gray-500 mt-2 bg-blue-50 border border-blue-100 rounded-lg p-3">Issue digital gift cards with a pre-loaded balance. Each card gets a unique code customers can enter at checkout. The balance decreases with each use. You can deactivate a card at any time to prevent further use.</p>}
+        </div>
         <button onClick={() => setShowCreate(!showCreate)} className="px-4 py-2 bg-brand text-white rounded-lg text-sm font-medium">+ Issue Card</button>
       </div>
 

@@ -9,13 +9,14 @@ export default function TagsPage() {
   const [tags, setTags] = useState<Tag[]>([]);
   const [loading, setLoading] = useState(true);
   const [newTag, setNewTag] = useState({ name: '', slug: '' });
+  const [helpOpen, setHelpOpen] = useState(false);
 
   useEffect(() => { load(); }, []);
 
   async function load() {
     try {
-      const data = await api.get<{ tags: Tag[] }>('/api/admin/tags');
-      setTags(data.tags);
+      const data = await api.get<Tag[]>('/api/admin/tags');
+      setTags(Array.isArray(data) ? data : []);
     } catch {} finally { setLoading(false); }
   }
 
@@ -35,7 +36,11 @@ export default function TagsPage() {
 
   return (
     <div>
-      <h1 className="text-2xl font-bold text-gray-900 mb-6">Tags</h1>
+      <div className="mb-6">
+        <h1 className="text-2xl font-bold text-gray-900">Tags</h1>
+        <button onClick={() => setHelpOpen(!helpOpen)} className="text-xs text-blue-600 hover:underline mt-0.5">What are tags?</button>
+        {helpOpen && <p className="text-sm text-gray-500 mt-2 bg-blue-50 border border-blue-100 rounded-lg p-3">Tags are flexible labels you can attach to products for filtering and organization. Unlike categories (which are hierarchical), tags are flat and a product can have many. Examples: "new-arrival", "best-seller", "eco-friendly".</p>}
+      </div>
 
       <div className="bg-white rounded-xl border border-gray-200 p-4 mb-4 flex items-end gap-3">
         <div>

@@ -9,14 +9,15 @@ export default function SizeGuidesPage() {
   const [guides, setGuides] = useState<SizeGuide[]>([]);
   const [loading, setLoading] = useState(true);
   const [showForm, setShowForm] = useState(false);
+  const [helpOpen, setHelpOpen] = useState(false);
   const [form, setForm] = useState({ name: '', category_slug: '', measurements_json: '{"columns":["Size","Chest","Length"],"rows":[["S","36","28"],["M","38","29"],["L","40","30"]]}', is_default: false });
 
   useEffect(() => { load(); }, []);
 
   async function load() {
     try {
-      const data = await api.get<{ size_guides: SizeGuide[] }>('/api/admin/size-guides');
-      setGuides(data.size_guides);
+      const data = await api.get<SizeGuide[]>('/api/admin/size-guides');
+      setGuides(Array.isArray(data) ? data : []);
     } catch {} finally { setLoading(false); }
   }
 
@@ -38,7 +39,11 @@ export default function SizeGuidesPage() {
   return (
     <div>
       <div className="flex items-center justify-between mb-6">
-        <h1 className="text-2xl font-bold text-gray-900">Size Guides</h1>
+        <div>
+          <h1 className="text-2xl font-bold text-gray-900">Size Guides</h1>
+          <button onClick={() => setHelpOpen(!helpOpen)} className="text-xs text-blue-600 hover:underline mt-0.5">What are size guides?</button>
+          {helpOpen && <p className="text-sm text-gray-500 mt-2 bg-blue-50 border border-blue-100 rounded-lg p-3">Size guides are measurement charts displayed on product pages to help customers choose the right fit. You can create guides per category (e.g. tops vs pants) or set a default guide. The measurements JSON defines column headers and rows.</p>}
+        </div>
         <button onClick={() => setShowForm(!showForm)} className="px-4 py-2 bg-brand text-white rounded-lg text-sm font-medium">+ New Guide</button>
       </div>
 

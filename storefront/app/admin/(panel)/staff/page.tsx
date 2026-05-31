@@ -18,13 +18,14 @@ export default function StaffPage() {
   const [loading, setLoading] = useState(true);
   const [showForm, setShowForm] = useState(false);
   const [form, setForm] = useState({ username: '', password: '', display_name: '', role: 'staff' });
+  const [helpOpen, setHelpOpen] = useState(false);
 
   useEffect(() => { load(); }, []);
 
   async function load() {
     try {
-      const data = await api.get<{ staff: StaffMember[] }>('/api/admin/staff');
-      setStaff(data.staff);
+      const data = await api.get<StaffMember[]>('/api/admin/staff');
+      setStaff(Array.isArray(data) ? data : []);
     } catch {} finally { setLoading(false); }
   }
 
@@ -45,7 +46,11 @@ export default function StaffPage() {
   return (
     <div>
       <div className="flex items-center justify-between mb-6">
-        <h1 className="text-2xl font-bold text-gray-900">Staff</h1>
+        <div>
+          <h1 className="text-2xl font-bold text-gray-900">Staff</h1>
+          <button onClick={() => setHelpOpen(!helpOpen)} className="text-xs text-blue-600 hover:underline mt-0.5">What is staff management?</button>
+          {helpOpen && <p className="text-sm text-gray-500 mt-2 bg-blue-50 border border-blue-100 rounded-lg p-3">Manage admin accounts that can access this panel. Staff can be assigned roles (staff, admin, owner) to control access levels. Disable an account to revoke access without deleting it.</p>}
+        </div>
         <button onClick={() => setShowForm(!showForm)} className="px-4 py-2 bg-brand text-white rounded-lg text-sm font-medium">+ Add Staff</button>
       </div>
 

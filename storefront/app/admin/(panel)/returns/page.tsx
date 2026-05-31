@@ -17,13 +17,14 @@ interface ReturnRequest {
 export default function ReturnsPage() {
   const [returns, setReturns] = useState<ReturnRequest[]>([]);
   const [loading, setLoading] = useState(true);
+  const [helpOpen, setHelpOpen] = useState(false);
 
   useEffect(() => { load(); }, []);
 
   async function load() {
     try {
       const data = await api.get<{ returns: ReturnRequest[]; total: number }>('/api/admin/returns');
-      setReturns(data.returns);
+      setReturns(data.returns ?? []);
     } catch {} finally { setLoading(false); }
   }
 
@@ -36,7 +37,11 @@ export default function ReturnsPage() {
 
   return (
     <div>
-      <h1 className="text-2xl font-bold text-gray-900 mb-6">Returns</h1>
+      <div className="mb-6">
+        <h1 className="text-2xl font-bold text-gray-900">Returns</h1>
+        <button onClick={() => setHelpOpen(!helpOpen)} className="text-xs text-blue-600 hover:underline mt-0.5">How do returns work?</button>
+        {helpOpen && <p className="text-sm text-gray-500 mt-2 bg-blue-50 border border-blue-100 rounded-lg p-3">Customers can request returns from their account. Returned items go through a workflow: Pending → Approved/Rejected → Received → Refunded. Approving a return sends the customer shipping instructions. Marking as received triggers stock restoration.</p>}
+      </div>
       {returns.length === 0 ? (
         <p className="text-gray-500">No return requests yet.</p>
       ) : (

@@ -33,6 +33,7 @@ export default function AnalyticsPage() {
   const [funnel, setFunnel] = useState<Funnel | null>(null);
   const [report, setReport] = useState<SalesReport | null>(null);
   const [days, setDays] = useState(30);
+  const [helpOpen, setHelpOpen] = useState(false);
 
   useEffect(() => {
     api.get<Funnel>(`/api/admin/analytics/funnel?days=${days}`).then(setFunnel).catch(() => {});
@@ -44,7 +45,11 @@ export default function AnalyticsPage() {
   return (
     <div>
       <div className="flex items-center justify-between mb-6">
-        <h1 className="text-2xl font-bold text-gray-900">Analytics</h1>
+        <div>
+          <h1 className="text-2xl font-bold text-gray-900">Analytics</h1>
+          <button onClick={() => setHelpOpen(!helpOpen)} className="text-xs text-blue-600 hover:underline mt-0.5">What does this page show?</button>
+          {helpOpen && <p className="text-sm text-gray-500 mt-2 bg-blue-50 border border-blue-100 rounded-lg p-3">Analytics shows your store's performance at a glance: revenue, order volume, average order value, conversion funnel (views → cart → checkout → purchase), and marketing attribution by UTM source. Use the date range selector to compare different periods.</p>}
+        </div>
         <select value={days} onChange={(e) => setDays(Number(e.target.value))} className="border border-gray-200 rounded-lg px-3 py-1.5 text-sm">
           <option value={7}>Last 7 days</option>
           <option value={30}>Last 30 days</option>
@@ -81,11 +86,11 @@ export default function AnalyticsPage() {
       )}
 
       {/* UTM Attribution */}
-      {report && report.utm_attribution.length > 0 && (
+      {report && (report.utm_attribution ?? []).length > 0 && (
         <div className="bg-white rounded-xl border border-gray-200 p-5">
           <h2 className="font-semibold text-gray-900 mb-3">Marketing Attribution</h2>
           <div className="space-y-2">
-            {report.utm_attribution.map((u, i) => (
+            {(report.utm_attribution ?? []).map((u, i) => (
               <div key={i} className="flex justify-between text-sm">
                 <span className="text-gray-700">{u.utm_source}/{u.utm_medium}</span>
                 <span className="text-gray-500">{u.orders} orders</span>

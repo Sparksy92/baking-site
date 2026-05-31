@@ -18,13 +18,14 @@ export default function BundlesPage() {
   const [loading, setLoading] = useState(true);
   const [showForm, setShowForm] = useState(false);
   const [form, setForm] = useState({ name: '', slug: '', discount_type: 'percent', discount_value: '10' });
+  const [helpOpen, setHelpOpen] = useState(false);
 
   useEffect(() => { load(); }, []);
 
   async function load() {
     try {
-      const data = await api.get<{ bundles: Bundle[] }>('/api/admin/bundles');
-      setBundles(data.bundles);
+      const data = await api.get<Bundle[]>('/api/admin/bundles');
+      setBundles(Array.isArray(data) ? data : []);
     } catch {} finally { setLoading(false); }
   }
 
@@ -42,7 +43,11 @@ export default function BundlesPage() {
   return (
     <div>
       <div className="flex items-center justify-between mb-6">
-        <h1 className="text-2xl font-bold text-gray-900">Product Bundles</h1>
+        <div>
+          <h1 className="text-2xl font-bold text-gray-900">Product Bundles</h1>
+          <button onClick={() => setHelpOpen(!helpOpen)} className="text-xs text-blue-600 hover:underline mt-0.5">What are bundles?</button>
+          {helpOpen && <p className="text-sm text-gray-500 mt-2 bg-blue-50 border border-blue-100 rounded-lg p-3">Bundles let you group multiple products together and sell them at a discount. For example, a "Summer Essentials" bundle with a t-shirt, shorts, and cap at 15% off. Customers see the bundle as a single purchasable item.</p>}
+        </div>
         <button onClick={() => setShowForm(!showForm)} className="px-4 py-2 bg-brand text-white rounded-lg text-sm font-medium">+ New Bundle</button>
       </div>
 
