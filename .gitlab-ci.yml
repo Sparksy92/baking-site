@@ -25,6 +25,52 @@ variables:
   DEPLOY_APP: "clothing-ecommerce-baseline"
 
 # =============================================================================
+# VALIDATE — Infrastructure change detection
+# =============================================================================
+
+validate:infra-impact:
+  stage: validate
+  image: alpine:3.19
+  script:
+    - |
+      echo "Checking for infrastructure-impacting changes..."
+      WARNINGS=""
+      # Detect database driver changes
+      if git diff --name-only $CI_MERGE_REQUEST_DIFF_BASE_SHA $CI_COMMIT_SHA 2>/dev/null | grep -q "requirements.txt"; then
+        if git diff $CI_MERGE_REQUEST_DIFF_BASE_SHA $CI_COMMIT_SHA -- api/requirements.txt 2>/dev/null | grep -qE "^\+.*(asyncpg|psycopg|sqlalchemy|sqlite|mysql)"; then
+          WARNINGS="${WARNINGS}\n⚠️  DATABASE DRIVER CHANGED — update ansible-infrastructure compose + env templates"
+        fi
+      fi
+      # Detect Dockerfile changes
+      if git diff --name-only $CI_MERGE_REQUEST_DIFF_BASE_SHA $CI_COMMIT_SHA 2>/dev/null | grep -q "Dockerfile"; then
+        WARNINGS="${WARNINGS}\n⚠️  DOCKERFILE CHANGED — verify ansible-infrastructure build context still matches"
+      fi
+      # Detect new env vars in config
+      if git diff --name-only $CI_MERGE_REQUEST_DIFF_BASE_SHA $CI_COMMIT_SHA 2>/dev/null | grep -q "config.py"; then
+        if git diff $CI_MERGE_REQUEST_DIFF_BASE_SHA $CI_COMMIT_SHA -- api/app/config.py 2>/dev/null | grep -qE "^\+.*:\s*(str|int|bool)"; then
+          WARNINGS="${WARNINGS}\n⚠️  NEW CONFIG/ENV VARS DETECTED — update ansible env templates"
+        fi
+      fi
+      if [ -n "$WARNINGS" ]; then
+        echo "============================================"
+        echo "INFRASTRUCTURE IMPACT WARNINGS"
+        echo "============================================"
+        echo -e "$WARNINGS"
+        echo ""
+        echo "These changes may require updates to:"
+        echo "  - ansible-infrastructure/roles/clothing-ecommerce/"
+        echo "  - Compose templates, env templates, or vault"
+        echo "============================================"
+      else
+        echo "No infrastructure-impacting changes detected."
+      fi
+  before_script:
+    - apk add --no-cache git
+  rules:
+    - if: '$CI_PIPELINE_SOURCE == "merge_request_event"'
+  allow_failure: true
+
+# =============================================================================
 # QUALITY — Linting & type checking
 # =============================================================================
 
