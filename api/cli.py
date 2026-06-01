@@ -19,12 +19,10 @@ sys.path.insert(0, os.path.dirname(__file__))
 async def create_admin():
     """Create the first admin user interactively."""
     from app.config import get_settings
-    from app.database import init_db, set_db_path
+    from app.database import init_db, get_db
     from app.auth import hash_password
-    import aiosqlite
 
     settings = get_settings()
-    set_db_path(settings.database_path)
     await init_db()
 
     print("── Create Admin User ──")
@@ -47,34 +45,30 @@ async def create_admin():
 
     pw_hash = hash_password(password)
 
-    async with aiosqlite.connect(settings.database_path) as db:
+    async for db in get_db():
         try:
             await db.execute(
                 "INSERT INTO admin_users (username, password_hash, display_name, role) VALUES (?, ?, ?, ?)",
                 (username, pw_hash, display_name, "owner"),
             )
-            await db.commit()
             print(f"\n✓ Admin user '{username}' created with role 'owner'")
         except Exception as e:
-            if "UNIQUE" in str(e):
+            if "UNIQUE" in str(e) or "unique constraint" in str(e).lower():
                 print(f"Error: username '{username}' already exists")
             else:
                 print(f"Error: {e}")
+        break
 
 
 async def seed():
     """Insert sample products, categories, and collections for development."""
     from app.config import get_settings
-    from app.database import init_db, set_db_path
-    import aiosqlite
+    from app.database import init_db, get_db
 
     settings = get_settings()
-    set_db_path(settings.database_path)
     await init_db()
 
-    async with aiosqlite.connect(settings.database_path) as db:
-        db.row_factory = aiosqlite.Row
-
+    async for db in get_db():
         # Check if already seeded
         cursor = await db.execute("SELECT COUNT(*) FROM products")
         count = (await cursor.fetchone())[0]
@@ -173,8 +167,8 @@ async def seed():
         await db.execute("INSERT INTO collection_products (collection_id, product_id, sort_order) VALUES (2, 2, 0)")
         await db.execute("INSERT INTO collection_products (collection_id, product_id, sort_order) VALUES (2, 4, 1)")
         await db.execute("INSERT INTO collection_products (collection_id, product_id, sort_order) VALUES (2, 5, 2)")
-
-        await db.commit()
+        
+        break
 
     print("✓ Seeded database:")
     print("  • 3 categories")

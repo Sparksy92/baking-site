@@ -61,7 +61,7 @@ async def update_collection(
     values = list(updates.values()) + [collection_id]
 
     await db.execute(
-        f"UPDATE collections SET {set_clause}, updated_at = datetime('now') WHERE id = ?",
+        f"UPDATE collections SET {set_clause}, updated_at = CURRENT_TIMESTAMP WHERE id = ?",
         values,
     )
     await db.commit()

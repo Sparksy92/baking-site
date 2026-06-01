@@ -67,7 +67,7 @@ async def abandoned_cart_stats(
             SUM(CASE WHEN status = 'abandoned' THEN subtotal_cents ELSE 0 END) as abandoned_value_cents,
             SUM(CASE WHEN status = 'recovered' THEN subtotal_cents ELSE 0 END) as recovered_value_cents
         FROM carts
-        WHERE created_at >= datetime('now', '-30 days')
+        WHERE created_at >= (CURRENT_TIMESTAMP - INTERVAL '30 days')
     """)
     row = await cursor.fetchone()
 

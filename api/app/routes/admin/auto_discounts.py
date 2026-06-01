@@ -129,7 +129,7 @@ async def update_auto_discount(
     values = list(updates.values()) + [discount_id]
 
     await db.execute(
-        f"UPDATE automatic_discounts SET {set_clause}, updated_at = datetime('now') WHERE id = ?",
+        f"UPDATE automatic_discounts SET {set_clause}, updated_at = CURRENT_TIMESTAMP WHERE id = ?",
         values,
     )
     await db.commit()

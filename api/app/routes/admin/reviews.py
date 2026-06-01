@@ -59,7 +59,7 @@ async def moderate_review(
         raise HTTPException(status_code=400, detail="Status must be 'approved' or 'rejected'")
 
     result = await db.execute(
-        "UPDATE product_reviews SET status = ?, updated_at = datetime('now') WHERE id = ?",
+        "UPDATE product_reviews SET status = ?, updated_at = CURRENT_TIMESTAMP WHERE id = ?",
         (body.status, review_id),
     )
     await db.commit()

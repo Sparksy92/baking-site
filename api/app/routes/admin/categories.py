@@ -78,7 +78,7 @@ async def update_category(
     values = list(updates.values()) + [category_id]
 
     result = await db.execute(
-        f"UPDATE categories SET {set_clause}, updated_at = datetime('now') WHERE id = ?",
+        f"UPDATE categories SET {set_clause}, updated_at = CURRENT_TIMESTAMP WHERE id = ?",
         values,
     )
     await db.commit()

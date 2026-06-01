@@ -47,7 +47,7 @@ export const brandConfig: BrandConfig = {
   },
   navigation: {
     mainLinks: [
-      { label: 'Shop', href: '/' },
+      { label: 'Shop', href: '/search' },
       { label: 'New Arrivals', href: '/collections/new-arrivals' },
       { label: 'Categories', href: '/categories' },
       { label: 'About', href: '/about' },
@@ -59,7 +59,6 @@ export const brandConfig: BrandConfig = {
           { label: 'All Products', href: '/search' },
           { label: 'New Arrivals', href: '/collections/new-arrivals' },
           { label: 'Categories', href: '/categories' },
-          { label: 'Search', href: '/search' },
         ],
       },
       {

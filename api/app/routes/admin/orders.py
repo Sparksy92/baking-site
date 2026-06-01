@@ -97,7 +97,7 @@ async def update_order(
     values = list(updates.values()) + [order_id]
 
     await db.execute(
-        f"UPDATE orders SET {set_clause}, updated_at = datetime('now') WHERE id = ?",
+        f"UPDATE orders SET {set_clause}, updated_at = CURRENT_TIMESTAMP WHERE id = ?",
         values,
     )
     await db.commit()
@@ -184,9 +184,9 @@ async def refund_order(
                payment_status = 'refunded',
                refund_amount_cents = ?,
                stripe_refund_id = ?,
-               refunded_at = datetime('now'),
+               refunded_at = CURRENT_TIMESTAMP,
                refund_reason = ?,
-               updated_at = datetime('now')
+               updated_at = CURRENT_TIMESTAMP
            WHERE id = ?""",
         (refund_amount, stripe_refund_id, body.reason, order_id),
     )

@@ -28,7 +28,7 @@ async def get_social_proof(
            FROM events
            WHERE event_type = 'product_viewed'
              AND product_id = ?
-             AND created_at >= datetime('now', '-30 minutes')""",
+             AND created_at >= (CURRENT_TIMESTAMP - INTERVAL '30 minutes')""",
         (product_id,),
     )
     row = await cursor.fetchone()

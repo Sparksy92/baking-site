@@ -119,7 +119,7 @@ async def update_segment(
     set_clause = ", ".join(f"{k} = ?" for k in updates)
     values = list(updates.values()) + [segment_id]
     await db.execute(
-        f"UPDATE customer_segments SET {set_clause}, updated_at = datetime('now') WHERE id = ?", values
+        f"UPDATE customer_segments SET {set_clause}, updated_at = CURRENT_TIMESTAMP WHERE id = ?", values
     )
     await db.commit()
     return {"updated": True}

@@ -19,7 +19,15 @@ class Settings(BaseSettings):
     brand_favicon_path: str = "/images/brand/favicon.ico"
 
     # ── Database ─────────────────────────────────────────────────
-    database_path: str = "./data/store.db"
+    postgres_user: str = "ecommerce"
+    postgres_password: str = "ecommerce_password"
+    postgres_db: str = "ecommerce"
+    postgres_host: str = "localhost"
+    postgres_port: int = 5432
+    
+    @property
+    def database_url(self) -> str:
+        return f"postgresql://{self.postgres_user}:{self.postgres_password}@{self.postgres_host}:{self.postgres_port}/{self.postgres_db}"
 
     # ── Auth ─────────────────────────────────────────────────────
     admin_jwt_secret: str = "CHANGE_ME"
@@ -82,12 +90,8 @@ class Settings(BaseSettings):
     }
 
     @property
-    def database_dir(self) -> Path:
-        return Path(self.database_path).parent
-
-    @property
     def uploads_dir(self) -> Path:
-        return self.database_dir / "uploads" / "products"
+        return Path("./data/uploads/products")
 
 
 @lru_cache

@@ -93,7 +93,7 @@ async def update_size_guide(
     set_clause = ", ".join(f"{k} = ?" for k in updates)
     values = list(updates.values()) + [guide_id]
     await db.execute(
-        f"UPDATE size_guides SET {set_clause}, updated_at = datetime('now') WHERE id = ?", values
+        f"UPDATE size_guides SET {set_clause}, updated_at = CURRENT_TIMESTAMP WHERE id = ?", values
     )
     await db.commit()
     return {"updated": True}

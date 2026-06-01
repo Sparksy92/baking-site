@@ -117,7 +117,7 @@ async def adjust_balance(
         )
 
     await db.execute(
-        "UPDATE gift_cards SET current_balance_cents = ?, updated_at = datetime('now') WHERE id = ?",
+        "UPDATE gift_cards SET current_balance_cents = ?, updated_at = CURRENT_TIMESTAMP WHERE id = ?",
         (new_balance, card_id),
     )
     await db.execute(
@@ -140,7 +140,7 @@ async def deactivate_gift_card(
         raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Gift card not found")
 
     await db.execute(
-        "UPDATE gift_cards SET is_active = 0, updated_at = datetime('now') WHERE id = ?", (card_id,)
+        "UPDATE gift_cards SET is_active = 0, updated_at = CURRENT_TIMESTAMP WHERE id = ?", (card_id,)
     )
     await db.commit()
     return {"deactivated": True}

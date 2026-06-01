@@ -173,7 +173,7 @@ async def update_profile(
     set_clause = ", ".join(f"{k} = ?" for k in updates)
     values = list(updates.values()) + [customer_id]
     await db.execute(
-        f"UPDATE customers SET {set_clause}, updated_at = datetime('now') WHERE id = ?",
+        f"UPDATE customers SET {set_clause}, updated_at = CURRENT_TIMESTAMP WHERE id = ?",
         values,
     )
     await db.commit()
@@ -204,7 +204,7 @@ async def change_password(
 
     new_hash = hash_password(body.new_password)
     await db.execute(
-        "UPDATE customers SET password_hash = ?, updated_at = datetime('now') WHERE id = ?",
+        "UPDATE customers SET password_hash = ?, updated_at = CURRENT_TIMESTAMP WHERE id = ?",
         (new_hash, customer_id),
     )
     await db.commit()
@@ -273,7 +273,7 @@ async def reset_password(
     new_hash = hash_password(body.new_password)
     await db.execute(
         """UPDATE customers SET password_hash = ?, password_reset_token = NULL,
-           password_reset_expires = NULL, updated_at = datetime('now') WHERE id = ?""",
+           password_reset_expires = NULL, updated_at = CURRENT_TIMESTAMP WHERE id = ?""",
         (new_hash, customer["id"]),
     )
     await db.commit()
@@ -364,7 +364,7 @@ async def update_address(
     set_clause = ", ".join(f"{k} = ?" for k in updates)
     values = list(updates.values()) + [address_id, customer_id]
     await db.execute(
-        f"UPDATE customer_addresses SET {set_clause}, updated_at = datetime('now') WHERE id = ? AND customer_id = ?",
+        f"UPDATE customer_addresses SET {set_clause}, updated_at = CURRENT_TIMESTAMP WHERE id = ? AND customer_id = ?",
         values,
     )
     await db.commit()

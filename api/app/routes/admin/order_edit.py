@@ -86,7 +86,7 @@ async def edit_order_item(
     new_total = items_total + (order_data["shipping_cents"] or 0) - (order_data["discount_cents"] or 0)
 
     await db.execute(
-        "UPDATE orders SET subtotal_cents = ?, total_cents = ?, updated_at = datetime('now') WHERE id = ?",
+        "UPDATE orders SET subtotal_cents = ?, total_cents = ?, updated_at = CURRENT_TIMESTAMP WHERE id = ?",
         (items_total, max(new_total, 0), order_id),
     )
     await db.commit()
@@ -160,7 +160,7 @@ async def add_order_item(
     new_total = items_total + (order_data["shipping_cents"] or 0) - (order_data["discount_cents"] or 0)
 
     await db.execute(
-        "UPDATE orders SET subtotal_cents = ?, total_cents = ?, updated_at = datetime('now') WHERE id = ?",
+        "UPDATE orders SET subtotal_cents = ?, total_cents = ?, updated_at = CURRENT_TIMESTAMP WHERE id = ?",
         (items_total, max(new_total, 0), order_id),
     )
     await db.commit()

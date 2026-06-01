@@ -125,7 +125,7 @@ async def update_product(
     values = list(updates.values()) + [product_id]
 
     await db.execute(
-        f"UPDATE products SET {set_clause}, updated_at = datetime('now') WHERE id = ?",
+        f"UPDATE products SET {set_clause}, updated_at = CURRENT_TIMESTAMP WHERE id = ?",
         values,
     )
     await db.commit()
@@ -146,7 +146,7 @@ async def delete_product(
 
     if order_count > 0:
         await db.execute(
-            "UPDATE products SET is_active = 0, updated_at = datetime('now') WHERE id = ?",
+            "UPDATE products SET is_active = 0, updated_at = CURRENT_TIMESTAMP WHERE id = ?",
             (product_id,),
         )
         await db.commit()
@@ -213,7 +213,7 @@ async def update_variant(
     values = list(updates.values()) + [variant_id, product_id]
 
     await db.execute(
-        f"UPDATE product_variants SET {set_clause}, updated_at = datetime('now') WHERE id = ? AND product_id = ?",
+        f"UPDATE product_variants SET {set_clause}, updated_at = CURRENT_TIMESTAMP WHERE id = ? AND product_id = ?",
         values,
     )
     await db.commit()

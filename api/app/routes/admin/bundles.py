@@ -91,7 +91,7 @@ async def update_bundle(
     set_clause = ", ".join(f"{k} = ?" for k in updates)
     values = list(updates.values()) + [bundle_id]
     await db.execute(
-        f"UPDATE bundles SET {set_clause}, updated_at = datetime('now') WHERE id = ?", values
+        f"UPDATE bundles SET {set_clause}, updated_at = CURRENT_TIMESTAMP WHERE id = ?", values
     )
     await db.commit()
     return {"updated": True}

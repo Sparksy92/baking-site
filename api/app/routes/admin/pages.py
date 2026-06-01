@@ -87,14 +87,14 @@ async def create_page(
     db: aiosqlite.Connection = Depends(get_db),
     user: dict = Depends(require_admin),
 ):
-    published_at = "datetime('now')" if body.status == "published" else None
+    published_at = "CURRENT_TIMESTAMP" if body.status == "published" else None
 
     try:
         cursor = await db.execute(
             """INSERT INTO pages (title, slug, content_html, meta_title, meta_description,
                                  featured_image_url, page_type, status, author, published_at)
                VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?,
-                       CASE WHEN ? = 'published' THEN datetime('now') ELSE NULL END)""",
+                       CASE WHEN ? = 'published' THEN CURRENT_TIMESTAMP ELSE NULL END)""",
             (body.title, body.slug, body.content_html, body.meta_title, body.meta_description,
              body.featured_image_url, body.page_type, body.status, body.author, body.status),
         )
@@ -129,7 +129,7 @@ async def update_page(
     values = []
     for k, v in updates.items():
         if k == "published_at":
-            set_parts.append("published_at = datetime('now')")
+            set_parts.append("published_at = CURRENT_TIMESTAMP")
         else:
             set_parts.append(f"{k} = ?")
             values.append(v)
@@ -138,7 +138,7 @@ async def update_page(
     values.append(page_id)
 
     await db.execute(
-        f"UPDATE pages SET {set_clause}, updated_at = datetime('now') WHERE id = ?", values
+        f"UPDATE pages SET {set_clause}, updated_at = CURRENT_TIMESTAMP WHERE id = ?", values
     )
     await db.commit()
     return {"updated": True}

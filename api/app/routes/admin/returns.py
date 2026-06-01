@@ -120,7 +120,7 @@ async def update_return_status(
     set_clause = ", ".join(f"{k} = ?" for k in updates)
     values = list(updates.values()) + [return_id]
     await db.execute(
-        f"UPDATE return_requests SET {set_clause}, updated_at = datetime('now') WHERE id = ?",
+        f"UPDATE return_requests SET {set_clause}, updated_at = CURRENT_TIMESTAMP WHERE id = ?",
         values,
     )
 

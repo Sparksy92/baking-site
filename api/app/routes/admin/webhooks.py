@@ -96,7 +96,7 @@ async def update_webhook(
 
     set_clause = ", ".join(f"{k} = ?" for k in updates)
     values = list(updates.values()) + [webhook_id]
-    await db.execute(f"UPDATE webhooks SET {set_clause}, updated_at = datetime('now') WHERE id = ?", values)
+    await db.execute(f"UPDATE webhooks SET {set_clause}, updated_at = CURRENT_TIMESTAMP WHERE id = ?", values)
     await db.commit()
     return {"updated": True}
 

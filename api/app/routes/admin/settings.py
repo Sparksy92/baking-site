@@ -33,7 +33,7 @@ async def update_settings(
 ):
     for item in updates:
         await db.execute(
-            "INSERT OR REPLACE INTO settings (key, value, updated_by, updated_at) VALUES (?, ?, ?, datetime('now'))",
+            "INSERT INTO settings (key, value, updated_by, updated_at) VALUES (?, ?, ?, CURRENT_TIMESTAMP) ON CONFLICT (key) DO UPDATE SET value = EXCLUDED.value, updated_by = EXCLUDED.updated_by, updated_at = CURRENT_TIMESTAMP",
             (item.key, item.value, user["sub"]),
         )
     await db.commit()

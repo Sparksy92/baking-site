@@ -79,7 +79,7 @@ async def _handle_checkout_completed(db: aiosqlite.Connection, session: dict, ev
         SET payment_status = 'confirmed',
             stripe_payment_intent_id = ?,
             stripe_event_id = ?,
-            updated_at = datetime('now')
+            updated_at = CURRENT_TIMESTAMP
         WHERE id = ?
         """,
         (payment_intent, event_id, order["id"]),

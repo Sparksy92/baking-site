@@ -32,7 +32,7 @@ async def bulk_update_status(
     """Update status for multiple orders at once."""
     placeholders = ",".join("?" * len(body.order_ids))
     await db.execute(
-        f"UPDATE orders SET status = ?, updated_at = datetime('now') WHERE id IN ({placeholders})",
+        f"UPDATE orders SET status = ?, updated_at = CURRENT_TIMESTAMP WHERE id IN ({placeholders})",
         [body.status] + body.order_ids,
     )
     await db.commit()

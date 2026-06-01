@@ -150,7 +150,7 @@ async def add_to_cart(
     )
     subtotal = (await cursor.fetchone())[0] or 0
     await db.execute(
-        "UPDATE carts SET subtotal_cents = ?, last_activity_at = datetime('now'), updated_at = datetime('now') WHERE id = ?",
+        "UPDATE carts SET subtotal_cents = ?, last_activity_at = CURRENT_TIMESTAMP, updated_at = CURRENT_TIMESTAMP WHERE id = ?",
         (subtotal, cart["id"]),
     )
     await db.commit()
@@ -188,7 +188,7 @@ async def update_cart_item(
     )
     subtotal = (await cursor.fetchone())[0] or 0
     await db.execute(
-        "UPDATE carts SET subtotal_cents = ?, last_activity_at = datetime('now'), updated_at = datetime('now') WHERE id = ?",
+        "UPDATE carts SET subtotal_cents = ?, last_activity_at = CURRENT_TIMESTAMP, updated_at = CURRENT_TIMESTAMP WHERE id = ?",
         (subtotal, cart["id"]),
     )
     await db.commit()
@@ -208,7 +208,7 @@ async def capture_cart_email(
     cart = await _get_or_create_cart(request, response, db, customer)
 
     await db.execute(
-        "UPDATE carts SET customer_email = ?, customer_name = ?, updated_at = datetime('now') WHERE id = ?",
+        "UPDATE carts SET customer_email = ?, customer_name = ?, updated_at = CURRENT_TIMESTAMP WHERE id = ?",
         (body.email, body.name, cart["id"]),
     )
     await db.commit()
@@ -225,7 +225,7 @@ async def mark_cart_converted(
     cart_token = request.cookies.get(CART_COOKIE_NAME)
     if cart_token:
         await db.execute(
-            "UPDATE carts SET status = 'converted', updated_at = datetime('now') WHERE cart_token = ?",
+            "UPDATE carts SET status = 'converted', updated_at = CURRENT_TIMESTAMP WHERE cart_token = ?",
             (cart_token,),
         )
         await db.commit()

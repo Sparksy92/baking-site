@@ -123,7 +123,7 @@ async def create_fulfillment(
     status_val = "shipped" if body.tracking_number else "pending"
     cursor = await db.execute(
         """INSERT INTO fulfillments (order_id, tracking_number, tracking_carrier, status, notes, shipped_at)
-           VALUES (?, ?, ?, ?, ?, CASE WHEN ? IS NOT NULL THEN datetime('now') ELSE NULL END)""",
+           VALUES (?, ?, ?, ?, ?, CASE WHEN ? IS NOT NULL THEN CURRENT_TIMESTAMP ELSE NULL END)""",
         (order_id, body.tracking_number, body.tracking_carrier, status_val, body.notes, body.tracking_number),
     )
     fulfillment_id = cursor.lastrowid
@@ -147,7 +147,7 @@ async def create_fulfillment(
 
     new_status = "shipped" if totals["total_fulfilled"] >= totals["total_ordered"] else "partially_shipped"
     await db.execute(
-        "UPDATE orders SET status = ?, updated_at = datetime('now') WHERE id = ?",
+        "UPDATE orders SET status = ?, updated_at = CURRENT_TIMESTAMP WHERE id = ?",
         (new_status, order_id),
     )
     await db.commit()
@@ -187,16 +187,16 @@ async def update_fulfillment(
 
     # Set timestamp fields
     if updates.get("status") == "shipped" and "tracking_number" in updates:
-        updates["shipped_at"] = "datetime('now')"
+        updates["shipped_at"] = "CURRENT_TIMESTAMP"
     if updates.get("status") == "delivered":
-        updates["delivered_at"] = "datetime('now')"
+        updates["delivered_at"] = "CURRENT_TIMESTAMP"
 
     # Build SET clause (handle datetime functions specially)
     set_parts = []
     values = []
     for k, v in updates.items():
-        if v in ("datetime('now')",):
-            set_parts.append(f"{k} = datetime('now')")
+        if v in ("CURRENT_TIMESTAMP",):
+            set_parts.append(f"{k} = CURRENT_TIMESTAMP")
         else:
             set_parts.append(f"{k} = ?")
             values.append(v)
@@ -205,7 +205,7 @@ async def update_fulfillment(
     values.extend([fulfillment_id, order_id])
 
     await db.execute(
-        f"UPDATE fulfillments SET {set_clause}, updated_at = datetime('now') WHERE id = ? AND order_id = ?",
+        f"UPDATE fulfillments SET {set_clause}, updated_at = CURRENT_TIMESTAMP WHERE id = ? AND order_id = ?",
         values,
     )
     await db.commit()
