@@ -153,9 +153,13 @@ async def get_product(slug: str, db: aiosqlite.Connection = Depends(get_db)):
         sort_order=v["sort_order"],
     ) for v in variant_rows]
 
-    # Images
+    # Images — resolve color from linked variant
     img_cursor = await db.execute(
-        "SELECT * FROM product_images WHERE product_id = ? ORDER BY is_primary DESC, sort_order",
+        """SELECT pi.*, pv.color as variant_color
+           FROM product_images pi
+           LEFT JOIN product_variants pv ON pi.variant_id = pv.id
+           WHERE pi.product_id = ?
+           ORDER BY pi.is_primary DESC, pi.sort_order""",
         (product["id"],),
     )
     img_rows = await img_cursor.fetchall()
@@ -163,13 +167,17 @@ async def get_product(slug: str, db: aiosqlite.Connection = Depends(get_db)):
         id=i["id"], product_id=i["product_id"], url=i["url"],
         alt_text=i["alt_text"], sort_order=i["sort_order"],
         is_primary=bool(i["is_primary"]),
+        variant_id=i["variant_id"],
+        color=i["variant_color"],
     ) for i in img_rows]
 
     return ProductResponse(
         id=product["id"], name=product["name"], slug=product["slug"],
         description=product["description"], category=category,
         is_active=bool(product["is_active"]), is_featured=bool(product["is_featured"]),
-        sort_order=product["sort_order"], variants=variants, images=images,
+        sort_order=product["sort_order"],
+        meta_title=product["meta_title"], meta_description=product["meta_description"],
+        variants=variants, images=images,
     )
 
 

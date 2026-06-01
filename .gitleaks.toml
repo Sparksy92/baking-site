@@ -2,18 +2,13 @@
 [extend]
 # Use default rules as base
 
-[[allowlist]]
-description = "Example/placeholder secrets in .env.example and docs"
+[allowlist]
+description = "Example/placeholder secrets, docs, and test fixtures"
 paths = [
   '''\.env\.example''',
   '''PROGRESS\.md''',
   '''README\.md''',
   '''docs/.*''',
-]
-
-[[allowlist]]
-description = "Test fixtures with dummy data"
-paths = [
   '''tests/.*''',
   '''__tests__/.*''',
 ]

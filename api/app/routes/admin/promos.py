@@ -68,7 +68,7 @@ async def update_promo(
     values = list(updates.values()) + [promo_id]
 
     await db.execute(
-        f"UPDATE promo_codes SET {set_clause}, updated_at = datetime('now') WHERE id = ?",
+        f"UPDATE promo_codes SET {set_clause}, updated_at = CURRENT_TIMESTAMP WHERE id = ?",
         values,
     )
     await db.commit()

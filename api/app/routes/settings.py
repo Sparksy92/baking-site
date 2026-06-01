@@ -19,11 +19,12 @@ async def get_public_settings(db: aiosqlite.Connection = Depends(get_db)):
     store_settings = {r["key"]: r["value"] for r in rows}
 
     return PublicSettingsResponse(
-        brand_name=settings.brand_name,
+        brand_name=store_settings.get("brand_name", "") or settings.brand_name,
         store_announcement=store_settings.get("store_announcement", ""),
         shipping_flat_rate_cents=int(store_settings.get("shipping_flat_rate_cents", str(settings.shipping_flat_rate_cents))),
         shipping_free_threshold_cents=int(store_settings.get("shipping_free_threshold_cents", str(settings.shipping_free_threshold_cents))),
         tax_rate=float(store_settings.get("tax_rate", str(settings.tax_rate))),
         currency=settings.store_currency,
         analytics_id=store_settings.get("analytics_id", ""),
+        etransfer_email=settings.etransfer_email,
     )

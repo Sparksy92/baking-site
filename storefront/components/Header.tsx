@@ -4,19 +4,24 @@ import { useState, useEffect } from 'react';
 import Link from 'next/link';
 import Image from 'next/image';
 import { usePathname } from 'next/navigation';
-import { ShoppingBag, Search, Menu, X } from 'lucide-react';
+import { ShoppingBag, Search, Menu, X, User } from 'lucide-react';
 import { useCart } from '@/lib/cart';
+import { useCustomer } from '@/lib/customer';
 import { api, type PublicSettings } from '@/lib/api';
 import { brandName, brandLogo, formatCents } from '@/lib/format';
+import { brandConfig } from '@/config/brand.config';
 
 export function Header() {
   const { count, subtotal } = useCart();
+  const { customer } = useCustomer();
   const pathname = usePathname();
   const isCheckout = ['/cart', '/checkout'].includes(pathname);
   const [mobileOpen, setMobileOpen] = useState(false);
   const [announcement, setAnnouncement] = useState('');
+  const [mounted, setMounted] = useState(false);
 
   useEffect(() => {
+    setMounted(true);
     api.get<PublicSettings>('/api/settings/public')
       .then((s) => { if (s.store_announcement) setAnnouncement(s.store_announcement); })
       .catch(() => {});
@@ -24,13 +29,7 @@ export function Header() {
 
   useEffect(() => { setMobileOpen(false); }, [pathname]);
 
-  const navLinks = [
-    { label: 'Shop', href: '/' },
-    { label: 'New Arrivals', href: '/collections/new-arrivals' },
-    { label: 'Categories', href: '/categories' },
-    { label: 'About', href: '/about' },
-    { label: 'Track Order', href: '/order-lookup' },
-  ];
+  const navLinks = brandConfig.navigation.mainLinks;
 
   return (
     <>
@@ -85,12 +84,19 @@ export function Header() {
               <Search size={20} />
             </Link>
             <Link
+              href={customer ? '/account' : '/account/login'}
+              className="w-10 h-10 flex items-center justify-center rounded-full text-gray-600 hover:bg-gray-100 transition-colors"
+              aria-label={customer ? 'Account' : 'Sign in'}
+            >
+              <User size={20} />
+            </Link>
+            <Link
               href="/cart"
               className="relative w-10 h-10 flex items-center justify-center rounded-full text-gray-600 hover:bg-gray-100 transition-colors"
               aria-label="Cart"
             >
               <ShoppingBag size={20} />
-              {count > 0 && (
+              {mounted && count > 0 && (
                 <span className="absolute -top-0.5 -right-0.5 bg-accent text-white text-[10px] font-bold rounded-full min-w-[18px] h-[18px] flex items-center justify-center px-1">
                   {count}
                 </span>
@@ -118,7 +124,7 @@ export function Header() {
       </header>
 
       {/* Floating cart bar — mobile only */}
-      {count > 0 && !isCheckout && (
+      {mounted && count > 0 && !isCheckout && (
         <div className="fixed bottom-0 left-0 right-0 z-50 p-3 bg-white/90 backdrop-blur border-t border-gray-200 md:hidden">
           <Link
             href="/cart"

@@ -75,6 +75,8 @@ class ImageResponse(BaseModel):
     alt_text: str | None = None
     sort_order: int
     is_primary: bool
+    variant_id: int | None = None
+    color: str | None = None
 
 
 class ProductResponse(BaseModel):
@@ -86,6 +88,8 @@ class ProductResponse(BaseModel):
     is_active: bool
     is_featured: bool
     sort_order: int
+    meta_title: str | None = None
+    meta_description: str | None = None
     variants: list[VariantResponse] = []
     images: list[ImageResponse] = []
 
@@ -113,6 +117,9 @@ class ProductCreate(BaseModel):
     is_active: bool = True
     is_featured: bool = False
     sort_order: int = 0
+    weight_g: int | None = None
+    meta_title: str | None = None
+    meta_description: str | None = None
 
 
 class ProductUpdate(BaseModel):
@@ -123,13 +130,16 @@ class ProductUpdate(BaseModel):
     is_active: bool | None = None
     is_featured: bool | None = None
     sort_order: int | None = None
+    weight_g: int | None = None
+    meta_title: str | None = None
+    meta_description: str | None = None
 
 
 class VariantCreate(BaseModel):
     size: str = Field(min_length=1, max_length=50)
     color: str = Field(min_length=1, max_length=100)
     color_hex: str | None = None
-    price_cents: int = Field(gt=0)
+    price_cents: int = Field(ge=0)
     compare_at_price_cents: int | None = None
     sku: str | None = None
     stock_quantity: int = Field(ge=0, default=0)
@@ -202,12 +212,14 @@ class CheckoutRequest(BaseModel):
     items: list[CheckoutItem] = Field(min_length=1)
     promo_code: str | None = None
     customer_notes: str | None = None
-
+    utm_source: str | None = None
+    utm_medium: str | None = None
+    utm_campaign: str | None = None
+    payment_method: Literal["stripe", "etransfer"] = "stripe"
 
 class CheckoutResponse(BaseModel):
     order_number: str
-    stripe_checkout_url: str
-
+    stripe_checkout_url: str | None = None
 
 # ── Orders ──────────────────────────────────────────────────────
 
@@ -224,6 +236,7 @@ class OrderResponse(BaseModel):
     order_number: str
     status: str
     payment_status: str
+    payment_method: str
     items: list[OrderItemResponse]
     subtotal_cents: int
     discount_cents: int = 0
@@ -238,9 +251,15 @@ class OrderResponse(BaseModel):
 
 class OrderStatusUpdate(BaseModel):
     status: ORDER_STATUSES | None = None
+    payment_status: str | None = None
     tracking_number: str | None = None
     tracking_carrier: str | None = None
     admin_notes: str | None = None
+
+
+class RefundRequest(BaseModel):
+    amount_cents: int | None = None
+    reason: str = Field(default="requested_by_customer", pattern="^(duplicate|fraudulent|requested_by_customer)$")
 
 
 # ── Promo Codes ──────────────────────────────────────────────────
@@ -286,3 +305,99 @@ class PublicSettingsResponse(BaseModel):
     tax_rate: float
     currency: str
     analytics_id: str = ""
+    etransfer_email: str = ""
+
+# ── Contact ────────────────────────────────────────────────────
+
+class ContactRequest(BaseModel):
+    name: str = Field(min_length=1, max_length=200)
+    email: EmailStr
+    subject: str = Field(default="General Inquiry", max_length=300)
+    message: str = Field(min_length=10, max_length=5000)
+    order_number: str | None = None
+
+
+# ── Customer Accounts ──────────────────────────────────────────
+
+class CustomerRegister(BaseModel):
+    email: EmailStr
+    password: str = Field(min_length=8, max_length=128)
+    first_name: str = Field(min_length=1, max_length=100)
+    last_name: str = Field(min_length=1, max_length=100)
+    phone: str | None = None
+
+
+class CustomerLogin(BaseModel):
+    email: EmailStr
+    password: str
+
+
+class CustomerResponse(BaseModel):
+    id: int
+    email: str
+    first_name: str
+    last_name: str
+    phone: str | None = None
+
+
+class CustomerUpdate(BaseModel):
+    first_name: str | None = None
+    last_name: str | None = None
+    phone: str | None = None
+
+
+class CustomerPasswordChange(BaseModel):
+    current_password: str
+    new_password: str = Field(min_length=8, max_length=128)
+
+
+class CustomerPasswordResetRequest(BaseModel):
+    email: EmailStr
+
+
+class CustomerPasswordReset(BaseModel):
+    token: str
+    new_password: str = Field(min_length=8, max_length=128)
+
+
+class AddressCreate(BaseModel):
+    label: str = Field(default="Home", max_length=50)
+    first_name: str = Field(min_length=1, max_length=100)
+    last_name: str = Field(min_length=1, max_length=100)
+    line1: str = Field(min_length=1, max_length=500)
+    line2: str | None = None
+    city: str = Field(min_length=1, max_length=200)
+    province: str = Field(min_length=1, max_length=100)
+    postal_code: str = Field(min_length=1, max_length=20)
+    country: str = Field(default="CA", max_length=2)
+    phone: str | None = None
+    is_default: bool = False
+
+
+class AddressUpdate(BaseModel):
+    label: str | None = None
+    first_name: str | None = None
+    last_name: str | None = None
+    line1: str | None = None
+    line2: str | None = None
+    city: str | None = None
+    province: str | None = None
+    postal_code: str | None = None
+    country: str | None = None
+    phone: str | None = None
+    is_default: bool | None = None
+
+
+class AddressResponse(BaseModel):
+    id: int
+    label: str
+    first_name: str
+    last_name: str
+    line1: str
+    line2: str | None = None
+    city: str
+    province: str
+    postal_code: str
+    country: str
+    phone: str | None = None
+    is_default: bool

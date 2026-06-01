@@ -11,14 +11,38 @@ from app.config import get_settings
 from app.database import init_db
 from app.middleware.logging import setup_logging
 from app.middleware.rate_limit import RateLimitMiddleware
-from app.routes import health, products, settings, auth, checkout, webhooks, promos, newsletter
+from app.middleware.request_id import RequestIdMiddleware
+from app.routes import health, products, settings, auth, checkout, webhooks, promos, newsletter, customers, contact, shipping, wishlist, reviews, related_products, back_in_stock, cart, pages, size_guides, gift_cards, loyalty, bundles, sitemap, events, returns, social_proof
 from app.routes.admin import (
     products as admin_products,
     collections as admin_collections,
+    categories as admin_categories,
     orders as admin_orders,
     settings as admin_settings,
     promos as admin_promos,
     newsletter as admin_newsletter,
+    dashboard as admin_dashboard,
+    csv_io as admin_csv,
+    reviews as admin_reviews,
+    related_products as admin_related,
+    auto_discounts as admin_auto_discounts,
+    abandoned_carts as admin_abandoned_carts,
+    fulfillments as admin_fulfillments,
+    bulk_orders as admin_bulk_orders,
+    staff as admin_staff,
+    order_edit as admin_order_edit,
+    packing_slip as admin_packing_slip,
+    pages as admin_pages,
+    tags as admin_tags,
+    segments as admin_segments,
+    size_guides as admin_size_guides,
+    gift_cards as admin_gift_cards,
+    loyalty as admin_loyalty,
+    bundles as admin_bundles,
+    events as admin_events,
+    reports as admin_reports,
+    returns as admin_returns,
+    webhooks as admin_webhooks,
 )
 
 logger = logging.getLogger(__name__)
@@ -34,6 +58,11 @@ async def lifespan(app: FastAPI):
     if not settings.dev_mode and settings.admin_jwt_secret == "CHANGE_ME":
         raise RuntimeError(
             "ADMIN_JWT_SECRET is set to the default value. "
+            "Generate a real secret: openssl rand -base64 32"
+        )
+    if not settings.dev_mode and settings.customer_jwt_secret == "CHANGE_ME_CUSTOMER":
+        raise RuntimeError(
+            "CUSTOMER_JWT_SECRET is set to the default value. "
             "Generate a real secret: openssl rand -base64 32"
         )
 
@@ -69,28 +98,79 @@ def create_app() -> FastAPI:
         allow_headers=["Content-Type"],
     )
     app.add_middleware(RateLimitMiddleware)
+    app.add_middleware(RequestIdMiddleware)
 
     # ── Public routes ──────────────────────────────────────────
     app.include_router(health.router, prefix="/api")
     app.include_router(products.router, prefix="/api")
     app.include_router(settings.router, prefix="/api")
+    app.include_router(shipping.router, prefix="/api")
 
-    # ── Checkout, Promos, Newsletter & Webhooks ──────────────────
+    # ── Checkout, Promos, Newsletter, Contact & Webhooks ────────
     app.include_router(checkout.router, prefix="/api")
     app.include_router(promos.router, prefix="/api")
     app.include_router(newsletter.router, prefix="/api")
+    app.include_router(contact.router, prefix="/api")
     app.include_router(webhooks.router, prefix="/api")
 
     # ── Auth ───────────────────────────────────────────────────
     app.include_router(auth.router, prefix="/api")
 
+    # ── Customer accounts ────────────────────────────────────────
+    app.include_router(customers.router, prefix="/api")
+    app.include_router(wishlist.router, prefix="/api")
+    app.include_router(reviews.router, prefix="/api")
+
+    # ── Cart & Notifications ─────────────────────────────────────
+    app.include_router(cart.router, prefix="/api")
+    app.include_router(related_products.router, prefix="/api")
+    app.include_router(back_in_stock.router, prefix="/api")
+
+    # ── Pages & Guides ────────────────────────────────────────
+    app.include_router(pages.router, prefix="/api")
+    app.include_router(size_guides.router, prefix="/api")
+
+    # ── Gift Cards, Loyalty & Bundles ─────────────────────────
+    app.include_router(gift_cards.router, prefix="/api")
+    app.include_router(loyalty.router, prefix="/api")
+    app.include_router(bundles.router, prefix="/api")
+
+    # ── Events, Returns & Sitemap ─────────────────────────────
+    app.include_router(events.router, prefix="/api")
+    app.include_router(returns.router, prefix="/api")
+    app.include_router(sitemap.router, prefix="/api")
+    app.include_router(social_proof.router, prefix="/api")
+
     # ── Admin routes ───────────────────────────────────────────
+    app.include_router(admin_csv.router, prefix="/api")  # must be before admin_products (static paths before {product_id})
     app.include_router(admin_products.router, prefix="/api")
     app.include_router(admin_collections.router, prefix="/api")
+    app.include_router(admin_categories.router, prefix="/api")
     app.include_router(admin_orders.router, prefix="/api")
     app.include_router(admin_settings.router, prefix="/api")
     app.include_router(admin_promos.router, prefix="/api")
     app.include_router(admin_newsletter.router, prefix="/api")
+    app.include_router(admin_dashboard.router, prefix="/api")
+    app.include_router(admin_reviews.router, prefix="/api")
+    app.include_router(admin_related.router, prefix="/api")
+    app.include_router(admin_auto_discounts.router, prefix="/api")
+    app.include_router(admin_abandoned_carts.router, prefix="/api")
+    app.include_router(admin_fulfillments.router, prefix="/api")
+    app.include_router(admin_bulk_orders.router, prefix="/api")
+    app.include_router(admin_staff.router, prefix="/api")
+    app.include_router(admin_order_edit.router, prefix="/api")
+    app.include_router(admin_packing_slip.router, prefix="/api")
+    app.include_router(admin_pages.router, prefix="/api")
+    app.include_router(admin_tags.router, prefix="/api")
+    app.include_router(admin_segments.router, prefix="/api")
+    app.include_router(admin_size_guides.router, prefix="/api")
+    app.include_router(admin_gift_cards.router, prefix="/api")
+    app.include_router(admin_loyalty.router, prefix="/api")
+    app.include_router(admin_bundles.router, prefix="/api")
+    app.include_router(admin_events.router, prefix="/api")
+    app.include_router(admin_reports.router, prefix="/api")
+    app.include_router(admin_returns.router, prefix="/api")
+    app.include_router(admin_webhooks.router, prefix="/api")
 
     # ── Static files (uploaded images) ─────────────────────────
     uploads_dir = app_settings.uploads_dir

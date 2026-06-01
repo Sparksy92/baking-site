@@ -27,9 +27,8 @@ async def test_public_settings_announcement_default_empty(client: AsyncClient):
 async def test_public_settings_custom_announcement(client: AsyncClient):
     """store_announcement can be set via DB."""
     import os
-    import aiosqlite
-    db_path = os.environ["DATABASE_PATH"]
-    async with aiosqlite.connect(db_path) as db:
+    from app.database import get_db
+    async for db in get_db():
         await db.execute(
             "INSERT OR REPLACE INTO settings (key, value) VALUES (?, ?)",
             ("store_announcement", "Free shipping this weekend!"),

@@ -30,7 +30,7 @@ async def validate_checkout(db: aiosqlite.Connection, body: CheckoutRequest) -> 
 
     for item in body.items:
         cursor = await db.execute(
-            """SELECT pv.*, p.name as product_name
+            """SELECT pv.*, p.name as product_name, p.weight_g
                FROM product_variants pv
                JOIN products p ON p.id = pv.product_id
                WHERE pv.id = ? AND pv.is_active = 1 AND p.is_active = 1""",
@@ -75,11 +75,23 @@ async def validate_checkout(db: aiosqlite.Connection, body: CheckoutRequest) -> 
         else:
             raise CheckoutError(promo_result.message or "Invalid promo code")
 
-    # Shipping
+    # Calculate total order weight for shipping
+    total_weight_g = 0
+    for oi in order_items:
+        cursor = await db.execute("SELECT weight_g FROM products WHERE id = ?", (oi["product_id"],))
+        row = await cursor.fetchone()
+        item_weight_g = (row["weight_g"] if row and row["weight_g"] else None)
+        if item_weight_g:
+            total_weight_g += item_weight_g * oi["quantity"]
+    order_weight_kg = (total_weight_g / 1000.0) if total_weight_g > 0 else None
+
+    # Shipping — use Canada Post real rates if configured, else flat rate
     if subtotal_cents >= settings.shipping_free_threshold_cents:
         shipping_cents = 0
     else:
-        shipping_cents = settings.shipping_flat_rate_cents
+        from app.services.canadapost_service import get_cheapest_rate
+        cp_rate = await get_cheapest_rate(body.shipping_address.postal_code, weight_kg=order_weight_kg)
+        shipping_cents = cp_rate if cp_rate is not None else settings.shipping_flat_rate_cents
 
     # Tax (on subtotal after discount)
     taxable = subtotal_cents - discount_cents
@@ -102,6 +114,7 @@ async def create_order(
     db: aiosqlite.Connection,
     body: CheckoutRequest,
     validated: dict,
+    payment_method: str = "stripe",
     payment_status: str = "pending",
     stripe_session_id: str | None = None,
 ) -> str:
@@ -128,10 +141,10 @@ async def create_order(
             shipping_address_city, shipping_address_province,
             shipping_address_postal, shipping_address_country,
             subtotal_cents, discount_cents, shipping_cents, tax_cents, total_cents,
-            promo_code, customer_notes)
-           VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)""",
+            promo_code, customer_notes, utm_source, utm_medium, utm_campaign)
+           VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)""",
         (
-            order_number, "stripe", payment_status, stripe_session_id,
+            order_number, payment_method, payment_status, stripe_session_id,
             body.customer_name, body.customer_email, body.customer_phone,
             body.shipping_address.line1, body.shipping_address.line2,
             body.shipping_address.city, body.shipping_address.province,
@@ -139,6 +152,7 @@ async def create_order(
             validated["subtotal_cents"], validated["discount_cents"],
             validated["shipping_cents"], validated["tax_cents"], validated["total_cents"],
             validated["promo_code"], body.customer_notes,
+            body.utm_source, body.utm_medium, body.utm_campaign,
         ),
     )
 
@@ -172,6 +186,30 @@ async def create_order(
             "UPDATE product_variants SET stock_quantity = stock_quantity - ? WHERE id = ?",
             (item["quantity"], item["variant_id"]),
         )
+
+    # Check for low-stock variants after decrement
+    low_stock_variants = []
+    for item in validated["order_items"]:
+        cursor = await db.execute(
+            "SELECT stock_quantity FROM product_variants WHERE id = ?",
+            (item["variant_id"],),
+        )
+        row = await cursor.fetchone()
+        if row and row["stock_quantity"] <= settings.low_stock_threshold:
+            low_stock_variants.append({
+                "product_name": item["product_name"],
+                "size": item["variant_size"],
+                "color": item["variant_color"],
+                "stock_quantity": row["stock_quantity"],
+            })
+
+    # Send alert asynchronously (don't block order creation)
+    if low_stock_variants:
+        try:
+            from app.services.email_service import send_low_stock_alert
+            await send_low_stock_alert(low_stock_variants)
+        except Exception:
+            logger.exception("Failed to send low-stock alert email")
 
     # Note: caller is responsible for commit (allows wrapping in exclusive transaction)
     logger.info("Order created: %s (total: %d cents)", order_number, validated["total_cents"])

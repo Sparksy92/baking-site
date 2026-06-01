@@ -3,6 +3,7 @@ import type { NextRequest } from 'next/server';
 
 export function middleware(request: NextRequest) {
   const response = NextResponse.next();
+  const isDev = process.env.NODE_ENV === 'development';
 
   // Security headers
   response.headers.set('X-Frame-Options', 'DENY');
@@ -10,6 +11,20 @@ export function middleware(request: NextRequest) {
   response.headers.set('Referrer-Policy', 'strict-origin-when-cross-origin');
   response.headers.set('X-DNS-Prefetch-Control', 'on');
   response.headers.set('Permissions-Policy', 'camera=(), microphone=(), geolocation=()');
+  response.headers.set(
+    'Content-Security-Policy',
+    [
+      "default-src 'self'",
+      `script-src 'self' 'unsafe-inline'${isDev ? " 'unsafe-eval'" : ''} https://js.stripe.com`,
+      "style-src 'self' 'unsafe-inline'",
+      "img-src 'self' data: blob: https://*.yourdomain.com",
+      "font-src 'self' data:",
+      `connect-src 'self' https://api.stripe.com${isDev ? ' ws://localhost:* http://localhost:*' : ''}`,
+      "frame-src 'self' https://js.stripe.com https://hooks.stripe.com",
+      "base-uri 'self'",
+      "form-action 'self'",
+    ].join('; ')
+  );
 
   // HSTS — only in production
   if (request.nextUrl.protocol === 'https:') {

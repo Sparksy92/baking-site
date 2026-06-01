@@ -94,6 +94,8 @@ export interface ProductImage {
   alt_text: string | null;
   sort_order: number;
   is_primary: boolean;
+  color: string | null;
+  variant_id: number | null;
 }
 
 export interface Product {
@@ -106,6 +108,9 @@ export interface Product {
   is_active: boolean;
   is_featured: boolean;
   sort_order: number;
+  weight_g: number | null;
+  meta_title: string | null;
+  meta_description: string | null;
   variants: Variant[];
   images: ProductImage[];
 }
@@ -144,17 +149,20 @@ export interface PublicSettings {
   tax_rate: number;
   currency: string;
   analytics_id: string;
+  etransfer_email: string;
+  payment_method?: 'stripe' | 'etransfer';
 }
 
 export interface CheckoutResponse {
   order_number: string;
-  stripe_checkout_url: string;
+  stripe_checkout_url?: string;
 }
 
 export interface OrderLookup {
   order_number: string;
   status: string;
   payment_status: string;
+  payment_method: string;
   items: {
     product_name: string;
     variant_size: string;
@@ -170,4 +178,38 @@ export interface OrderLookup {
   tracking_number: string | null;
   tracking_carrier: string | null;
   created_at: string;
+}
+
+export interface Customer {
+  id: number;
+  email: string;
+  first_name: string;
+  last_name: string;
+  phone: string | null;
+}
+
+export interface CustomerAddress {
+  id: number;
+  label: string;
+  first_name: string;
+  last_name: string;
+  line1: string;
+  line2: string | null;
+  city: string;
+  province: string;
+  postal_code: string;
+  country: string;
+  phone: string | null;
+  is_default: boolean;
+}
+
+export interface CustomerOrder {
+  order_number: string;
+  status: string;
+  payment_status: string;
+  total_cents: number;
+  tracking_number: string | null;
+  tracking_carrier: string | null;
+  created_at: string;
+  item_count: number;
 }

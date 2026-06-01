@@ -5,6 +5,7 @@ from httpx import AsyncClient, ASGITransport
 
 # Set test environment BEFORE any app imports
 os.environ["ADMIN_JWT_SECRET"] = "test-secret-key"
+os.environ["CUSTOMER_JWT_SECRET"] = "test-customer-secret-key"
 os.environ["STRIPE_SECRET_KEY"] = "sk_test_fake"
 os.environ["STRIPE_WEBHOOK_SECRET"] = "whsec_fake"
 os.environ["RESEND_API_KEY"] = "re_test_fake"
@@ -12,7 +13,9 @@ os.environ["STORE_DOMAIN"] = "http://localhost:5173"
 os.environ["BRAND_NAME"] = "TestBrand"
 os.environ["STORE_CURRENCY"] = "CAD"
 os.environ["ORDER_NUMBER_PREFIX"] = "TST"
+os.environ["CONTACT_EMAIL"] = "contact@testbrand.com"
 os.environ["DEV_MODE"] = "true"
+os.environ["POSTGRES_DB"] = "ecommerce_test"
 
 
 def _clear_rate_limits(app):
@@ -32,20 +35,32 @@ def _clear_rate_limits(app):
 
 @pytest.fixture
 async def client():
-    """Provide an async test client with a fresh temporary database."""
-    with tempfile.NamedTemporaryFile(suffix=".db", delete=False) as f:
-        db_path = f.name
-
-    os.environ["DATABASE_PATH"] = db_path
-
-    # Clear cached settings so test env vars take effect
+    """Provide an async test client with a clean database."""
     from app.config import get_settings
+    from app.database import init_db, get_db
+
     get_settings.cache_clear()
-
-    from app.database import set_db_path, init_db
-    set_db_path(db_path)
-
+    
+    # Safety check
+    if not get_settings().postgres_db.endswith('test'):
+        raise RuntimeError("Refusing to run tests against non-test database to prevent data loss.")
+    
+    # Initialize connection pool if not already initialized
     await init_db()
+
+    # Truncate all tables to ensure clean state
+    async for db in get_db():
+        # Get all tables
+        records = await db.conn.fetch("""
+            SELECT tablename 
+            FROM pg_tables 
+            WHERE schemaname = 'public' 
+            AND tablename != '_migrations';
+        """)
+        if records:
+            tables = ", ".join([f'"{r["tablename"]}"' for r in records])
+            await db.conn.execute(f"TRUNCATE {tables} RESTART IDENTITY CASCADE;")
+        break
 
     from app.main import app
     _clear_rate_limits(app)
@@ -54,25 +69,38 @@ async def client():
     async with AsyncClient(transport=transport, base_url="http://test") as ac:
         yield ac
 
-    os.unlink(db_path)
+    from app.database import close_db
+    await close_db()
 
 
 @pytest.fixture
 async def admin_client(client: AsyncClient):
     """Provide an authenticated admin client."""
-    import aiosqlite
+    from app.database import get_db
     from app.auth import hash_password
 
-    db_path = os.environ["DATABASE_PATH"]
     pw_hash = hash_password("admin123")
 
-    async with aiosqlite.connect(db_path) as db:
+    async for db in get_db():
         await db.execute(
-            "INSERT INTO admin_users (username, password_hash, role) VALUES (?, ?, ?)",
+            "INSERT OR IGNORE INTO admin_users (username, password_hash, role) VALUES (?, ?, ?)",
             ("admin", pw_hash, "owner"),
         )
-        await db.commit()
+        break
 
     resp = await client.post("/api/auth/login", json={"username": "admin", "password": "admin123"})
     assert resp.status_code == 200
+    yield client
+
+
+@pytest.fixture
+async def customer_client(client: AsyncClient):
+    """Provide an authenticated customer client."""
+    resp = await client.post("/api/customers/register", json={
+        "email": "customer@test.com",
+        "password": "TestPass123",
+        "first_name": "Test",
+        "last_name": "Customer",
+    })
+    assert resp.status_code == 201
     yield client

@@ -2,9 +2,10 @@ from __future__ import annotations
 
 import logging
 
-from fastapi import APIRouter, Depends, HTTPException, Query, status
+from fastapi import APIRouter, Depends, HTTPException, Query, Request, status
 import aiosqlite
 
+from app.customer_auth import get_optional_customer
 from app.database import get_db
 from app.models.schemas import CheckoutRequest, CheckoutResponse, OrderResponse, OrderItemResponse
 from app.services.order_service import CheckoutError, create_order, validate_checkout
@@ -19,7 +20,9 @@ router = APIRouter(tags=["checkout"])
 @router.post("/checkout", response_model=CheckoutResponse, status_code=status.HTTP_201_CREATED)
 async def checkout(
     body: CheckoutRequest,
+    request: Request,
     db: aiosqlite.Connection = Depends(get_db),
+    customer: dict | None = Depends(get_optional_customer),
 ):
     """Create order and redirect to Stripe Checkout.
 
@@ -33,6 +36,7 @@ async def checkout(
         validated = await validate_checkout(db, body)
         order_number = await create_order(
             db, body, validated,
+            payment_method=body.payment_method,
             payment_status="pending",
             stripe_session_id=None,
         )
@@ -43,30 +47,48 @@ async def checkout(
         await db.rollback()
         raise
 
-    # Create Stripe session after order exists (no orphan sessions)
-    try:
-        checkout_url, session_id = await stripe_service.create_checkout_session(
-            order_number=order_number,
-            items=validated["order_items"],
-            subtotal_cents=validated["subtotal_cents"],
-            discount_cents=validated["discount_cents"],
-            shipping_cents=validated["shipping_cents"],
-            tax_cents=validated["tax_cents"],
-            total_cents=validated["total_cents"],
-            customer_email=body.customer_email,
-        )
-    except Exception:
-        logger.exception("Stripe session creation failed")
-        raise HTTPException(
-            status_code=status.HTTP_502_BAD_GATEWAY,
-            detail="Payment service unavailable. Please try again.",
-        )
+    checkout_url = None
+    session_id = None
+    if body.payment_method == "stripe":
+        # Create Stripe session after order exists (no orphan sessions)
+        try:
+            checkout_url, session_id = await stripe_service.create_checkout_session(
+                order_number=order_number,
+                items=validated["order_items"],
+                subtotal_cents=validated["subtotal_cents"],
+                discount_cents=validated["discount_cents"],
+                shipping_cents=validated["shipping_cents"],
+                tax_cents=validated["tax_cents"],
+                total_cents=validated["total_cents"],
+                customer_email=body.customer_email,
+            )
+        except Exception:
+            await db.rollback()
+            logger.exception("Stripe session creation failed")
+            raise HTTPException(
+                status_code=status.HTTP_502_BAD_GATEWAY,
+                detail="Payment service unavailable. Please try again.",
+            )
 
-    # Link Stripe session to order
-    await db.execute(
-        "UPDATE orders SET stripe_session_id = ? WHERE order_number = ?",
-        (session_id, order_number),
-    )
+        # Link Stripe session (and customer account if logged in) to order
+        if customer:
+            await db.execute(
+                "UPDATE orders SET stripe_session_id = ?, customer_id = ? WHERE order_number = ?",
+                (session_id, int(customer["sub"]), order_number),
+            )
+        else:
+            await db.execute(
+                "UPDATE orders SET stripe_session_id = ? WHERE order_number = ?",
+                (session_id, order_number),
+            )
+    else:
+        # For e-transfers, just link customer if logged in
+        if customer:
+            await db.execute(
+                "UPDATE orders SET customer_id = ? WHERE order_number = ?",
+                (int(customer["sub"]), order_number),
+            )
+            
     await db.commit()
 
     # Send order confirmation email (order received, payment still pending)
@@ -76,10 +98,17 @@ async def checkout(
                 "order_number": order_number,
                 "customer_name": body.customer_name,
                 "customer_email": body.customer_email,
+                "payment_method": body.payment_method,
                 "subtotal_cents": validated["subtotal_cents"],
                 "shipping_cents": validated["shipping_cents"],
                 "tax_cents": validated["tax_cents"],
                 "total_cents": validated["total_cents"],
+                "shipping_address_line1": body.shipping_address_line1,
+                "shipping_address_line2": body.shipping_address_line2,
+                "shipping_city": body.shipping_city,
+                "shipping_state": body.shipping_state,
+                "shipping_postal_code": body.shipping_postal_code,
+                "shipping_country": body.shipping_country,
             },
             validated["order_items"],
         )
@@ -100,7 +129,7 @@ async def lookup_order(
 ):
     """Public order lookup — requires matching email."""
     cursor = await db.execute(
-        "SELECT * FROM orders WHERE order_number = ? AND customer_email = ?",
+        "SELECT * FROM orders WHERE order_number = ? AND customer_email = ? COLLATE NOCASE",
         (order_number, email),
     )
     order = await cursor.fetchone()
@@ -128,6 +157,7 @@ async def lookup_order(
         order_number=order["order_number"],
         status=order["status"],
         payment_status=order["payment_status"],
+        payment_method=order["payment_method"],
         items=items,
         subtotal_cents=order["subtotal_cents"],
         shipping_cents=order["shipping_cents"],

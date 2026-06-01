@@ -3,7 +3,7 @@
 import { useEffect, useState, useRef } from 'react';
 import { useParams, useSearchParams } from 'next/navigation';
 import Link from 'next/link';
-import { CheckCircle } from 'lucide-react';
+import { CheckCircle2, Package, Truck, ArrowRight, Receipt } from 'lucide-react';
 import { api, type OrderLookup } from '@/lib/api';
 import { formatCents } from '@/lib/format';
 import { cart } from '@/lib/cart';
@@ -13,71 +13,184 @@ export default function ConfirmationPage() {
   const searchParams = useSearchParams();
   const orderNumber = params.orderNumber;
   const [order, setOrder] = useState<OrderLookup | null>(null);
+  const [settings, setSettings] = useState<{ etransfer_email?: string } | null>(null);
+  const [loading, setLoading] = useState(true);
+  const [emailUsed, setEmailUsed] = useState('');
   const cartCleared = useRef(false);
 
-  // Get email from URL params (Stripe redirect) or sessionStorage (fallback)
-  const urlEmail = searchParams.get('email') || '';
-  const [email, setEmail] = useState(urlEmail);
-
   useEffect(() => {
-    if (!urlEmail) {
-      try {
-        const pending = sessionStorage.getItem('pending_order');
-        if (pending) {
-          const data = JSON.parse(pending);
-          if (data.order_number === orderNumber && data.email) {
-            setEmail(data.email);
+    if (!orderNumber) return;
+
+    api.get<any>('/api/settings/public').then(setSettings).catch(() => {});
+
+    let email = '';
+    try {
+      const pending = sessionStorage.getItem('pending_order');
+      if (pending) {
+        const data = JSON.parse(pending);
+        if (data.order_number === orderNumber && data.email) {
+          email = data.email;
+          setEmailUsed(email);
+        }
+      }
+    } catch { /* ignore */ }
+
+    if (email) {
+      api.get<OrderLookup>(`/api/orders/${orderNumber}?email=${encodeURIComponent(email)}`)
+        .then((data) => {
+          setOrder(data);
+          if (!cartCleared.current) {
+            cart.clear();
+            sessionStorage.removeItem('pending_order');
+            cartCleared.current = true;
           }
-        }
-      } catch { /* ignore */ }
+        })
+        .catch(() => {})
+        .finally(() => setLoading(false));
+    } else {
+      setLoading(false);
     }
-  }, [orderNumber, urlEmail]);
 
-  useEffect(() => {
-    if (!orderNumber || !email) return;
-    api.get<OrderLookup>(`/api/orders/${orderNumber}?email=${encodeURIComponent(email)}`)
-      .then((data) => {
-        setOrder(data);
-        // Clear cart only after successfully verifying the order exists
-        if (!cartCleared.current) {
-          cart.clear();
-          sessionStorage.removeItem('pending_order');
-          cartCleared.current = true;
-        }
-      })
-      .catch(() => {
-        // Order found via Stripe redirect — clear cart even if lookup fails
-        if (!cartCleared.current && searchParams.get('session_id')) {
-          cart.clear();
-          sessionStorage.removeItem('pending_order');
-          cartCleared.current = true;
-        }
-      });
-  }, [orderNumber, email, searchParams]);
+    if (!cartCleared.current && searchParams.get('session_id')) {
+      cart.clear();
+      sessionStorage.removeItem('pending_order');
+      cartCleared.current = true;
+    }
+  }, [orderNumber, searchParams]);
+
+  if (loading) {
+    return (
+      <div className="min-h-[60vh] flex items-center justify-center">
+        <div className="animate-pulse flex flex-col items-center">
+          <div className="w-16 h-16 bg-gray-200 rounded-full mb-4"></div>
+          <div className="h-6 bg-gray-200 rounded w-48 mb-2"></div>
+          <div className="h-4 bg-gray-200 rounded w-32"></div>
+        </div>
+      </div>
+    );
+  }
 
   return (
-    <div className="max-w-2xl mx-auto px-4 py-12 text-center">
-      <CheckCircle size={48} className="mx-auto text-green-500 mb-4" />
-      <h1 className="text-2xl font-bold text-gray-900">Order Confirmed</h1>
-      <p className="mt-2 text-gray-600">
-        Order <strong>{orderNumber}</strong> has been placed successfully.
-      </p>
-      <p className="mt-1 text-sm text-gray-500">A confirmation email is on its way.</p>
-
-      {order && (
-        <div className="mt-8 text-left bg-gray-50 rounded-xl p-6 space-y-3">
-          <div className="flex justify-between text-sm"><span>Status</span><span className="font-medium capitalize">{order.status}</span></div>
-          <div className="flex justify-between text-sm"><span>Payment</span><span className="font-medium capitalize">{order.payment_status}</span></div>
-          <div className="flex justify-between text-sm"><span>Total</span><span className="font-bold">{formatCents(order.total_cents)}</span></div>
-          {order.tracking_number && (
-            <div className="flex justify-between text-sm"><span>Tracking</span><span className="font-medium">{order.tracking_carrier} — {order.tracking_number}</span></div>
+    <div className="bg-gray-50/50 min-h-screen py-12 sm:py-20">
+      <div className="max-w-3xl mx-auto px-4">
+        
+        {/* Header Section */}
+        <div className="text-center mb-10">
+          <div className="inline-flex items-center justify-center w-20 h-20 bg-green-100 rounded-full mb-6 shadow-sm shadow-green-100 ring-8 ring-green-50">
+            <CheckCircle2 className="text-green-600 w-10 h-10" />
+          </div>
+          <h1 className="text-3xl sm:text-4xl font-bold text-gray-900 mb-3 tracking-tight">Thank you for your order!</h1>
+          <p className="text-lg text-gray-600">
+            Order <strong className="text-gray-900">#{orderNumber}</strong> has been confirmed.
+          </p>
+          {emailUsed && (
+            <p className="mt-2 text-sm text-gray-500">
+              We've sent a confirmation email to <span className="font-medium text-gray-700">{emailUsed}</span>.
+            </p>
           )}
         </div>
-      )}
 
-      <Link href="/" className="inline-block mt-8 px-6 py-3 bg-brand text-white rounded-lg font-medium hover:bg-brand/90">
-        Continue Shopping
-      </Link>
+        {order ? (
+          <div className="space-y-8">
+            {order.payment_method === 'etransfer' && order.payment_status === 'pending' && (
+              <div className="bg-yellow-50 border-2 border-yellow-200 rounded-3xl p-6 sm:p-8 text-center shadow-sm">
+                <h2 className="text-xl font-bold text-yellow-900 mb-2">Payment Required: Interac e-Transfer</h2>
+                <p className="text-yellow-800 mb-4">Your order is received, but we need your payment to fulfill it.</p>
+                <div className="bg-white rounded-2xl p-4 inline-block text-left shadow-sm border border-yellow-100">
+                  <p className="text-gray-600 mb-2">1. Log into your online banking and send an e-Transfer to:</p>
+                  <p className="font-bold text-lg text-gray-900 mb-4">{settings?.etransfer_email || 'payments@example.com'}</p>
+                  <p className="text-gray-600 mb-2">2. Include your order number in the message/memo:</p>
+                  <p className="font-bold text-lg text-gray-900">#{order.order_number}</p>
+                </div>
+              </div>
+            )}
+            
+            <div className="bg-white rounded-3xl shadow-xl shadow-gray-200/40 border border-gray-100 overflow-hidden">
+              
+              {/* Status Bar */}
+            <div className="bg-gray-50/80 px-6 py-4 border-b border-gray-100 flex flex-col sm:flex-row gap-4 justify-between sm:items-center text-sm">
+              <div className="flex items-center gap-2">
+                <Receipt size={18} className="text-gray-400" />
+                <span className="text-gray-600">Payment: <span className="font-semibold text-gray-900 capitalize">{order.payment_status}</span></span>
+              </div>
+              <div className="flex items-center gap-2">
+                <Package size={18} className="text-gray-400" />
+                <span className="text-gray-600">Fulfillment: <span className="font-semibold text-gray-900 capitalize">{order.status}</span></span>
+              </div>
+              {order.tracking_number && (
+                <div className="flex items-center gap-2">
+                  <Truck size={18} className="text-brand" />
+                  <span className="text-gray-600">Tracking: <span className="font-semibold text-brand">{order.tracking_carrier} {order.tracking_number}</span></span>
+                </div>
+              )}
+            </div>
+
+            {/* Items List */}
+            <div className="p-6 sm:p-8 border-b border-gray-100">
+              <h2 className="text-lg font-bold text-gray-900 mb-6">Order Summary</h2>
+              <div className="space-y-6">
+                {order.items.map((item, idx) => (
+                  <div key={idx} className="flex justify-between gap-4 group">
+                    <div className="flex gap-4 items-start">
+                      <div className="w-12 h-12 rounded-xl bg-gray-50 border border-gray-100 flex items-center justify-center flex-shrink-0 text-gray-400 font-bold text-xs">
+                        {item.quantity}x
+                      </div>
+                      <div>
+                        <h3 className="font-semibold text-gray-900">{item.product_name}</h3>
+                        <p className="text-sm text-gray-500 capitalize mt-0.5">{item.variant_size} / {item.variant_color}</p>
+                      </div>
+                    </div>
+                    <div className="text-right">
+                      <span className="font-semibold text-gray-900">{formatCents(item.line_total_cents)}</span>
+                      {item.quantity > 1 && (
+                        <p className="text-xs text-gray-400 mt-0.5">{formatCents(item.unit_price_cents)} each</p>
+                      )}
+                    </div>
+                  </div>
+                ))}
+              </div>
+            </div>
+
+            {/* Price Breakdown */}
+            <div className="p-6 sm:p-8 bg-gray-50/30">
+              <div className="max-w-xs ml-auto space-y-3 text-sm">
+                <div className="flex justify-between text-gray-600">
+                  <span>Subtotal</span>
+                  <span className="font-medium text-gray-900">{formatCents(order.subtotal_cents)}</span>
+                </div>
+                <div className="flex justify-between text-gray-600">
+                  <span>Shipping</span>
+                  <span className="font-medium text-gray-900">{order.shipping_cents === 0 ? 'Free' : formatCents(order.shipping_cents)}</span>
+                </div>
+                {order.tax_cents > 0 && (
+                  <div className="flex justify-between text-gray-600">
+                    <span>Tax</span>
+                    <span className="font-medium text-gray-900">{formatCents(order.tax_cents)}</span>
+                  </div>
+                )}
+                <div className="flex justify-between items-center pt-4 mt-4 border-t border-gray-200">
+                  <span className="font-bold text-gray-900">Total</span>
+                  <span className="text-xl font-black text-gray-900">{formatCents(order.total_cents)}</span>
+                </div>
+              </div>
+            </div>
+
+          </div>
+          </div>
+        ) : (
+          <div className="bg-white rounded-3xl p-8 text-center shadow-sm border border-gray-100">
+            <p className="text-gray-600 mb-4">We couldn't load your order details automatically, but your order is confirmed!</p>
+            <p className="text-sm text-gray-500">Check your email for the full receipt.</p>
+          </div>
+        )}
+
+        <div className="mt-10 text-center">
+          <Link href="/" className="inline-flex items-center gap-2 px-8 py-4 bg-brand text-white rounded-xl font-bold hover:bg-brand/90 transition-all hover:-translate-y-0.5 hover:shadow-lg hover:shadow-brand/20 active:scale-[0.98]">
+            Continue Shopping <ArrowRight size={18} />
+          </Link>
+        </div>
+
+      </div>
     </div>
   );
 }
