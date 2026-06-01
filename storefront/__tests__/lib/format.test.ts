@@ -1,4 +1,4 @@
-import { describe, it, expect, vi, beforeEach } from 'vitest';
+import { describe, it, expect } from 'vitest';
 import { formatCents, brandName, brandTagline, brandLogo, siteUrl } from '@/lib/format';
 
 describe('formatCents', () => {
@@ -24,73 +24,25 @@ describe('formatCents', () => {
 });
 
 describe('brandName', () => {
-  const originalEnv = process.env;
-
-  beforeEach(() => {
-    process.env = { ...originalEnv };
-  });
-
-  it('returns env value when set', () => {
-    process.env.NEXT_PUBLIC_BRAND_NAME = 'TestBrand';
-    expect(brandName()).toBe('TestBrand');
-  });
-
-  it('returns default when not set', () => {
-    delete process.env.NEXT_PUBLIC_BRAND_NAME;
-    expect(brandName()).toBe('Store');
+  it('returns brand config name', () => {
+    expect(brandName()).toBe('Baseline Store');
   });
 });
 
 describe('brandTagline', () => {
-  const originalEnv = process.env;
-
-  beforeEach(() => {
-    process.env = { ...originalEnv };
-  });
-
-  it('returns env value when set', () => {
-    process.env.NEXT_PUBLIC_BRAND_TAGLINE = 'Best clothing';
-    expect(brandTagline()).toBe('Best clothing');
-  });
-
-  it('returns empty string when not set', () => {
-    delete process.env.NEXT_PUBLIC_BRAND_TAGLINE;
-    expect(brandTagline()).toBe('');
+  it('returns brand config tagline', () => {
+    expect(brandTagline()).toBe('Your Tagline Here');
   });
 });
 
 describe('brandLogo', () => {
-  const originalEnv = process.env;
-
-  beforeEach(() => {
-    process.env = { ...originalEnv };
-  });
-
-  it('returns url when set', () => {
-    process.env.NEXT_PUBLIC_BRAND_LOGO = '/logo.png';
-    expect(brandLogo()).toBe('/logo.png');
-  });
-
-  it('returns null when not set', () => {
-    delete process.env.NEXT_PUBLIC_BRAND_LOGO;
-    expect(brandLogo()).toBeNull();
+  it('returns brand config logo path', () => {
+    expect(brandLogo()).toBe('/images/brand/logo.png');
   });
 });
 
 describe('siteUrl', () => {
-  const originalEnv = process.env;
-
-  beforeEach(() => {
-    process.env = { ...originalEnv };
-  });
-
-  it('returns env value when set', () => {
-    process.env.NEXT_PUBLIC_SITE_URL = 'https://example.com';
-    expect(siteUrl()).toBe('https://example.com');
-  });
-
-  it('returns default when not set', () => {
-    delete process.env.NEXT_PUBLIC_SITE_URL;
-    expect(siteUrl()).toBe('http://localhost:5173');
+  it('returns brand config baseUrl', () => {
+    expect(siteUrl()).toBe('https://yourdomain.com');
   });
 });
