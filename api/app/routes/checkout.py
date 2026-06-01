@@ -98,6 +98,7 @@ async def checkout(
                 "order_number": order_number,
                 "customer_name": body.customer_name,
                 "customer_email": body.customer_email,
+                "payment_method": body.payment_method,
                 "subtotal_cents": validated["subtotal_cents"],
                 "shipping_cents": validated["shipping_cents"],
                 "tax_cents": validated["tax_cents"],

@@ -127,9 +127,16 @@ export default function AdminOrders() {
                       </span>
                     </td>
                     <td className="px-6 py-4 whitespace-nowrap">
-                      <span className={`capitalize px-2.5 py-1 rounded-full text-xs font-bold ${PAYMENT_BADGE[order.payment_status] || 'bg-gray-100 text-gray-700'}`}>
-                        {order.payment_status}
-                      </span>
+                      <div className="flex flex-col gap-1.5 items-start">
+                        <span className={`capitalize px-2.5 py-1 rounded-full text-xs font-bold ${PAYMENT_BADGE[order.payment_status] || 'bg-gray-100 text-gray-700'}`}>
+                          {order.payment_status}
+                        </span>
+                        <span className={`px-2.5 py-1 rounded-full text-[10px] font-bold ${
+                          order.payment_method === 'etransfer' ? 'bg-purple-100 text-purple-700' : 'bg-blue-100 text-blue-700'
+                        }`}>
+                          {order.payment_method === 'etransfer' ? 'e-Transfer' : 'Stripe'}
+                        </span>
+                      </div>
                     </td>
                     <td className="px-6 py-4 text-right font-bold text-gray-900 whitespace-nowrap">{formatCents(order.total_cents)}</td>
                     <td className="px-6 py-4 text-gray-500 text-xs font-medium whitespace-nowrap">{new Date(order.created_at).toLocaleDateString(undefined, { year: 'numeric', month: 'short', day: 'numeric' })}</td>

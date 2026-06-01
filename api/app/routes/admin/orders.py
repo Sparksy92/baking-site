@@ -8,7 +8,7 @@ import aiosqlite
 from app.auth import require_admin
 from app.database import get_db
 from app.models.schemas import OrderStatusUpdate, RefundRequest
-from app.services.email_service import send_shipping_notification, send_refund_confirmation
+from app.services.email_service import send_shipping_notification, send_refund_confirmation, send_payment_confirmed
 from app.services.stripe_service import create_refund
 
 logger = logging.getLogger(__name__)
@@ -110,6 +110,15 @@ async def update_order(
             await send_shipping_notification(order_data)
         except Exception:
             logger.exception("Failed to send shipping notification for order %d", order_id)
+
+    # Send payment confirmed email if status was manually changed to confirmed
+    if updates.get("payment_status") == "confirmed" and order["payment_status"] != "confirmed":
+        try:
+            order_data = dict(order)
+            order_data.update(updates)
+            await send_payment_confirmed(order_data)
+        except Exception:
+            logger.exception("Failed to send payment confirmed email for order %d", order_id)
 
     return {"updated": True}
 

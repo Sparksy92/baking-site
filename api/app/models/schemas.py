@@ -248,6 +248,7 @@ class OrderResponse(BaseModel):
 
 class OrderStatusUpdate(BaseModel):
     status: ORDER_STATUSES | None = None
+    payment_status: str | None = None
     tracking_number: str | None = None
     tracking_carrier: str | None = None
     admin_notes: str | None = None

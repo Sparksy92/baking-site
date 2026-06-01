@@ -22,6 +22,7 @@ interface OrderDetail {
   order_number: string;
   status: string;
   payment_status: string;
+  payment_method: string;
   customer_name: string;
   customer_email: string;
   shipping_line1: string;
@@ -63,6 +64,7 @@ export default function AdminOrderDetail() {
 
   // Editable fields
   const [status, setStatus] = useState('');
+  const [paymentStatus, setPaymentStatus] = useState('');
   const [trackingCarrier, setTrackingCarrier] = useState('');
   const [trackingNumber, setTrackingNumber] = useState('');
   const [adminNotes, setAdminNotes] = useState('');
@@ -74,19 +76,22 @@ export default function AdminOrderDetail() {
   const [refundReason, setRefundReason] = useState('requested_by_customer');
   const [refunding, setRefunding] = useState(false);
 
+  const fetchOrder = useCallback(async () => {
+    const data = await api.get<{ order: OrderDetail; items: OrderItem[] }>(`/api/admin/orders/${params.id}`);
+    setOrder(data.order);
+    setItems(data.items);
+    setStatus(data.order.status);
+    setPaymentStatus(data.order.payment_status);
+    setTrackingCarrier(data.order.tracking_carrier || '');
+    setTrackingNumber(data.order.tracking_number || '');
+    setAdminNotes(data.order.admin_notes || '');
+  }, [params.id]);
+
   useEffect(() => {
-    api.get<{ order: OrderDetail; items: OrderItem[] }>(`/api/admin/orders/${params.id}`)
-      .then((data) => {
-        setOrder(data.order);
-        setItems(data.items);
-        setStatus(data.order.status);
-        setTrackingCarrier(data.order.tracking_carrier || '');
-        setTrackingNumber(data.order.tracking_number || '');
-        setAdminNotes(data.order.admin_notes || '');
-      })
+    fetchOrder()
       .catch(() => router.push('/admin/orders'))
       .finally(() => setLoading(false));
-  }, [params.id, router]);
+  }, [fetchOrder, router]);
 
   async function handleSave() {
     if (!order) return;
@@ -95,6 +100,7 @@ export default function AdminOrderDetail() {
     try {
       const updates: Record<string, string> = {};
       if (status !== order.status) updates.status = status;
+      if (paymentStatus !== order.payment_status) updates.payment_status = paymentStatus;
       if (trackingCarrier !== (order.tracking_carrier || '')) updates.tracking_carrier = trackingCarrier;
       if (trackingNumber !== (order.tracking_number || '')) updates.tracking_number = trackingNumber;
       if (adminNotes !== (order.admin_notes || '')) updates.admin_notes = adminNotes;
@@ -107,9 +113,7 @@ export default function AdminOrderDetail() {
 
       await api.patch(`/api/admin/orders/${order.id}`, updates);
       setMessage('Order updated successfully.');
-      // Refresh order data
-      const data = await api.get<{ order: OrderDetail; items: OrderItem[] }>(`/api/admin/orders/${order.id}`);
-      setOrder(data.order);
+      await fetchOrder();
     } catch {
       setMessage('Failed to update order.');
     } finally {
@@ -129,10 +133,7 @@ export default function AdminOrderDetail() {
       await api.post(`/api/admin/orders/${order.id}/refund`, body);
       setMessage('Refund processed successfully.');
       setShowRefund(false);
-      // Refresh order data
-      const data = await api.get<{ order: OrderDetail; items: OrderItem[] }>(`/api/admin/orders/${order.id}`);
-      setOrder(data.order);
-      setStatus(data.order.status);
+      await fetchOrder();
     } catch (err: unknown) {
       const detail = err instanceof Error ? err.message : 'Refund failed.';
       setMessage(`Failed: ${detail}`);
@@ -159,11 +160,16 @@ export default function AdminOrderDetail() {
         </div>
         <div className="flex gap-2">
           <span className={`px-2.5 py-1 rounded text-xs font-medium ${
+            order.payment_method === 'etransfer' ? 'bg-purple-100 text-purple-700' : 'bg-blue-100 text-blue-700'
+          }`}>
+            Method: {order.payment_method === 'etransfer' ? 'e-Transfer' : 'Stripe'}
+          </span>
+          <span className={`px-2.5 py-1 rounded text-xs font-medium ${
             order.payment_status === 'confirmed' ? 'bg-green-100 text-green-700' :
             order.payment_status === 'expired' ? 'bg-red-100 text-red-700' :
             'bg-yellow-100 text-yellow-700'
           }`}>
-            Payment: {order.payment_status}
+            Status: {order.payment_status}
           </span>
         </div>
       </div>
@@ -247,17 +253,32 @@ export default function AdminOrderDetail() {
         {/* Right column — actions */}
         <div className="space-y-6">
           {/* Status */}
-          <section className="bg-white rounded-xl border border-gray-200 p-5">
-            <h2 className="font-semibold text-gray-900 mb-3">Status</h2>
-            <select
-              value={status}
-              onChange={(e) => setStatus(e.target.value)}
-              className="w-full px-3 py-2 rounded-lg border border-gray-200 text-sm focus:border-brand outline-none"
-            >
-              {ORDER_STATUSES.map((s) => (
-                <option key={s} value={s}>{s.charAt(0).toUpperCase() + s.slice(1)}</option>
-              ))}
-            </select>
+          <section className="bg-white rounded-xl border border-gray-200 p-5 space-y-4">
+            <div>
+              <h2 className="font-semibold text-gray-900 mb-2">Fulfillment Status</h2>
+              <select
+                value={status}
+                onChange={(e) => setStatus(e.target.value)}
+                className="w-full px-3 py-2 rounded-lg border border-gray-200 text-sm focus:border-brand outline-none"
+              >
+                {ORDER_STATUSES.map((s) => (
+                  <option key={s} value={s}>{s.charAt(0).toUpperCase() + s.slice(1)}</option>
+                ))}
+              </select>
+            </div>
+            <div>
+              <h2 className="font-semibold text-gray-900 mb-2">Payment Status</h2>
+              <select
+                value={paymentStatus}
+                onChange={(e) => setPaymentStatus(e.target.value)}
+                className="w-full px-3 py-2 rounded-lg border border-gray-200 text-sm focus:border-brand outline-none"
+              >
+                <option value="pending">Pending</option>
+                <option value="confirmed">Confirmed</option>
+                <option value="failed">Failed</option>
+                <option value="refunded">Refunded</option>
+              </select>
+            </div>
           </section>
 
           {/* Tracking */}

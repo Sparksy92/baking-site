@@ -52,10 +52,25 @@ def order_confirmation_template(order_data: dict, items: list[dict], settings: S
         </tr>
         """
 
+    intro_html = ""
+    if order_data.get('payment_method') == 'etransfer':
+        intro_html = f"""
+        <div style="background-color: #fefce8; border: 2px solid #fef08a; padding: 20px; border-radius: 8px; margin-bottom: 24px; margin-top: 20px;">
+            <h3 style="margin-top: 0; color: #854d0e; font-size: 16px;">Action Required: Send your e-Transfer</h3>
+            <p style="color: #a16207; line-height: 1.5; margin-bottom: 12px;">Your order has been received, but we need your payment to fulfill it.</p>
+            <p style="color: #4b5563; line-height: 1.5; margin: 0;">1. Send an e-Transfer to: <strong style="color: #111827;">{settings.etransfer_email}</strong></p>
+            <p style="color: #4b5563; line-height: 1.5; margin: 0;">2. Include your order number in the message/memo: <strong style="color: #111827;">#{order_data['order_number']}</strong></p>
+        </div>
+        """
+    else:
+        intro_html = f"""
+        <p style="color: #4b5563; line-height: 1.6;">We're getting your order ready to be shipped. We will notify you when it has been sent.</p>
+        """
+
     content = f"""
     <h2 style="margin-top: 0; color: #111827; font-size: 20px;">Order Confirmed</h2>
     <p style="color: #4b5563; line-height: 1.6;">Hi {order_data['customer_name']},</p>
-    <p style="color: #4b5563; line-height: 1.6;">We're getting your order ready to be shipped. We will notify you when it has been sent.</p>
+    {intro_html}
     
     <div style="margin-top: 30px; margin-bottom: 30px;">
         <h3 style="font-size: 14px; text-transform: uppercase; color: #9ca3af; letter-spacing: 1px; border-bottom: 2px solid #eeeeee; padding-bottom: 8px; margin-bottom: 16px;">Order {order_data['order_number']}</h3>
