@@ -149,17 +149,20 @@ export interface PublicSettings {
   tax_rate: number;
   currency: string;
   analytics_id: string;
+  etransfer_email: string;
+  payment_method?: 'stripe' | 'etransfer';
 }
 
 export interface CheckoutResponse {
   order_number: string;
-  stripe_checkout_url: string;
+  stripe_checkout_url?: string;
 }
 
 export interface OrderLookup {
   order_number: string;
   status: string;
   payment_status: string;
+  payment_method: string;
   items: {
     product_name: string;
     variant_size: string;

@@ -13,8 +13,7 @@ const nextConfig: NextConfig = {
   images: {
     remotePatterns: [
       { protocol: 'http', hostname: 'localhost' },
-      { protocol: 'https', hostname: '*.rez-hub.com' },
-      { protocol: 'https', hostname: '*.clancollection.ca' },
+      { protocol: 'https', hostname: '*.yourdomain.com' },
     ],
   },
 };

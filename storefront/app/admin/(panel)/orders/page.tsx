@@ -2,7 +2,7 @@
 
 import { useEffect, useState } from 'react';
 import { useRouter } from 'next/navigation';
-import { Search } from 'lucide-react';
+import { Search, Loader2 } from 'lucide-react';
 import { api } from '@/lib/api';
 import { formatCents } from '@/lib/format';
 
@@ -48,80 +48,111 @@ export default function AdminOrders() {
     : orders;
 
   return (
-    <div>
-      <h1 className="text-2xl font-bold text-gray-900 mb-4">Orders</h1>
-
-      {/* Status tabs */}
-      <div className="flex gap-1 mb-4 flex-wrap">
-        {STATUS_TABS.map((tab) => (
-          <button
-            key={tab}
-            onClick={() => setActiveTab(tab)}
-            className={`px-3 py-1.5 rounded-lg text-sm font-medium transition-colors ${
-              activeTab === tab ? 'bg-brand text-white' : 'bg-gray-100 text-gray-600 hover:bg-gray-200'
-            }`}
-          >
-            {tab.charAt(0).toUpperCase() + tab.slice(1)}
-          </button>
-        ))}
+    <div className="space-y-6">
+      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+        <h1 className="text-2xl font-bold text-gray-900">Orders</h1>
       </div>
 
-      {/* Search */}
-      <div className="relative mb-4">
-        <Search size={16} className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400" />
-        <input
-          type="text"
-          placeholder="Search by order number, name, or email..."
-          value={search}
-          onChange={(e) => setSearch(e.target.value)}
-          className="w-full pl-9 pr-4 py-2.5 rounded-lg border border-gray-200 text-sm focus:border-brand outline-none"
-        />
+      {/* Controls Container */}
+      <div className="flex flex-col lg:flex-row lg:items-center justify-between gap-4 bg-white p-4 rounded-xl shadow-sm border border-gray-100">
+        
+        {/* Status tabs */}
+        <div className="flex gap-1.5 overflow-x-auto pb-1 sm:pb-0 custom-scrollbar hide-scrollbar-on-mobile w-full lg:w-auto">
+          {STATUS_TABS.map((tab) => (
+            <button
+              key={tab}
+              onClick={() => setActiveTab(tab)}
+              className={`px-4 py-2 rounded-lg text-sm font-semibold transition-all whitespace-nowrap ${
+                activeTab === tab ? 'bg-gray-900 text-white shadow-md' : 'bg-gray-50 text-gray-600 hover:bg-gray-100 hover:text-gray-900 border border-gray-200'
+              }`}
+            >
+              {tab.charAt(0).toUpperCase() + tab.slice(1)}
+            </button>
+          ))}
+        </div>
+
+        {/* Search */}
+        <div className="relative w-full lg:w-80 flex-shrink-0">
+          <Search size={18} className="absolute left-3.5 top-1/2 -translate-y-1/2 text-gray-400" />
+          <input
+            type="text"
+            placeholder="Search orders..."
+            value={search}
+            onChange={(e) => setSearch(e.target.value)}
+            className="w-full pl-10 pr-4 py-2.5 rounded-lg border border-gray-200 text-sm focus:border-brand focus:ring-1 focus:ring-brand outline-none transition-all"
+          />
+        </div>
       </div>
 
-      {loading ? (
-        <div className="text-gray-400 py-8 text-center">Loading orders...</div>
-      ) : (
-        <div className="bg-white rounded-xl border border-gray-200 overflow-hidden">
-          <table className="w-full text-sm">
-            <caption className="sr-only">Orders list</caption>
-            <thead className="bg-gray-50 border-b border-gray-200">
+      <div className="bg-white rounded-xl shadow-sm border border-gray-200 overflow-hidden">
+        <div className="overflow-x-auto custom-scrollbar">
+          <table className="w-full text-sm min-w-[800px]">
+            <thead className="bg-gray-50/80 border-b border-gray-200">
               <tr>
-                <th className="px-4 py-3 text-left font-medium text-gray-600">Order</th>
-                <th className="px-4 py-3 text-left font-medium text-gray-600">Customer</th>
-                <th className="px-4 py-3 text-left font-medium text-gray-600">Status</th>
-                <th className="px-4 py-3 text-left font-medium text-gray-600">Payment</th>
-                <th className="px-4 py-3 text-right font-medium text-gray-600">Total</th>
-                <th className="px-4 py-3 text-left font-medium text-gray-600">Date</th>
+                <th className="px-6 py-4 text-left font-semibold text-gray-600 whitespace-nowrap">Order</th>
+                <th className="px-6 py-4 text-left font-semibold text-gray-600 whitespace-nowrap">Customer</th>
+                <th className="px-6 py-4 text-left font-semibold text-gray-600 whitespace-nowrap">Status</th>
+                <th className="px-6 py-4 text-left font-semibold text-gray-600 whitespace-nowrap">Payment</th>
+                <th className="px-6 py-4 text-right font-semibold text-gray-600 whitespace-nowrap">Total</th>
+                <th className="px-6 py-4 text-left font-semibold text-gray-600 whitespace-nowrap">Date</th>
               </tr>
             </thead>
             <tbody className="divide-y divide-gray-100">
-              {filtered.map((order) => (
-                <tr
-                  key={order.id}
-                  onClick={() => router.push(`/admin/orders/${order.id}`)}
-                  className="hover:bg-gray-50 cursor-pointer"
-                >
-                  <td className="px-4 py-3 font-mono font-medium text-brand">{order.order_number}</td>
-                  <td className="px-4 py-3 text-gray-600">{order.customer_name}</td>
-                  <td className="px-4 py-3">
-                    <span className={`capitalize px-2 py-0.5 rounded text-xs font-medium ${STATUS_BADGE[order.status] || 'bg-gray-100 text-gray-700'}`}>
-                      {order.status}
-                    </span>
+              {loading ? (
+                [...Array(5)].map((_, i) => (
+                  <tr key={i} className="animate-pulse">
+                    <td className="px-6 py-4"><div className="h-4 bg-gray-200 rounded w-20"></div></td>
+                    <td className="px-6 py-4"><div className="h-4 bg-gray-200 rounded w-32"></div></td>
+                    <td className="px-6 py-4"><div className="h-5 bg-gray-200 rounded-full w-16"></div></td>
+                    <td className="px-6 py-4"><div className="h-5 bg-gray-200 rounded-full w-20"></div></td>
+                    <td className="px-6 py-4 flex justify-end"><div className="h-4 bg-gray-200 rounded w-16"></div></td>
+                    <td className="px-6 py-4"><div className="h-4 bg-gray-200 rounded w-24"></div></td>
+                  </tr>
+                ))
+              ) : filtered.length > 0 ? (
+                filtered.map((order) => (
+                  <tr
+                    key={order.id}
+                    onClick={() => router.push(`/admin/orders/${order.id}`)}
+                    className="hover:bg-gray-50/80 cursor-pointer transition-colors group"
+                  >
+                    <td className="px-6 py-4 font-mono font-bold text-brand group-hover:text-brand-600 whitespace-nowrap">{order.order_number}</td>
+                    <td className="px-6 py-4">
+                      <div className="font-medium text-gray-900">{order.customer_name}</div>
+                      <div className="text-gray-500 text-xs mt-0.5">{order.customer_email}</div>
+                    </td>
+                    <td className="px-6 py-4 whitespace-nowrap">
+                      <span className={`capitalize px-2.5 py-1 rounded-full text-xs font-bold ${STATUS_BADGE[order.status] || 'bg-gray-100 text-gray-700'}`}>
+                        {order.status}
+                      </span>
+                    </td>
+                    <td className="px-6 py-4 whitespace-nowrap">
+                      <div className="flex flex-col gap-1.5 items-start">
+                        <span className={`capitalize px-2.5 py-1 rounded-full text-xs font-bold ${PAYMENT_BADGE[order.payment_status] || 'bg-gray-100 text-gray-700'}`}>
+                          {order.payment_status}
+                        </span>
+                        <span className={`px-2.5 py-1 rounded-full text-[10px] font-bold ${
+                          order.payment_method === 'etransfer' ? 'bg-purple-100 text-purple-700' : 'bg-blue-100 text-blue-700'
+                        }`}>
+                          {order.payment_method === 'etransfer' ? 'e-Transfer' : 'Stripe'}
+                        </span>
+                      </div>
+                    </td>
+                    <td className="px-6 py-4 text-right font-bold text-gray-900 whitespace-nowrap">{formatCents(order.total_cents)}</td>
+                    <td className="px-6 py-4 text-gray-500 text-xs font-medium whitespace-nowrap">{new Date(order.created_at).toLocaleDateString(undefined, { year: 'numeric', month: 'short', day: 'numeric' })}</td>
+                  </tr>
+                ))
+              ) : (
+                <tr>
+                  <td colSpan={6} className="px-6 py-12 text-center text-gray-400">
+                    {search ? 'No matching orders found' : 'No orders yet'}
                   </td>
-                  <td className="px-4 py-3">
-                    <span className={`capitalize px-2 py-0.5 rounded text-xs font-medium ${PAYMENT_BADGE[order.payment_status] || 'bg-gray-100 text-gray-700'}`}>
-                      {order.payment_status}
-                    </span>
-                  </td>
-                  <td className="px-4 py-3 text-right font-medium">{formatCents(order.total_cents)}</td>
-                  <td className="px-4 py-3 text-gray-500 text-xs">{new Date(order.created_at).toLocaleDateString()}</td>
                 </tr>
-              ))}
+              )}
             </tbody>
           </table>
-          {filtered.length === 0 && <p className="text-center text-gray-400 py-8">{search ? 'No matching orders' : 'No orders yet'}</p>}
         </div>
-      )}
+      </div>
     </div>
   );
 }

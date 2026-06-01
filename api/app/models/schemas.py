@@ -215,12 +215,11 @@ class CheckoutRequest(BaseModel):
     utm_source: str | None = None
     utm_medium: str | None = None
     utm_campaign: str | None = None
-
+    payment_method: Literal["stripe", "etransfer"] = "stripe"
 
 class CheckoutResponse(BaseModel):
     order_number: str
-    stripe_checkout_url: str
-
+    stripe_checkout_url: str | None = None
 
 # ── Orders ──────────────────────────────────────────────────────
 
@@ -237,6 +236,7 @@ class OrderResponse(BaseModel):
     order_number: str
     status: str
     payment_status: str
+    payment_method: str
     items: list[OrderItemResponse]
     subtotal_cents: int
     discount_cents: int = 0
@@ -251,6 +251,7 @@ class OrderResponse(BaseModel):
 
 class OrderStatusUpdate(BaseModel):
     status: ORDER_STATUSES | None = None
+    payment_status: str | None = None
     tracking_number: str | None = None
     tracking_carrier: str | None = None
     admin_notes: str | None = None
@@ -304,7 +305,7 @@ class PublicSettingsResponse(BaseModel):
     tax_rate: float
     currency: str
     analytics_id: str = ""
-
+    etransfer_email: str = ""
 
 # ── Contact ────────────────────────────────────────────────────
 

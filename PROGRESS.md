@@ -67,7 +67,7 @@
 - **Auth**: JWT in httpOnly cookie, admin role only
 - **Env-driven branding**: NEXT_PUBLIC_BRAND_NAME, BRAND_LOGO, etc.
 - **Forking model**: Copy repo → edit .env → seed → deploy
-- **Image domains**: localhost + *.rez-hub.com + *.clancollection.ca
+- **Image domains**: localhost + *.yourdomain.com
 
 ## Key Files
 - `api/app/migrations/001_initial_schema.sql` — full schema (11 tables)

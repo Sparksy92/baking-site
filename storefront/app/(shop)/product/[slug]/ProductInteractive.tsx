@@ -30,7 +30,7 @@ export function ProductInteractive({ product }: { product: Product }) {
       productName: product.name,
       variantSize: selectedVariant.size,
       variantColor: selectedVariant.color,
-      unitPriceCents: selectedVariant.price_cents,
+      unitPriceCents: selectedVariant.price_cents || product.variants.find((v) => v.price_cents > 0)?.price_cents || 0,
       imageUrl: product.images[0]?.url ?? null,
     });
     addToast(`${product.name} added to cart`, 'success');
@@ -48,7 +48,7 @@ export function ProductInteractive({ product }: { product: Product }) {
       {selectedVariant && (
         <div className="mt-3 flex items-center gap-3">
           <span className="text-2xl font-bold text-gray-900">
-            {formatCents(selectedVariant.price_cents)}
+            {formatCents(selectedVariant.price_cents || product.variants.find((v) => v.price_cents > 0)?.price_cents || 0)}
           </span>
           {selectedVariant.compare_at_price_cents && (
             <span className="text-lg text-gray-400 line-through">
@@ -56,13 +56,6 @@ export function ProductInteractive({ product }: { product: Product }) {
             </span>
           )}
         </div>
-      )}
-
-      {product.description && (
-        <div
-          className="mt-4 text-gray-600 leading-relaxed prose prose-sm max-w-none"
-          dangerouslySetInnerHTML={{ __html: product.description }}
-        />
       )}
 
       {/* Color selector */}
@@ -171,6 +164,19 @@ export function ProductInteractive({ product }: { product: Product }) {
       >
         {added ? 'Added to Cart' : inStock ? 'Add to Cart' : 'Sold Out'}
       </button>
+
+      {/* Description */}
+      {product.description && (
+        <div
+          className="mt-8 pt-8 border-t border-gray-100"
+        >
+          <h3 className="text-sm font-semibold text-gray-900 mb-3">Description</h3>
+          <div
+            className="text-gray-600 leading-relaxed prose prose-sm max-w-none"
+            dangerouslySetInnerHTML={{ __html: product.description }}
+          />
+        </div>
+      )}
       </div>
     </div>
   );

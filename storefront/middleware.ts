@@ -17,7 +17,7 @@ export function middleware(request: NextRequest) {
       "default-src 'self'",
       `script-src 'self' 'unsafe-inline'${isDev ? " 'unsafe-eval'" : ''} https://js.stripe.com`,
       "style-src 'self' 'unsafe-inline'",
-      "img-src 'self' data: blob: https://*.rez-hub.com https://*.clancollection.ca",
+      "img-src 'self' data: blob: https://*.yourdomain.com",
       "font-src 'self' data:",
       `connect-src 'self' https://api.stripe.com${isDev ? ' ws://localhost:* http://localhost:*' : ''}`,
       "frame-src 'self' https://js.stripe.com https://hooks.stripe.com",

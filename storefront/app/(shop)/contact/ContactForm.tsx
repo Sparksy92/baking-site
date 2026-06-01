@@ -2,6 +2,7 @@
 
 import { useState } from 'react';
 import { api } from '@/lib/api';
+import { Send, CheckCircle2, Loader2, AlertCircle } from 'lucide-react';
 
 export default function ContactForm() {
   const [form, setForm] = useState({
@@ -42,12 +43,15 @@ export default function ContactForm() {
 
   if (status === 'sent') {
     return (
-      <div className="bg-green-50 border border-green-200 rounded-xl p-8 text-center">
-        <h3 className="text-lg font-semibold text-green-800 mb-2">Message Sent!</h3>
-        <p className="text-green-700 text-sm">Thank you for reaching out. We&apos;ll get back to you within 24 hours.</p>
+      <div className="flex flex-col items-center justify-center py-12 text-center">
+        <div className="w-16 h-16 bg-green-100 rounded-full flex items-center justify-center mb-6">
+          <CheckCircle2 className="w-8 h-8 text-green-600" />
+        </div>
+        <h3 className="text-2xl font-bold text-gray-900 mb-2">Message Sent!</h3>
+        <p className="text-gray-600 mb-8 max-w-sm">Thank you for reaching out. We&apos;ll get back to you as soon as possible.</p>
         <button
           onClick={() => setStatus('idle')}
-          className="mt-4 text-sm text-brand hover:underline"
+          className="px-6 py-3 bg-gray-100 text-gray-900 rounded-xl font-medium hover:bg-gray-200 transition-colors"
         >
           Send another message
         </button>
@@ -55,47 +59,25 @@ export default function ContactForm() {
     );
   }
 
+  const inputClass = "w-full border border-gray-200 bg-gray-50 rounded-xl px-4 py-3 text-sm focus:outline-none focus:ring-2 focus:ring-brand focus:border-transparent transition-all";
+
   return (
-    <form onSubmit={handleSubmit} className="space-y-4">
-      <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+    <form onSubmit={handleSubmit} className="space-y-5">
+      <div className="grid grid-cols-1 sm:grid-cols-2 gap-5">
         <div>
-          <label htmlFor="name" className="block text-sm font-medium text-gray-700 mb-1">Name *</label>
-          <input
-            id="name"
-            name="name"
-            type="text"
-            required
-            value={form.name}
-            onChange={handleChange}
-            className="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-brand focus:border-transparent"
-            placeholder="Your name"
-          />
+          <label htmlFor="name" className="block text-sm font-semibold text-gray-700 mb-1.5">Name *</label>
+          <input id="name" name="name" type="text" required value={form.name} onChange={handleChange} className={inputClass} placeholder="Jane Doe" />
         </div>
         <div>
-          <label htmlFor="email" className="block text-sm font-medium text-gray-700 mb-1">Email *</label>
-          <input
-            id="email"
-            name="email"
-            type="email"
-            required
-            value={form.email}
-            onChange={handleChange}
-            className="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-brand focus:border-transparent"
-            placeholder="you@example.com"
-          />
+          <label htmlFor="email" className="block text-sm font-semibold text-gray-700 mb-1.5">Email *</label>
+          <input id="email" name="email" type="email" required value={form.email} onChange={handleChange} className={inputClass} placeholder="you@example.com" />
         </div>
       </div>
 
-      <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+      <div className="grid grid-cols-1 sm:grid-cols-2 gap-5">
         <div>
-          <label htmlFor="subject" className="block text-sm font-medium text-gray-700 mb-1">Subject</label>
-          <select
-            id="subject"
-            name="subject"
-            value={form.subject}
-            onChange={handleChange}
-            className="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-brand focus:border-transparent bg-white"
-          >
+          <label htmlFor="subject" className="block text-sm font-semibold text-gray-700 mb-1.5">Subject</label>
+          <select id="subject" name="subject" value={form.subject} onChange={handleChange} className={`${inputClass} appearance-none bg-white`}>
             <option value="">General Inquiry</option>
             <option value="Order Question">Order Question</option>
             <option value="Returns & Exchanges">Returns &amp; Exchanges</option>
@@ -105,46 +87,33 @@ export default function ContactForm() {
           </select>
         </div>
         <div>
-          <label htmlFor="order_number" className="block text-sm font-medium text-gray-700 mb-1">Order Number</label>
-          <input
-            id="order_number"
-            name="order_number"
-            type="text"
-            value={form.order_number}
-            onChange={handleChange}
-            className="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-brand focus:border-transparent"
-            placeholder="e.g. ELD-A3X7K9"
-          />
+          <label htmlFor="order_number" className="block text-sm font-semibold text-gray-700 mb-1.5">Order Number <span className="text-gray-400 font-normal">(optional)</span></label>
+          <input id="order_number" name="order_number" type="text" value={form.order_number} onChange={handleChange} className={inputClass} placeholder="e.g. ELD-A3X7K9" />
         </div>
       </div>
 
       <div>
-        <label htmlFor="message" className="block text-sm font-medium text-gray-700 mb-1">Message *</label>
-        <textarea
-          id="message"
-          name="message"
-          required
-          minLength={10}
-          rows={5}
-          value={form.message}
-          onChange={handleChange}
-          className="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-brand focus:border-transparent resize-y"
-          placeholder="How can we help?"
-        />
+        <label htmlFor="message" className="block text-sm font-semibold text-gray-700 mb-1.5">Message *</label>
+        <textarea id="message" name="message" required minLength={10} rows={5} value={form.message} onChange={handleChange} className={`${inputClass} resize-none`} placeholder="How can we help?" />
       </div>
 
       {status === 'error' && (
-        <div className="bg-red-50 border border-red-200 rounded-lg px-4 py-3 text-sm text-red-700">
-          {errorMsg}
+        <div className="bg-red-50 border border-red-200 rounded-xl px-4 py-3 text-sm text-red-700 flex items-start gap-3">
+          <AlertCircle className="w-5 h-5 flex-shrink-0 mt-0.5" />
+          <p>{errorMsg}</p>
         </div>
       )}
 
       <button
         type="submit"
         disabled={status === 'sending'}
-        className="w-full sm:w-auto bg-brand text-white px-8 py-2.5 rounded-lg text-sm font-medium hover:opacity-90 transition disabled:opacity-50 disabled:cursor-not-allowed"
+        className="w-full bg-brand text-white px-8 py-4 rounded-xl text-base font-bold hover:bg-brand/90 transition-all active:scale-[0.98] disabled:opacity-50 disabled:active:scale-100 flex items-center justify-center gap-2 group shadow-lg shadow-brand/20"
       >
-        {status === 'sending' ? 'Sending...' : 'Send Message'}
+        {status === 'sending' ? (
+          <><Loader2 className="animate-spin w-5 h-5" /> Sending...</>
+        ) : (
+          <>Send Message <Send className="w-5 h-5 group-hover:translate-x-1 group-hover:-translate-y-1 transition-transform" /></>
+        )}
       </button>
     </form>
   );

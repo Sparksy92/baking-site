@@ -7,6 +7,7 @@ test.describe('Security Checks (D1-D4)', () => {
   });
 
   test('D2: Rate limit login', async ({ page }) => {
+    await page.setExtraHTTPHeaders({ 'x-forwarded-for': '10.0.0.99' });
     await page.goto('/admin/login');
     for (let i = 0; i < 6; i++) {
       await page.getByPlaceholder(/username/i).fill('wrongadmin');
@@ -20,7 +21,9 @@ test.describe('Security Checks (D1-D4)', () => {
   test('D3: Order lookup rate limit', async ({ request }) => {
     let status429 = false;
     for (let i = 0; i < 15; i++) {
-      const response = await request.get('/api/orders/FAKE?email=fake@example.com');
+      const response = await request.get('/api/orders/FAKE?email=fake@example.com', {
+        headers: { 'x-forwarded-for': '10.0.0.100' }
+      });
       if (response.status() === 429) {
         status429 = true;
         break;

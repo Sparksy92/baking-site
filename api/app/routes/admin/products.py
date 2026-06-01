@@ -311,36 +311,6 @@ async def upload_image(
     return {"id": cursor.lastrowid, "url": url}
 
 
-@router.delete("/{product_id}/images/{image_id}")
-async def delete_image(
-    product_id: int,
-    image_id: int,
-    db: aiosqlite.Connection = Depends(get_db),
-    user: dict = Depends(require_admin),
-):
-    from pathlib import Path
-
-    # Get image URL before deleting record
-    cursor = await db.execute(
-        "SELECT url FROM product_images WHERE id = ? AND product_id = ?", (image_id, product_id)
-    )
-    image = await cursor.fetchone()
-
-    await db.execute("DELETE FROM product_images WHERE id = ? AND product_id = ?", (image_id, product_id))
-    await db.commit()
-
-    # Clean up file on disk
-    if image and image["url"]:
-        settings = get_settings()
-        filename = image["url"].rsplit("/", 1)[-1]
-        filepath = settings.uploads_dir / filename
-        if filepath.is_file():
-            filepath.unlink(missing_ok=True)
-            logger.info("Deleted image file: %s", filepath)
-
-    return {"deleted": True}
-
-
 @router.patch("/{product_id}/images/{image_id}/primary")
 async def set_primary_image(
     product_id: int,
@@ -411,3 +381,33 @@ async def update_image(
     )
     await db.commit()
     return {"updated": True}
+
+
+@router.delete("/{product_id}/images/{image_id}")
+async def delete_image(
+    product_id: int,
+    image_id: int,
+    db: aiosqlite.Connection = Depends(get_db),
+    user: dict = Depends(require_admin),
+):
+    from pathlib import Path
+
+    # Get image URL before deleting record
+    cursor = await db.execute(
+        "SELECT url FROM product_images WHERE id = ? AND product_id = ?", (image_id, product_id)
+    )
+    image = await cursor.fetchone()
+
+    await db.execute("DELETE FROM product_images WHERE id = ? AND product_id = ?", (image_id, product_id))
+    await db.commit()
+
+    # Clean up file on disk
+    if image and image["url"]:
+        settings = get_settings()
+        filename = image["url"].rsplit("/", 1)[-1]
+        filepath = settings.uploads_dir / filename
+        if filepath.is_file():
+            filepath.unlink(missing_ok=True)
+            logger.info("Deleted image file: %s", filepath)
+
+    return {"deleted": True}

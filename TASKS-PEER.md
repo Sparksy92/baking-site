@@ -23,10 +23,10 @@ These paths are being actively worked on. **Do not modify any files in these dir
 
 ## Tasks
 
-### 1. Fix e2e admin test (your code)
+### 1. ✅ Fix e2e admin test (your code)
 Your `storefront/e2e/admin.spec.ts` uses `getByPlaceholder(/username/i)` but our login form uses **"Email"** not "Username". Fix the selector so the test passes.
 
-### 2. Email templates — remaining functions
+### 2. ✅ Email templates — remaining functions
 You did order confirmation and shipping. These still use inline HTML in `api/app/services/email_service.py`:
 - `send_order_cancelled`
 - `send_refund_confirmation`
@@ -34,25 +34,25 @@ You did order confirmation and shipping. These still use inline HTML in `api/app
 
 Move them into `api/app/services/email_templates.py` following the same pattern you used. Add tests in `api/tests/test_email_templates.py`.
 
-### 3. Cart page polish
+### 3. ✅ Cart page polish
 `storefront/app/(shop)/cart/page.tsx` — improve UX, empty cart state, quantity controls, mobile layout.
 
-### 4. Checkout flow
+### 4. ✅ Checkout flow
 `storefront/app/(shop)/checkout/` — test the full flow, fix CSS issues, improve form validation UX.
 
-### 5. Order confirmation page
+### 5. ✅ Order confirmation page
 `storefront/app/(shop)/confirmation/[orderNumber]/page.tsx` — make it look polished, show order summary.
 
-### 6. Search page
+### 6. ✅ Search page
 `storefront/app/(shop)/search/page.tsx` — improve results display, empty state, loading state.
 
-### 7. Collections & Categories pages
+### 7. ✅ Collections & Categories pages
 - `storefront/app/(shop)/collections/[slug]/page.tsx`
 - `storefront/app/(shop)/categories/[slug]/page.tsx`
 
 Polish layout, add filtering, improve product grid.
 
-### 8. Static content pages
+### 8. ✅ Static content pages
 - `storefront/app/(shop)/about/page.tsx`
 - `storefront/app/(shop)/faq/page.tsx`
 - `storefront/app/(shop)/shipping-policy/page.tsx`
@@ -60,7 +60,7 @@ Polish layout, add filtering, improve product grid.
 
 Add real content structure, make them look professional.
 
-### 9. Admin pages (NOT products)
+### 9. ✅ Admin pages (NOT products)
 Safe to work on:
 - `storefront/app/admin/(panel)/orders/`
 - `storefront/app/admin/(panel)/returns/`
@@ -71,7 +71,7 @@ Safe to work on:
 
 Add empty states, loading skeletons, toast notifications, mobile responsiveness.
 
-### 10. 404 page
+### 10. ✅ 404 page
 Design a branded 404 page at `storefront/app/not-found.tsx`.
 
 ---

@@ -9,9 +9,7 @@ test.describe('Search page', () => {
 
   test('empty search does not submit', async ({ page }) => {
     await page.goto('/search');
-    await page.getByRole('button', { name: 'Search' }).click();
-    // Should not show "No products found" since the search didn't execute
-    await expect(page.getByText(/No products found/)).not.toBeVisible();
+    await expect(page.getByRole('button', { name: 'Search' })).toBeDisabled();
   });
 
   test('search with query shows result feedback', async ({ page }) => {

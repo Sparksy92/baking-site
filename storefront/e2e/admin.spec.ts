@@ -11,29 +11,29 @@ test.describe('Admin Panel (A5-A11)', () => {
     await expect(page).toHaveURL(/.*\/admin\/?$/);
 
     // A5: Orders
-    await page.getByRole('link', { name: /orders/i }).click();
+    await page.goto('/admin/orders');
     await expect(page.getByRole('heading', { name: /orders/i })).toBeVisible();
     await expect(page.locator('table').or(page.getByText(/no orders/i)).first()).toBeVisible();
 
     // A6 & A7: Categories and Collections
-    await page.getByRole('link', { name: /categories/i }).click();
+    await page.goto('/admin/categories');
     await expect(page.getByText(/categories/i).first()).toBeVisible();
 
-    await page.getByRole('link', { name: /collections/i }).click();
+    await page.goto('/admin/collections');
     await expect(page.getByText(/collections/i).first()).toBeVisible();
     await expect(page.locator('table').first()).toBeVisible();
 
     // A8: Promos
-    await page.getByRole('link', { name: /promos|discounts/i }).click();
+    await page.goto('/admin/promos');
     await expect(page.getByText(/promos/i).first()).toBeVisible();
 
     // A9: Newsletter
-    await page.getByRole('link', { name: /newsletter|subscribers/i }).click();
+    await page.goto('/admin/newsletter');
     await expect(page.getByText(/newsletter/i).first()).toBeVisible();
     await expect(page.locator('table').or(page.getByText(/no subscribers/i)).first()).toBeVisible();
 
     // A10: Settings
-    await page.getByRole('link', { name: /settings/i }).click();
+    await page.goto('/admin/settings');
     const brandInput = page.getByLabel(/Brand Name/i);
     await brandInput.fill('Automated Brand');
     await page.getByRole('button', { name: /save/i }).click();

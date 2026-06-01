@@ -33,6 +33,9 @@ class Settings(BaseSettings):
     stripe_publishable_key: str = ""
     stripe_webhook_secret: str = ""
 
+    # ── Payments ──────────────────────────────────────────────────
+    etransfer_email: str = "payments@example.com"
+
     # ── Shipping ─────────────────────────────────────────────────
     shipping_flat_rate_cents: int = 1200
     shipping_free_threshold_cents: int = 15000

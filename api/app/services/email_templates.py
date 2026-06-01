@@ -52,10 +52,25 @@ def order_confirmation_template(order_data: dict, items: list[dict], settings: S
         </tr>
         """
 
+    intro_html = ""
+    if order_data.get('payment_method') == 'etransfer':
+        intro_html = f"""
+        <div style="background-color: #fefce8; border: 2px solid #fef08a; padding: 20px; border-radius: 8px; margin-bottom: 24px; margin-top: 20px;">
+            <h3 style="margin-top: 0; color: #854d0e; font-size: 16px;">Action Required: Send your e-Transfer</h3>
+            <p style="color: #a16207; line-height: 1.5; margin-bottom: 12px;">Your order has been received, but we need your payment to fulfill it.</p>
+            <p style="color: #4b5563; line-height: 1.5; margin: 0;">1. Send an e-Transfer to: <strong style="color: #111827;">{settings.etransfer_email}</strong></p>
+            <p style="color: #4b5563; line-height: 1.5; margin: 0;">2. Include your order number in the message/memo: <strong style="color: #111827;">#{order_data['order_number']}</strong></p>
+        </div>
+        """
+    else:
+        intro_html = f"""
+        <p style="color: #4b5563; line-height: 1.6;">We're getting your order ready to be shipped. We will notify you when it has been sent.</p>
+        """
+
     content = f"""
     <h2 style="margin-top: 0; color: #111827; font-size: 20px;">Order Confirmed</h2>
     <p style="color: #4b5563; line-height: 1.6;">Hi {order_data['customer_name']},</p>
-    <p style="color: #4b5563; line-height: 1.6;">We're getting your order ready to be shipped. We will notify you when it has been sent.</p>
+    {intro_html}
     
     <div style="margin-top: 30px; margin-bottom: 30px;">
         <h3 style="font-size: 14px; text-transform: uppercase; color: #9ca3af; letter-spacing: 1px; border-bottom: 2px solid #eeeeee; padding-bottom: 8px; margin-bottom: 16px;">Order {order_data['order_number']}</h3>
@@ -117,3 +132,45 @@ def shipping_notification_template(order_data: dict, settings: Settings) -> str:
     """
     
     return base_email_template(f"Order Shipped - {order_data['order_number']}", content, settings)
+
+def order_cancelled_template(order_data: dict, reason: str, settings: Settings) -> str:
+    reason_text = {
+        "expired": "Your payment session expired before it could be completed.",
+        "cancelled": "Your order has been cancelled.",
+    }.get(reason, "Your order has been cancelled.")
+
+    content = f"""
+    <h2 style="margin-top: 0; color: #111827; font-size: 20px;">Order Cancelled</h2>
+    <p style="color: #4b5563; line-height: 1.6;">Order <strong>{order_data['order_number']}</strong> has been cancelled.</p>
+    <p style="color: #4b5563; line-height: 1.6;">{reason_text}</p>
+    <p style="color: #4b5563; line-height: 1.6;">No charges were made. If you'd like to try again, please visit our store.</p>
+    <p style="margin-top: 24px;">
+        <a href="{settings.store_domain}" style="display:inline-block;padding:12px 24px;background:#1A1A1A;color:#fff;text-decoration:none;border-radius:6px;font-weight:bold;">Return to Store</a>
+    </p>
+    """
+    
+    return base_email_template(f"Order {order_data['order_number']} cancelled", content, settings)
+
+def refund_confirmation_template(order_data: dict, refund_amount_cents: int, settings: Settings) -> str:
+    content = f"""
+    <h2 style="margin-top: 0; color: #111827; font-size: 20px;">Refund Processed</h2>
+    <p style="color: #4b5563; line-height: 1.6;">Hi {order_data['customer_name']},</p>
+    <p style="color: #4b5563; line-height: 1.6;">A refund of <strong>${refund_amount_cents / 100:.2f} {settings.store_currency}</strong> has been issued for order <strong>{order_data['order_number']}</strong>.</p>
+    <p style="color: #4b5563; line-height: 1.6;">It may take 5–10 business days for the refund to appear on your statement, depending on your bank.</p>
+    <p style="color: #4b5563; line-height: 1.6; margin-top: 24px;">If you have any questions, please <a href="{settings.store_domain}/contact" style="color: {settings.brand_color_accent}; text-decoration: none;">contact us</a>.</p>
+    """
+    
+    return base_email_template(f"Refund processed - {order_data['order_number']}", content, settings)
+
+def password_reset_template(first_name: str, reset_url: str, settings: Settings) -> str:
+    content = f"""
+    <h2 style="margin-top: 0; color: #111827; font-size: 20px;">Password Reset</h2>
+    <p style="color: #4b5563; line-height: 1.6;">Hi {first_name},</p>
+    <p style="color: #4b5563; line-height: 1.6;">We received a request to reset your password. Click the link below to set a new one:</p>
+    <p style="margin-top: 24px; margin-bottom: 24px;">
+        <a href="{reset_url}" style="display:inline-block;padding:12px 24px;background:#1A1A1A;color:#fff;text-decoration:none;border-radius:6px;font-weight:bold;">Reset Password</a>
+    </p>
+    <p style="color: #6b7280; font-size: 13px; line-height: 1.6;">This link expires in 1 hour. If you didn't request this, you can safely ignore this email.</p>
+    """
+    
+    return base_email_template("Reset your password", content, settings)
