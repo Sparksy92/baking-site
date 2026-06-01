@@ -100,10 +100,11 @@ async def test_checkout_uses_canadapost_rate(admin_client: AsyncClient):
 
     assert resp.status_code == 201
     # Verify the order was created with Canada Post rate
-    import os, aiosqlite
+    import os
+    from app.database import get_db
     db_path = os.environ["DATABASE_PATH"]
-    async with aiosqlite.connect(db_path) as db:
-        db.row_factory = aiosqlite.Row
+    async for db in get_db():
+        pass
         cursor = await db.execute(
             "SELECT shipping_cents FROM orders WHERE order_number = ?",
             (resp.json()["order_number"],),
@@ -139,10 +140,11 @@ async def test_checkout_falls_back_to_flat_rate(admin_client: AsyncClient):
                 })
 
     assert resp.status_code == 201
-    import os, aiosqlite
+    import os
+    from app.database import get_db
     db_path = os.environ["DATABASE_PATH"]
-    async with aiosqlite.connect(db_path) as db:
-        db.row_factory = aiosqlite.Row
+    async for db in get_db():
+        pass
         cursor = await db.execute(
             "SELECT shipping_cents FROM orders WHERE order_number = ?",
             (resp.json()["order_number"],),

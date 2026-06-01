@@ -3,7 +3,7 @@ import os
 from unittest.mock import patch, MagicMock
 
 import pytest
-import aiosqlite
+from app.database import get_db
 from httpx import AsyncClient
 
 
@@ -43,7 +43,7 @@ async def _setup_admin(client: AsyncClient):
     """Set up admin user and return admin-authenticated client."""
     from app.auth import hash_password
     db_path = os.environ["DATABASE_PATH"]
-    async with aiosqlite.connect(db_path) as db:
+    async for db in get_db():
         pw_hash = hash_password("admin123")
         await db.execute(
             "INSERT OR IGNORE INTO admin_users (username, password_hash, role) VALUES (?, ?, ?)",
@@ -150,8 +150,8 @@ async def test_checkout_links_customer_id_to_order(client: AsyncClient):
 
     # Check DB directly
     db_path = os.environ["DATABASE_PATH"]
-    async with aiosqlite.connect(db_path) as db:
-        db.row_factory = aiosqlite.Row
+    async for db in get_db():
+        pass
         cursor = await db.execute(
             "SELECT customer_id FROM orders WHERE order_number = ?", (order_number,)
         )
@@ -173,8 +173,8 @@ async def test_guest_checkout_has_null_customer_id(client: AsyncClient):
     order_number = resp.json()["order_number"]
 
     db_path = os.environ["DATABASE_PATH"]
-    async with aiosqlite.connect(db_path) as db:
-        db.row_factory = aiosqlite.Row
+    async for db in get_db():
+        pass
         cursor = await db.execute(
             "SELECT customer_id FROM orders WHERE order_number = ?", (order_number,)
         )

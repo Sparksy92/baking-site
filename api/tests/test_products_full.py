@@ -47,9 +47,9 @@ async def _add_variant(
 async def _seed_category(admin_client: AsyncClient, name: str, slug: str) -> int:
     """Create a category via direct DB insert (no admin endpoint yet)."""
     import os
-    import aiosqlite
+    from app.database import get_db
     db_path = os.environ["DATABASE_PATH"]
-    async with aiosqlite.connect(db_path) as db:
+    async for db in get_db():
         cursor = await db.execute(
             "INSERT INTO categories (name, slug, is_active) VALUES (?, ?, 1)",
             (name, slug),

@@ -3,7 +3,7 @@ import os
 from unittest.mock import patch, MagicMock
 
 import pytest
-import aiosqlite
+from app.database import get_db
 from httpx import AsyncClient
 
 
@@ -46,7 +46,7 @@ async def _create_confirmed_order(admin_client: AsyncClient, variant_id: int):
 
     # Simulate confirmed payment by updating DB directly
     db_path = os.environ["DATABASE_PATH"]
-    async with aiosqlite.connect(db_path) as db:
+    async for db in get_db():
         await db.execute(
             """UPDATE orders
                SET payment_status = 'confirmed',
@@ -134,7 +134,7 @@ async def test_refund_rejects_pending_payment(admin_client: AsyncClient):
             })
     order_number = resp.json()["order_number"]
     db_path = os.environ["DATABASE_PATH"]
-    async with aiosqlite.connect(db_path) as db:
+    async for db in get_db():
         cursor = await db.execute("SELECT id FROM orders WHERE order_number = ?", (order_number,))
         order_id = (await cursor.fetchone())[0]
 

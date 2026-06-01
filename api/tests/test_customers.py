@@ -241,7 +241,8 @@ async def test_forgot_password_always_returns_success(client: AsyncClient):
 @pytest.mark.asyncio
 async def test_forgot_password_creates_token(client: AsyncClient):
     """After forgot-password, the customer should have a reset token in DB."""
-    import os, aiosqlite
+    import os
+    from app.database import get_db
     await client.post("/api/customers/register", json={
         "email": "reset@example.com",
         "password": "SecurePass1",
@@ -258,8 +259,8 @@ async def test_forgot_password_creates_token(client: AsyncClient):
     assert resp.status_code == 200
 
     db_path = os.environ["DATABASE_PATH"]
-    async with aiosqlite.connect(db_path) as db:
-        db.row_factory = aiosqlite.Row
+    async for db in get_db():
+        pass
         cursor = await db.execute(
             "SELECT password_reset_token, password_reset_expires FROM customers WHERE email = 'reset@example.com'"
         )
@@ -271,7 +272,8 @@ async def test_forgot_password_creates_token(client: AsyncClient):
 @pytest.mark.asyncio
 async def test_reset_password_with_valid_token(client: AsyncClient):
     """Full forgot → reset flow using a token from the DB."""
-    import os, aiosqlite
+    import os
+    from app.database import get_db
     await client.post("/api/customers/register", json={
         "email": "fullreset@example.com",
         "password": "OldPass123",
@@ -288,8 +290,8 @@ async def test_reset_password_with_valid_token(client: AsyncClient):
 
     # Get token from DB
     db_path = os.environ["DATABASE_PATH"]
-    async with aiosqlite.connect(db_path) as db:
-        db.row_factory = aiosqlite.Row
+    async for db in get_db():
+        pass
         cursor = await db.execute(
             "SELECT password_reset_token FROM customers WHERE email = 'fullreset@example.com'"
         )
@@ -324,7 +326,8 @@ async def test_reset_password_invalid_token(client: AsyncClient):
 @pytest.mark.asyncio
 async def test_reset_password_expired_token(client: AsyncClient):
     """Expired token should be rejected."""
-    import os, aiosqlite
+    import os
+    from app.database import get_db
     from datetime import datetime, timedelta, timezone
 
     await client.post("/api/customers/register", json={
@@ -337,7 +340,7 @@ async def test_reset_password_expired_token(client: AsyncClient):
     # Manually set an expired token
     db_path = os.environ["DATABASE_PATH"]
     expired = (datetime.now(timezone.utc) - timedelta(hours=2)).isoformat()
-    async with aiosqlite.connect(db_path) as db:
+    async for db in get_db():
         await db.execute(
             "UPDATE customers SET password_reset_token = 'expired-token', password_reset_expires = ? WHERE email = 'expired@example.com'",
             (expired,),
@@ -357,7 +360,8 @@ async def test_reset_password_expired_token(client: AsyncClient):
 @pytest.mark.asyncio
 async def test_order_detail_authenticated(client: AsyncClient):
     """Logged-in customer can view their order without providing email."""
-    import os, aiosqlite
+    import os
+    from app.database import get_db
     resp = await client.post("/api/customers/register", json={
         "email": "orderdetail@example.com",
         "password": "SecurePass1",
@@ -368,7 +372,7 @@ async def test_order_detail_authenticated(client: AsyncClient):
 
     # Insert order + item directly in DB
     db_path = os.environ["DATABASE_PATH"]
-    async with aiosqlite.connect(db_path) as db:
+    async for db in get_db():
         cursor = await db.execute("""
             INSERT INTO orders (order_number, customer_name, customer_email, customer_id,
                                status, payment_status, subtotal_cents, shipping_cents, discount_cents,
@@ -405,7 +409,8 @@ async def test_order_detail_unauthenticated(client: AsyncClient):
 @pytest.mark.asyncio
 async def test_order_detail_wrong_customer(client: AsyncClient):
     """Customer cannot view another customer's order."""
-    import os, aiosqlite
+    import os
+    from app.database import get_db
     # Customer A registers
     resp = await client.post("/api/customers/register", json={
         "email": "custA@example.com",
@@ -417,7 +422,7 @@ async def test_order_detail_wrong_customer(client: AsyncClient):
 
     # Insert order belonging to Customer A
     db_path = os.environ["DATABASE_PATH"]
-    async with aiosqlite.connect(db_path) as db:
+    async for db in get_db():
         await db.execute("""
             INSERT INTO orders (order_number, customer_name, customer_email, customer_id,
                                status, payment_status, subtotal_cents, shipping_cents, discount_cents,

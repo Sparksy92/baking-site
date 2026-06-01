@@ -57,6 +57,16 @@ quality:typecheck:
 test:api:
   stage: test
   image: python:3.12-bookworm
+  services:
+    - name: postgres:16-alpine
+      alias: postgres
+      command: ["postgres", "-c", "fsync=off"]
+  variables:
+    POSTGRES_USER: ecommerce
+    POSTGRES_PASSWORD: ecommerce_password
+    POSTGRES_DB: ecommerce_test
+    POSTGRES_HOST: postgres
+    POSTGRES_PORT: 5432
   extends: .default_job
   cache:
     key: api-pip

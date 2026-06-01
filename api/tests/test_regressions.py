@@ -3,7 +3,7 @@ import os
 from unittest.mock import patch, MagicMock
 
 import pytest
-import aiosqlite
+from app.database import get_db
 from httpx import AsyncClient
 
 
@@ -61,8 +61,8 @@ async def test_soft_delete_product_with_orders(admin_client: AsyncClient, client
 
     # Product should still exist in DB but be inactive
     db_path = os.environ["DATABASE_PATH"]
-    async with aiosqlite.connect(db_path) as db:
-        db.row_factory = aiosqlite.Row
+    async for db in get_db():
+        pass
         cursor = await db.execute("SELECT is_active FROM products WHERE id = ?", (pid,))
         row = await cursor.fetchone()
         assert row["is_active"] == 0
@@ -84,7 +84,7 @@ async def test_hard_delete_product_without_orders(admin_client: AsyncClient):
 
     # Product should be gone from DB
     db_path = os.environ["DATABASE_PATH"]
-    async with aiosqlite.connect(db_path) as db:
+    async for db in get_db():
         cursor = await db.execute("SELECT COUNT(*) FROM products WHERE id = ?", (pid,))
         count = (await cursor.fetchone())[0]
         assert count == 0
