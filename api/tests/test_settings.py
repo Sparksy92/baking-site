@@ -28,7 +28,6 @@ async def test_public_settings_custom_announcement(client: AsyncClient):
     """store_announcement can be set via DB."""
     import os
     from app.database import get_db
-    db_path = os.environ["DATABASE_PATH"]
     async for db in get_db():
         await db.execute(
             "INSERT OR REPLACE INTO settings (key, value) VALUES (?, ?)",

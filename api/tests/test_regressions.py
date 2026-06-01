@@ -60,7 +60,6 @@ async def test_soft_delete_product_with_orders(admin_client: AsyncClient, client
     assert "existing orders" in data["reason"]
 
     # Product should still exist in DB but be inactive
-    db_path = os.environ["DATABASE_PATH"]
     async for db in get_db():
         pass
         cursor = await db.execute("SELECT is_active FROM products WHERE id = ?", (pid,))
@@ -83,7 +82,6 @@ async def test_hard_delete_product_without_orders(admin_client: AsyncClient):
     assert resp.json()["deleted"] is True
 
     # Product should be gone from DB
-    db_path = os.environ["DATABASE_PATH"]
     async for db in get_db():
         cursor = await db.execute("SELECT COUNT(*) FROM products WHERE id = ?", (pid,))
         count = (await cursor.fetchone())[0]

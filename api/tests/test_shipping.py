@@ -102,7 +102,6 @@ async def test_checkout_uses_canadapost_rate(admin_client: AsyncClient):
     # Verify the order was created with Canada Post rate
     import os
     from app.database import get_db
-    db_path = os.environ["DATABASE_PATH"]
     async for db in get_db():
         pass
         cursor = await db.execute(
@@ -142,7 +141,6 @@ async def test_checkout_falls_back_to_flat_rate(admin_client: AsyncClient):
     assert resp.status_code == 201
     import os
     from app.database import get_db
-    db_path = os.environ["DATABASE_PATH"]
     async for db in get_db():
         pass
         cursor = await db.execute(

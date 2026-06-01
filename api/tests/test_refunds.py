@@ -45,7 +45,6 @@ async def _create_confirmed_order(admin_client: AsyncClient, variant_id: int):
     order_number = resp.json()["order_number"]
 
     # Simulate confirmed payment by updating DB directly
-    db_path = os.environ["DATABASE_PATH"]
     async for db in get_db():
         await db.execute(
             """UPDATE orders
@@ -133,7 +132,6 @@ async def test_refund_rejects_pending_payment(admin_client: AsyncClient):
                 "items": [{"variant_id": vid, "quantity": 1}],
             })
     order_number = resp.json()["order_number"]
-    db_path = os.environ["DATABASE_PATH"]
     async for db in get_db():
         cursor = await db.execute("SELECT id FROM orders WHERE order_number = ?", (order_number,))
         order_id = (await cursor.fetchone())[0]

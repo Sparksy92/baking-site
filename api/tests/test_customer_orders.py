@@ -42,7 +42,6 @@ def _checkout_body(variant_id: int, email: str = "customer@test.com"):
 async def _setup_admin(client: AsyncClient):
     """Set up admin user and return admin-authenticated client."""
     from app.auth import hash_password
-    db_path = os.environ["DATABASE_PATH"]
     async for db in get_db():
         pw_hash = hash_password("admin123")
         await db.execute(
@@ -149,7 +148,6 @@ async def test_checkout_links_customer_id_to_order(client: AsyncClient):
     order_number = resp.json()["order_number"]
 
     # Check DB directly
-    db_path = os.environ["DATABASE_PATH"]
     async for db in get_db():
         pass
         cursor = await db.execute(
@@ -172,7 +170,6 @@ async def test_guest_checkout_has_null_customer_id(client: AsyncClient):
             resp = await client.post("/api/checkout", json=_checkout_body(vid, "guest@test.com"))
     order_number = resp.json()["order_number"]
 
-    db_path = os.environ["DATABASE_PATH"]
     async for db in get_db():
         pass
         cursor = await db.execute(

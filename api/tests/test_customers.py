@@ -258,7 +258,6 @@ async def test_forgot_password_creates_token(client: AsyncClient):
         })
     assert resp.status_code == 200
 
-    db_path = os.environ["DATABASE_PATH"]
     async for db in get_db():
         pass
         cursor = await db.execute(
@@ -289,7 +288,6 @@ async def test_reset_password_with_valid_token(client: AsyncClient):
         })
 
     # Get token from DB
-    db_path = os.environ["DATABASE_PATH"]
     async for db in get_db():
         pass
         cursor = await db.execute(
@@ -338,7 +336,6 @@ async def test_reset_password_expired_token(client: AsyncClient):
     })
 
     # Manually set an expired token
-    db_path = os.environ["DATABASE_PATH"]
     expired = (datetime.now(timezone.utc) - timedelta(hours=2)).isoformat()
     async for db in get_db():
         await db.execute(
@@ -371,7 +368,6 @@ async def test_order_detail_authenticated(client: AsyncClient):
     customer_id = resp.json()["id"]
 
     # Insert order + item directly in DB
-    db_path = os.environ["DATABASE_PATH"]
     async for db in get_db():
         cursor = await db.execute("""
             INSERT INTO orders (order_number, customer_name, customer_email, customer_id,
@@ -421,7 +417,6 @@ async def test_order_detail_wrong_customer(client: AsyncClient):
     cust_a_id = resp.json()["id"]
 
     # Insert order belonging to Customer A
-    db_path = os.environ["DATABASE_PATH"]
     async for db in get_db():
         await db.execute("""
             INSERT INTO orders (order_number, customer_name, customer_email, customer_id,

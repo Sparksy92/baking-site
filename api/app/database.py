@@ -52,6 +52,16 @@ class PostgresCursor:
         
         # Rewrite query to use $1, $2
         pg_query = _convert_qmarks(original_query)
+        pg_query = re.sub(r'(?i)([a-zA-Z0-9_.]+)\s*=\s*\$(\d+)\s+COLLATE\s+NOCASE', r'LOWER(\1) = LOWER($\2)', pg_query)
+        pg_query = re.sub(r'(?i)\bGROUP_CONCAT\b', 'STRING_AGG', pg_query)
+        pg_query = re.sub(r"(?i)\bdate\('now',\s*'-(\d+)\s+days'\)", r"(NOW() - INTERVAL '\1 days')", pg_query)
+        pg_query = re.sub(r"(?i)\bdatetime\('now',\s*'-(\d+)\s+days'\)", r"(NOW() - INTERVAL '\1 days')", pg_query)
+        pg_query = re.sub(r'(?i)\bCOALESCE\(session_id,\s*id\)', r'COALESCE(session_id, CAST(id AS TEXT))', pg_query)
+        pg_query = re.sub(r'(?i)\bCASE\s+WHEN\s+\$(\d+)\s+IS\s+NOT\s+NULL', r'CASE WHEN CAST($\1 AS TEXT) IS NOT NULL', pg_query)
+        if pg_query.strip().upper() == "BEGIN EXCLUSIVE":
+            pg_query = "BEGIN"
+        elif pg_query.strip().upper() == "SELECT LAST_INSERT_ROWID()":
+            pg_query = "SELECT lastval()"
         
         # Append RETURNING id for lastrowid simulation
         if is_insert and "RETURNING" not in pg_query.upper() and "ON CONFLICT" not in pg_query.upper():
@@ -113,8 +123,10 @@ class PostgresConnection:
         await self.conn.execute(script)
 
     async def commit(self):
-        # asyncpg auto-commits outside of transactions
-        pass
+        await self.execute("COMMIT")
+
+    async def rollback(self):
+        await self.execute("ROLLBACK")
         
     async def close(self):
         pass
