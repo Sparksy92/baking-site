@@ -1,13 +1,13 @@
 import { BrandConfig } from '../types/brand';
 
 export const brandConfig: BrandConfig = {
-  id: 'turtle-island-supply',
+  id: 'baseline-store',
   metadata: {
-    name: 'Turtle Island Supply',
-    tagline: 'Authentic Indigenous Streetwear',
-    description: 'High quality indigenous clothing and streetwear.',
-    siteName: 'Turtle Island Supply',
-    baseUrl: 'https://turtleislandsupply.com',
+    name: 'Baseline Store',
+    tagline: 'Your Tagline Here',
+    description: 'High quality products for your brand.',
+    siteName: 'Baseline Store',
+    baseUrl: 'https://yourdomain.com',
     locale: 'en-US',
     defaultRegion: 'ca',
   },
@@ -70,7 +70,7 @@ export const brandConfig: BrandConfig = {
     ],
   },
   content: {
-    copyright: '© {year} Turtle Island Supply. All rights reserved.',
+    copyright: '© {year} Baseline Store. All rights reserved.',
     poweredBy: '',
     pages: {},
   },
