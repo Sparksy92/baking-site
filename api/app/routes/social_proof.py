@@ -24,11 +24,11 @@ async def get_social_proof(
     """
     # Recent viewers (events from last 30 min)
     cursor = await db.execute(
-        """SELECT COUNT(DISTINCT COALESCE(session_id, id)) as viewer_count
-           FROM events
-           WHERE event_type = 'product_viewed'
-             AND product_id = ?
-             AND created_at >= (CURRENT_TIMESTAMP - INTERVAL '30 minutes')""",
+            """SELECT COUNT(DISTINCT COALESCE(session_id, CAST(id AS TEXT))) as viewer_count
+               FROM events
+               WHERE event_type = 'product_viewed'
+                 AND product_id = ?
+                 AND CAST(created_at AS timestamp) >= (CURRENT_TIMESTAMP - INTERVAL '30 minutes')""",
         (product_id,),
     )
     row = await cursor.fetchone()
@@ -43,7 +43,7 @@ async def get_social_proof(
            JOIN orders o ON o.id = oi.order_id
            WHERE oi.product_id = ?
              AND o.payment_status = 'confirmed'
-             AND o.created_at >= date('now', '-7 days')""",
+             AND CAST(o.created_at AS timestamp) >= (CURRENT_TIMESTAMP - INTERVAL '7 days')""",
         (product_id,),
     )
     row = await cursor.fetchone()

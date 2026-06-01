@@ -122,6 +122,10 @@ async def add_to_cart(
     )
     variant = await cursor.fetchone()
     if not variant:
+        # Debug why it's missing
+        cursor_debug = await db.execute("SELECT * FROM product_variants WHERE id = ?", (body.variant_id,))
+        debug_var = await cursor_debug.fetchone()
+        logger.error(f"Variant 404 debug: variant_id={body.variant_id}, row={dict(debug_var) if debug_var else None}")
         raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Variant not found")
 
     # Upsert: add or update quantity

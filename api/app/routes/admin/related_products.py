@@ -95,7 +95,7 @@ async def rebuild_co_purchase_recommendations(
         JOIN orders o ON o.id = oi1.order_id AND o.payment_status = 'paid'
         WHERE oi1.product_id IS NOT NULL AND oi2.product_id IS NOT NULL
         GROUP BY oi1.product_id, oi2.product_id
-        HAVING co_count >= 2
+        HAVING COUNT(*) >= 2
         ORDER BY co_count DESC
     """)
     pairs = await cursor.fetchall()

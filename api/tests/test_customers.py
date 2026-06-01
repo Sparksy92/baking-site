@@ -381,7 +381,7 @@ async def test_order_detail_authenticated(client: AsyncClient):
         await db.execute("""
             INSERT INTO order_items (order_id, product_id, variant_id, product_name,
                                     variant_size, variant_color, quantity, unit_price_cents, line_total_cents)
-            VALUES (?, 1, 1, 'Detail Tee', 'M', 'Black', 1, 3000, 3000)
+            VALUES (?, NULL, NULL, 'Detail Tee', 'M', 'Black', 1, 3000, 3000)
         """, (order_id,))
         await db.commit()
 

@@ -83,7 +83,7 @@ async def admin_client(client: AsyncClient):
 
     async for db in get_db():
         await db.execute(
-            "INSERT INTO admin_users (username, password_hash, role) VALUES (?, ?, ?)",
+            "INSERT OR IGNORE INTO admin_users (username, password_hash, role) VALUES (?, ?, ?)",
             ("admin", pw_hash, "owner"),
         )
         break

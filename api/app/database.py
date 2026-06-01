@@ -54,10 +54,34 @@ class PostgresCursor:
         pg_query = _convert_qmarks(original_query)
         pg_query = re.sub(r'(?i)([a-zA-Z0-9_.]+)\s*=\s*\$(\d+)\s+COLLATE\s+NOCASE', r'LOWER(\1) = LOWER($\2)', pg_query)
         pg_query = re.sub(r'(?i)\bGROUP_CONCAT\b', 'STRING_AGG', pg_query)
-        pg_query = re.sub(r"(?i)\bdate\('now',\s*'-(\d+)\s+days'\)", r"(NOW() - INTERVAL '\1 days')", pg_query)
-        pg_query = re.sub(r"(?i)\bdatetime\('now',\s*'-(\d+)\s+days'\)", r"(NOW() - INTERVAL '\1 days')", pg_query)
+        pg_query = re.sub(r"(?i)\bdate\('now',\s*'start of month'\)", "date_trunc('month', NOW())", pg_query)
+        pg_query = re.sub(r"(?i)\bdate\('now',\s*'-(\d+)\s+days?'\)", r"(NOW() - INTERVAL '\1 days')", pg_query)
+        pg_query = re.sub(r"(?i)\bdatetime\('now',\s*'-(\d+)\s+days?'\)", r"(NOW() - INTERVAL '\1 days')", pg_query)
+        pg_query = re.sub(r"(?i)\bdatetime\('now',\s*'-(\d+)\s+hours?'\)", r"(NOW() - INTERVAL '\1 hours')", pg_query)
+        pg_query = re.sub(r"(?i)\bdatetime\('now'\)", "CURRENT_TIMESTAMP", pg_query)
+        pg_query = re.sub(r"(?i)\bdate\(([^)]+)\)", r"SUBSTRING(CAST(\1 AS TEXT) FROM 1 FOR 10)", pg_query)
         pg_query = re.sub(r'(?i)\bCOALESCE\(session_id,\s*id\)', r'COALESCE(session_id, CAST(id AS TEXT))', pg_query)
         pg_query = re.sub(r'(?i)\bCASE\s+WHEN\s+\$(\d+)\s+IS\s+NOT\s+NULL', r'CASE WHEN CAST($\1 AS TEXT) IS NOT NULL', pg_query)
+        
+        # Universal timestamp text casting for comparisons (inequalities only)
+        pg_query = re.sub(r'\b([a-zA-Z0-9_]+\.)?(created_at|last_activity_at|updated_at|refunded_at|cancelled_at)\s*([<>]=?)\s*', r'CAST(\1\2 AS timestamp) \3 ', pg_query)
+        
+        is_insert_ignore = "INSERT OR IGNORE" in original_query.upper()
+        if is_insert_ignore:
+            pg_query = re.sub(r'(?i)\bINSERT\s+OR\s+IGNORE\s+INTO\b', 'INSERT INTO', pg_query)
+            if "ON CONFLICT" not in pg_query.upper():
+                pg_query += " ON CONFLICT DO NOTHING"
+                
+        is_insert_replace = "INSERT OR REPLACE" in original_query.upper()
+        if is_insert_replace:
+            pg_query = re.sub(r'(?i)\bINSERT\s+OR\s+REPLACE\s+INTO\b\s+([a-zA-Z0-9_]+)', r'INSERT INTO \1', pg_query)
+            if "ON CONFLICT" not in pg_query.upper():
+                if "settings" in original_query.lower():
+                    pg_query += " ON CONFLICT (key) DO UPDATE SET value = EXCLUDED.value"
+                    
+        # SQLite LIKE is case-insensitive, Postgres LIKE is case-sensitive
+        pg_query = re.sub(r'(?i)\bLIKE\b', 'ILIKE', pg_query)
+                
         if pg_query.strip().upper() == "BEGIN EXCLUSIVE":
             pg_query = "BEGIN"
         elif pg_query.strip().upper() == "SELECT LAST_INSERT_ROWID()":
