@@ -69,6 +69,9 @@ async def client():
     async with AsyncClient(transport=transport, base_url="http://test") as ac:
         yield ac
 
+    from app.database import close_db
+    await close_db()
+
 
 @pytest.fixture
 async def admin_client(client: AsyncClient):

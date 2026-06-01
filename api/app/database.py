@@ -6,6 +6,7 @@ from pathlib import Path
 from typing import AsyncGenerator
 
 import asyncpg
+import aiosqlite
 
 from app.config import get_settings
 
@@ -68,11 +69,20 @@ class PostgresCursor:
                     pg_query_no_return = pg_query.replace(" RETURNING id", "")
                     await self.conn.execute(pg_query_no_return, *args)
                     self.rowcount = 1
+            elif original_query.upper().startswith("UPDATE") or original_query.upper().startswith("DELETE"):
+                status = await self.conn.execute(pg_query, *args)
+                # status is usually "UPDATE 1" or "DELETE 0"
+                try:
+                    self.rowcount = int(status.split()[-1])
+                except (ValueError, IndexError):
+                    self.rowcount = 0
             else:
                 # Use fetch so we can simulate fetchall/fetchone
                 records = await self.conn.fetch(pg_query, *args)
                 self._rows = [PostgresRow(r) for r in records]
                 self.rowcount = len(records)
+        except asyncpg.exceptions.IntegrityConstraintViolationError as e:
+            raise aiosqlite.IntegrityError(str(e))
         except Exception as e:
             logger.error(f"Error executing query: {pg_query} with args {args}")
             raise e
@@ -133,6 +143,14 @@ async def init_db() -> None:
             
     async with _pool.acquire() as conn:
         await _run_migrations(conn)
+
+async def close_db() -> None:
+    """Close the database pool. Used primarily for test teardown."""
+    global _pool
+    if _pool:
+        await _pool.close()
+        _pool = None
+
 
 
 async def _run_migrations(conn: asyncpg.Connection) -> None:
