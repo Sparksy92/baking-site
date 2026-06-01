@@ -9,6 +9,7 @@ import { useCart } from '@/lib/cart';
 import { useCustomer } from '@/lib/customer';
 import { api, type PublicSettings } from '@/lib/api';
 import { brandName, brandLogo, formatCents } from '@/lib/format';
+import { brandConfig } from '@/config/brand.config';
 
 export function Header() {
   const { count, subtotal } = useCart();
@@ -28,13 +29,7 @@ export function Header() {
 
   useEffect(() => { setMobileOpen(false); }, [pathname]);
 
-  const navLinks = [
-    { label: 'Shop', href: '/' },
-    { label: 'New Arrivals', href: '/collections/new-arrivals' },
-    { label: 'Categories', href: '/categories' },
-    { label: 'About', href: '/about' },
-    { label: 'Track Order', href: '/order-lookup' },
-  ];
+  const navLinks = brandConfig.navigation.mainLinks;
 
   return (
     <>
