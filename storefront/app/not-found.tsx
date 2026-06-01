@@ -11,7 +11,7 @@ export default function NotFound() {
         </h1>
         <div className="absolute inset-0 flex flex-col items-center justify-center pt-8">
           <h2 className="text-3xl sm:text-4xl font-bold text-gray-900 bg-white/60 backdrop-blur-sm px-4 py-2 rounded-2xl">
-            Lost in the sauce?
+            Page not found
           </h2>
         </div>
       </div>

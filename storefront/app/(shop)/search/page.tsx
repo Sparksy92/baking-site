@@ -57,7 +57,7 @@ export default function SearchPage() {
               <SearchIcon size={20} className="absolute left-4 top-1/2 -translate-y-1/2 text-gray-400 group-focus-within:text-brand transition-colors" />
               <input
                 type="text"
-                placeholder="Search for products, categories, or styles..."
+                placeholder="Search products..."
                 value={query}
                 onChange={(e) => setQuery(e.target.value)}
                 className="w-full pl-12 pr-4 py-4 rounded-2xl border border-gray-200 focus:border-brand focus:ring-4 focus:ring-brand/10 outline-none text-base md:text-lg transition-all shadow-sm"

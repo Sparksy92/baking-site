@@ -11,19 +11,21 @@ test.describe('Customer Account (C1-C6)', () => {
     await page.locator('input[id*="last"]').fill('User');
     await page.locator('input[type="email"]').fill(email);
     await page.locator('input[type="password"]').fill(password);
+    await page.waitForLoadState('networkidle');
     await page.getByRole('button', { name: /register|create/i }).click();
     
-    await expect(page).toHaveURL(/\/account/);
+    await expect(page).toHaveURL(/.*\/account\/?$/);
   });
 
   test('C2, C3, C5, C6: Account flow', async ({ page }) => {
     await page.goto('/account/login');
     await page.locator('input[type="email"]').fill(email);
     await page.locator('input[type="password"]').fill(password);
+    await page.waitForLoadState('networkidle');
     await page.getByRole('button', { name: /login|sign in/i }).click();
     
-    await expect(page).toHaveURL(/\/account/);
-    await expect(page.getByText(/orders/i).first()).toBeVisible();
+    await expect(page).toHaveURL(/.*\/account\/?$/);
+    await expect(page.getByRole('heading', { name: /Order History/i })).toBeVisible({ timeout: 10000 });
 
     const addressLink = page.getByRole('link', { name: /addresses/i });
     if (await addressLink.isVisible()) {

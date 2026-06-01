@@ -20,7 +20,7 @@ export default function ContactPage() {
       <div className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8">
         
         <div className="text-center max-w-2xl mx-auto mb-16">
-          <h1 className="text-4xl md:text-5xl font-extrabold text-gray-900 mb-4 tracking-tight">Get in Touch</h1>
+          <h1 className="text-4xl md:text-5xl font-extrabold text-gray-900 mb-4 tracking-tight">Contact Us</h1>
           <p className="text-lg text-gray-600">
             Have a question about an order, a product, or just want to say hey? We&apos;d love to hear from you.
           </p>

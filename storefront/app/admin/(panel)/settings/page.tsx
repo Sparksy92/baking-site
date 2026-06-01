@@ -59,10 +59,11 @@ export default function AdminSettings() {
           const meta = settingsMeta[s.key];
           return (
             <div key={s.key}>
-              <label className="text-sm font-medium text-gray-700 block mb-1">
+              <label htmlFor={`setting-${s.key}`} className="text-sm font-medium text-gray-700 block mb-1">
                 {meta?.label ?? s.key}
               </label>
               <input
+                id={`setting-${s.key}`}
                 type={meta?.type ?? 'text'}
                 value={s.value}
                 onChange={(e) => handleChange(s.key, e.target.value)}

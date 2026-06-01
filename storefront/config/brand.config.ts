@@ -48,8 +48,7 @@ export const brandConfig: BrandConfig = {
   navigation: {
     mainLinks: [
       { label: 'Shop', href: '/collections/all' },
-      { label: 'Best Sellers', href: '/collections/best-sellers' },
-      { label: 'New Arrivals', href: '/collections/new-arrivals' },
+      { label: 'Categories', href: '/categories' },
       { label: 'About', href: '/about' },
     ],
     footerColumns: [
@@ -58,13 +57,26 @@ export const brandConfig: BrandConfig = {
         links: [
           { label: 'All Products', href: '/collections/all' },
           { label: 'New Arrivals', href: '/collections/new-arrivals' },
+          { label: 'Categories', href: '/categories' },
+          { label: 'Search', href: '/search' },
         ],
       },
       {
         title: 'Company',
         links: [
-          { label: 'About Us', href: '/about' },
+          { label: 'Our Story', href: '/about' },
           { label: 'Contact', href: '/contact' },
+          { label: 'FAQ', href: '/faq' },
+          { label: 'Track Order', href: '/order-lookup' },
+        ],
+      },
+      {
+        title: 'Policies',
+        links: [
+          { label: 'Shipping', href: '/shipping-policy' },
+          { label: 'Returns & Exchanges', href: '/return-policy' },
+          { label: 'Privacy Policy', href: '/privacy-policy' },
+          { label: 'Terms of Service', href: '/terms-of-service' },
         ],
       },
     ],
