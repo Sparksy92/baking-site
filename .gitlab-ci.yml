@@ -11,7 +11,6 @@ include:
     file:
       - '/.gitlab-ci/templates/base.yml'
       - '/.gitlab-ci/templates/security-baseline.yml'
-      - '/.gitlab-ci/templates/cross-project-deploy.yml'
 
 variables:
   APP_NAME: "clothing-ecommerce-baseline"
@@ -23,10 +22,7 @@ variables:
   ENABLE_SECRET_SCAN: "true"
   ENABLE_VULNERABILITY_SCAN: "true"
   ENABLE_SAST: "false"
-  # Deploy triggers (cross-project to ansible-infrastructure)
   DEPLOY_APP: "clothing-ecommerce-baseline"
-  DEPLOY_STAGING_BRANCH: "staging"
-  DEPLOY_PRODUCTION_BRANCH: "main"
 
 # =============================================================================
 # QUALITY — Linting & type checking
@@ -142,3 +138,36 @@ build:storefront:
   rules:
     - changes:
         - storefront/**/*
+
+# =============================================================================
+# DEPLOY — Cross-project triggers to ansible-infrastructure
+# =============================================================================
+
+deploy:trigger-staging:
+  stage: deploy
+  variables:
+    DEPLOY_APP: "clothing-ecommerce-baseline"
+    DEPLOY_ENVIRONMENT: "staging"
+    DEPLOY_REF: "${CI_COMMIT_SHORT_SHA}"
+    DEPLOY_PROJECT_PATH: "${CI_PROJECT_PATH}"
+  trigger:
+    project: rezhub/ansible-infrastructure
+    branch: main
+    strategy: depend
+  rules:
+    - if: '$CI_COMMIT_BRANCH == "staging"'
+
+deploy:trigger-production:
+  stage: deploy
+  variables:
+    DEPLOY_APP: "clothing-ecommerce-baseline"
+    DEPLOY_ENVIRONMENT: "production"
+    DEPLOY_REF: "${CI_COMMIT_SHORT_SHA}"
+    DEPLOY_PROJECT_PATH: "${CI_PROJECT_PATH}"
+  trigger:
+    project: rezhub/ansible-infrastructure
+    branch: main
+    strategy: depend
+  rules:
+    - if: '$CI_COMMIT_BRANCH == "main"'
+      when: manual
