@@ -31,7 +31,8 @@ export function SortSelect() {
     <select
       value={currentSort}
       onChange={handleChange}
-      className="text-sm border border-gray-200 rounded-lg px-3 py-2 bg-white text-gray-700 focus:border-brand outline-none"
+      aria-label="Sort products"
+      className="h-11 rounded-full border border-sand bg-cream px-4 text-sm font-bold text-earth shadow-earth-sm outline-none transition-all duration-300 hover:border-terracotta/60 focus:border-terracotta focus:ring-4 focus:ring-terracotta/10"
     >
       {sortOptions.map((opt) => (
         <option key={opt.value} value={opt.value}>{opt.label}</option>

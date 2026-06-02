@@ -1,4 +1,5 @@
 import Link from 'next/link';
+import { ArrowLeft, ArrowRight } from 'lucide-react';
 
 interface PaginationProps {
   currentPage: number;
@@ -19,40 +20,47 @@ export function Pagination({ currentPage, totalPages, buildHref }: PaginationPro
   }
 
   return (
-    <nav className="flex items-center justify-center gap-1 mt-10" aria-label="Pagination">
-      {currentPage > 1 && (
-        <Link
-          href={buildHref(currentPage - 1)}
-          className="px-3 py-2 text-sm text-gray-600 hover:text-brand rounded-lg hover:bg-gray-100"
-        >
-          Prev
-        </Link>
-      )}
-      {pages.map((p, i) =>
-        p === '...' ? (
-          <span key={`dot-${i}`} className="px-2 py-2 text-sm text-gray-400">...</span>
-        ) : (
+    <nav className="mt-12 flex items-center justify-center" aria-label="Pagination">
+      <div className="inline-flex items-center gap-1 rounded-full border border-sand bg-warm p-1.5 shadow-earth-sm">
+        {currentPage > 1 && (
           <Link
-            key={p}
-            href={buildHref(p)}
-            className={`px-3 py-2 text-sm rounded-lg font-medium ${
-              p === currentPage
-                ? 'bg-brand text-white'
-                : 'text-gray-600 hover:text-brand hover:bg-gray-100'
-            }`}
+            href={buildHref(currentPage - 1)}
+            className="inline-flex h-10 items-center gap-1.5 rounded-full px-4 text-sm font-bold text-earth/70 transition-all duration-300 hover:bg-cream hover:text-terracotta"
+            aria-label="Go to previous page"
           >
-            {p}
+            <ArrowLeft size={14} />
+            <span className="hidden sm:inline">Prev</span>
           </Link>
-        )
-      )}
-      {currentPage < totalPages && (
-        <Link
-          href={buildHref(currentPage + 1)}
-          className="px-3 py-2 text-sm text-gray-600 hover:text-brand rounded-lg hover:bg-gray-100"
-        >
-          Next
-        </Link>
-      )}
+        )}
+        {pages.map((p, i) =>
+          p === '...' ? (
+            <span key={`dot-${i}`} className="flex h-10 min-w-10 items-center justify-center text-sm font-bold text-muted-earth/50">...</span>
+          ) : (
+            <Link
+              key={p}
+              href={buildHref(p)}
+              aria-current={p === currentPage ? 'page' : undefined}
+              className={`flex h-10 min-w-10 items-center justify-center rounded-full px-3 text-sm font-black transition-all duration-300 ${
+                p === currentPage
+                  ? 'bg-earth text-white shadow-earth-sm'
+                  : 'text-earth/65 hover:bg-cream hover:text-terracotta'
+              }`}
+            >
+              {p}
+            </Link>
+          )
+        )}
+        {currentPage < totalPages && (
+          <Link
+            href={buildHref(currentPage + 1)}
+            className="inline-flex h-10 items-center gap-1.5 rounded-full px-4 text-sm font-bold text-earth/70 transition-all duration-300 hover:bg-cream hover:text-terracotta"
+            aria-label="Go to next page"
+          >
+            <span className="hidden sm:inline">Next</span>
+            <ArrowRight size={14} />
+          </Link>
+        )}
+      </div>
     </nav>
   );
 }

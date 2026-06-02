@@ -5,7 +5,7 @@ import { ProductCard } from '@/components/ProductCard';
 import { JsonLd } from '@/components/JsonLd';
 import { Pagination } from '@/components/Pagination';
 import { SortSelect } from '@/components/SortSelect';
-import { SlidersHorizontal } from 'lucide-react';
+import { CheckCircle2, Compass, PackageCheck } from 'lucide-react';
 
 const PRODUCTS_PER_PAGE = 24;
 
@@ -39,7 +39,7 @@ export default async function CategoryPage({ params, searchParams }: Props) {
   const totalPages = Math.ceil(data.total / PRODUCTS_PER_PAGE);
 
   return (
-    <div className="min-h-screen bg-gray-50/30 pb-20">
+    <div className="min-h-screen bg-cream pb-20">
       <JsonLd data={{
         '@context': 'https://schema.org',
         '@type': 'BreadcrumbList',
@@ -50,33 +50,51 @@ export default async function CategoryPage({ params, searchParams }: Props) {
         ],
       }} />
 
-      {/* Hero Section */}
-      <div className="bg-white border-b border-gray-200">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-16 md:py-24 flex flex-col items-center text-center">
-          <h1 className="text-4xl md:text-5xl font-extrabold text-gray-900 tracking-tight mb-4">{name}</h1>
-          <p className="mt-2 text-lg text-gray-500 max-w-2xl">Explore our hand-picked selection of {name.toLowerCase()}.</p>
+      <div className="relative overflow-hidden bg-warm border-b border-sand">
+        <div className="absolute -left-24 top-10 h-72 w-72 rounded-full bg-sage/10 blur-3xl" aria-hidden="true" />
+        <div className="absolute -right-24 bottom-0 h-80 w-80 rounded-full bg-terracotta/10 blur-3xl" aria-hidden="true" />
+        <div className="grain" aria-hidden="true" />
+        <div className="relative site-shell py-16 md:py-24">
+          <div className="max-w-3xl">
+            <p className="section-kicker mb-4">Curated Category</p>
+            <h1 className="text-5xl md:text-7xl font-black text-earth leading-[0.9] tracking-[-0.03em]">{name}</h1>
+            <p className="mt-6 text-lg text-muted-earth max-w-2xl leading-relaxed">
+              Field-ready layers, daily staples, and honest materials selected for {name.toLowerCase()}.
+            </p>
+          </div>
+          <div className="mt-10 grid gap-3 sm:grid-cols-3">
+            {[
+              { icon: Compass, label: 'Built for real weather' },
+              { icon: PackageCheck, label: 'Ships from Canada' },
+              { icon: CheckCircle2, label: '60-day free returns' },
+            ].map((item) => (
+              <div key={item.label} className="flex items-center gap-3 rounded-2xl border border-sand bg-cream/70 px-4 py-3 text-sm font-bold text-earth shadow-earth-sm">
+                <item.icon size={17} className="text-terracotta" aria-hidden="true" />
+                {item.label}
+              </div>
+            ))}
+          </div>
         </div>
       </div>
 
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8 md:py-12">
-        {/* Toolbar */}
-        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 bg-white p-4 rounded-2xl shadow-sm border border-gray-100 mb-8">
-          <p className="text-sm text-gray-600 font-medium">
-            Showing <span className="text-gray-900 font-bold">{data.total}</span> product{data.total !== 1 ? 's' : ''}
+      <div className="site-shell py-8 md:py-12">
+        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 bg-warm p-4 rounded-3xl shadow-earth-sm border border-sand mb-8">
+          <p className="text-sm text-muted-earth font-semibold">
+            Showing <span className="text-earth font-bold">{data.total}</span> product{data.total !== 1 ? 's' : ''}
           </p>
           <div className="flex items-center gap-3">
-            <button className="flex items-center gap-2 px-4 py-2 bg-gray-50 hover:bg-gray-100 text-gray-700 rounded-xl text-sm font-medium border border-gray-200 transition-colors">
-              <SlidersHorizontal size={16} /> Filters
-            </button>
-            <div className="h-6 w-[1px] bg-gray-200"></div>
+            <span className="hidden sm:inline-flex rounded-full bg-cream px-4 py-2 text-xs font-black uppercase tracking-[0.16em] text-muted-earth border border-sand">
+              No fast fashion
+            </span>
             <SortSelect />
           </div>
         </div>
 
-        {/* Product Grid */}
         {data.products.length === 0 ? (
-          <div className="py-20 text-center bg-white rounded-3xl border border-gray-100 border-dashed">
-            <p className="text-gray-500 text-lg">No products found in this category.</p>
+          <div className="py-20 text-center bg-warm rounded-3xl border border-sand border-dashed px-6">
+            <p className="section-kicker mb-3">Nothing here yet</p>
+            <h2 className="text-3xl font-black text-earth">This rack is still being stocked.</h2>
+            <p className="mt-3 text-muted-earth">Check back soon or browse the full collection for gear ready now.</p>
           </div>
         ) : (
           <>

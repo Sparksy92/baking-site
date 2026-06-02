@@ -98,6 +98,12 @@ export interface ProductImage {
   variant_id: number | null;
 }
 
+export interface ProductTag {
+  id: number;
+  name: string;
+  slug: string;
+}
+
 export interface Product {
   id: number;
   name: string;
@@ -113,6 +119,7 @@ export interface Product {
   meta_description: string | null;
   variants: Variant[];
   images: ProductImage[];
+  tags: ProductTag[];
 }
 
 export interface ProductListItem {

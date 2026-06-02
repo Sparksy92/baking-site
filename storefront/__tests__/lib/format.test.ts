@@ -25,19 +25,19 @@ describe('formatCents', () => {
 
 describe('brandName', () => {
   it('returns brand config name', () => {
-    expect(brandName()).toBe('Baseline Store');
+    expect(brandName()).toBe('Terra Supply Co.');
   });
 });
 
 describe('brandTagline', () => {
   it('returns brand config tagline', () => {
-    expect(brandTagline()).toBe('Your Tagline Here');
+    expect(brandTagline()).toBe('Built for the Long Haul.');
   });
 });
 
 describe('brandLogo', () => {
   it('returns brand config logo path', () => {
-    expect(brandLogo()).toBe('/images/brand/logo.png');
+    expect(brandLogo()).toBe('/images/brand/logo.svg');
   });
 });
 
