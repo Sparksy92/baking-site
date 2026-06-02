@@ -7,20 +7,41 @@ export function Footer() {
   const tagline = brandTagline();
 
   return (
-    <footer className="border-t border-sand bg-earth text-white">
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-14">
-        <div className="grid grid-cols-2 md:grid-cols-4 gap-8">
-          <div className="col-span-2 md:col-span-1">
-            <h3 className="font-bold text-white text-lg">{name}</h3>
-            {tagline && <p className="mt-2 text-sm text-white/60">{tagline}</p>}
+    <footer className="relative overflow-hidden bg-deep text-white">
+      <div className="absolute inset-0 bg-[radial-gradient(ellipse_at_top_right,rgba(184,92,56,0.12),transparent_60%),radial-gradient(ellipse_at_bottom_left,rgba(107,127,94,0.08),transparent_55%)]" aria-hidden="true" />
+      <div className="grain" aria-hidden="true" />
+
+      <div className="relative max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 pt-16 pb-10 md:pt-20 md:pb-12">
+        <div className="grid grid-cols-2 md:grid-cols-4 gap-10 md:gap-12 pb-12 border-b border-white/10">
+
+          {/* Brand column */}
+          <div className="col-span-2 md:col-span-1 space-y-5">
+            <div className="flex items-center gap-2.5">
+              <span className="brand-mark" aria-hidden="true">B</span>
+              <span className="text-xl font-black tracking-tight text-white">{name}</span>
+            </div>
+            {tagline && (
+              <p className="text-sm leading-relaxed text-white/55 max-w-[220px]">{tagline}</p>
+            )}
+            <div className="h-px w-10 bg-terracotta/60" />
+            <p className="text-xs text-white/35 leading-relaxed">
+              Indigenous-owned. Ethically crafted.<br />Every piece carries purpose.
+            </p>
           </div>
+
+          {/* Nav columns */}
           {brandConfig.navigation.footerColumns.map((col, idx) => (
             <div key={idx}>
-              <h4 className="font-semibold text-sm text-white/90 mb-3">{col.title}</h4>
-              <ul className="space-y-2 text-sm text-white/50">
+              <h4 className="text-[10px] font-black uppercase tracking-[0.22em] text-white/40 mb-5">{col.title}</h4>
+              <ul className="space-y-3.5">
                 {col.links.map((link) => (
                   <li key={link.href}>
-                    <Link href={link.href} className="hover:text-terracotta transition-colors" target={link.external ? '_blank' : undefined}>
+                    <Link
+                      href={link.href}
+                      className="text-sm text-white/55 hover:text-terracotta transition-colors duration-200 leading-none"
+                      target={link.external ? '_blank' : undefined}
+                      rel={link.external ? 'noopener noreferrer' : undefined}
+                    >
                       {link.label}
                     </Link>
                   </li>
@@ -29,10 +50,19 @@ export function Footer() {
             </div>
           ))}
         </div>
-        <div className="mt-10 pt-8 border-t border-white/10 text-center text-xs text-white/30">
-          <span dangerouslySetInnerHTML={{
-            __html: brandConfig.content.copyright.replace('{year}', new Date().getFullYear().toString())
-          }} />
+
+        {/* Bottom bar */}
+        <div className="pt-8 flex flex-col sm:flex-row items-center justify-between gap-4">
+          <p className="text-xs text-white/30">
+            <span dangerouslySetInnerHTML={{
+              __html: brandConfig.content.copyright.replace('{year}', new Date().getFullYear().toString())
+            }} />
+          </p>
+          <div className="flex items-center gap-6 text-xs text-white/25">
+            <Link href="/privacy" className="hover:text-white/50 transition-colors duration-200">Privacy</Link>
+            <Link href="/terms" className="hover:text-white/50 transition-colors duration-200">Terms</Link>
+            <Link href="/accessibility" className="hover:text-white/50 transition-colors duration-200">Accessibility</Link>
+          </div>
         </div>
       </div>
     </footer>

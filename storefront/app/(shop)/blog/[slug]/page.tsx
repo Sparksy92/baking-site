@@ -60,7 +60,7 @@ export default async function BlogPostPage({ params }: Props) {
   }
 
   return (
-    <article className="min-h-screen bg-white pb-20">
+    <article className="min-h-screen bg-cream pb-20">
       <JsonLd data={{
         '@context': 'https://schema.org',
         '@type': 'BlogPosting',
@@ -75,7 +75,7 @@ export default async function BlogPostPage({ params }: Props) {
 
       {/* Hero image */}
       {post.featured_image_url && (
-        <div className="relative w-full h-64 md:h-96 bg-gray-100">
+        <div className="relative w-full h-64 md:h-96 bg-sand">
           <Image
             src={post.featured_image_url}
             alt={post.title}
@@ -89,17 +89,17 @@ export default async function BlogPostPage({ params }: Props) {
 
       <div className="max-w-3xl mx-auto px-4 sm:px-6 lg:px-8 py-12">
         {/* Back link */}
-        <Link href="/blog" className="inline-flex items-center gap-1.5 text-sm text-gray-500 hover:text-brand transition-colors mb-8">
+        <Link href="/blog" className="inline-flex items-center gap-1.5 text-sm font-semibold text-muted-earth hover:text-terracotta transition-colors mb-8">
           <ArrowLeft size={14} /> Back to Blog
         </Link>
 
         {/* Title */}
-        <h1 className="text-3xl md:text-4xl font-extrabold text-gray-900 tracking-tight leading-tight">
+        <h1 className="text-4xl md:text-6xl font-black text-earth tracking-tight leading-tight">
           {post.title}
         </h1>
 
         {/* Meta */}
-        <div className="mt-4 flex items-center gap-4 text-sm text-gray-400">
+        <div className="mt-5 flex items-center gap-4 text-sm text-muted-earth">
           {post.author && (
             <span className="flex items-center gap-1.5">
               <User size={14} /> {post.author}
@@ -115,7 +115,7 @@ export default async function BlogPostPage({ params }: Props) {
 
         {/* Content */}
         <div
-          className="mt-10 prose prose-lg max-w-none prose-headings:font-bold prose-headings:text-gray-900 prose-p:text-gray-600 prose-a:text-accent prose-img:rounded-xl"
+          className="mt-10 prose prose-lg max-w-none prose-headings:font-bold prose-headings:text-earth prose-p:text-muted-earth prose-a:text-terracotta prose-strong:text-earth prose-img:rounded-2xl"
           dangerouslySetInnerHTML={{ __html: post.content_html }}
         />
       </div>

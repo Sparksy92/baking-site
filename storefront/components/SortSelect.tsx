@@ -31,7 +31,7 @@ export function SortSelect() {
     <select
       value={currentSort}
       onChange={handleChange}
-      className="text-sm border border-gray-200 rounded-lg px-3 py-2 bg-white text-gray-700 focus:border-brand outline-none"
+      className="text-sm border border-sand rounded-xl px-4 py-2.5 bg-cream text-earth font-medium focus:border-terracotta focus:ring-4 focus:ring-terracotta/10 outline-none shadow-earth-sm cursor-pointer"
     >
       {sortOptions.map((opt) => (
         <option key={opt.value} value={opt.value}>{opt.label}</option>

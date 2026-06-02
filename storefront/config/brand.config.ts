@@ -29,8 +29,8 @@ export const brandConfig: BrandConfig = {
     body: 'var(--font-geist-sans), sans-serif',
   },
   assets: {
-    logo: '/images/brand/logo.png',
-    favicon: '/images/brand/favicon.ico',
+    logo: '/images/brand/logo.svg',
+    favicon: '/images/brand/favicon.svg',
   },
   payment: {
     provider: 'stripe',
@@ -38,8 +38,8 @@ export const brandConfig: BrandConfig = {
   features: {
     blog: true,
     accounts: true,
-    search: false,
-    newsletter: false,
+    search: true,
+    newsletter: true,
     reviews: false,
     wishlists: false,
     multiCurrency: false,
@@ -92,13 +92,17 @@ export const brandConfig: BrandConfig = {
     enabled: true,
     text: 'Free shipping on orders over $100 | Indigenous owned & operated',
   },
-  trustIndicators: [],
+  trustIndicators: [
+    { label: 'Ethically Made', icon: 'leaf', description: 'Thoughtful production and responsible sourcing.' },
+    { label: 'Indigenous Owned', icon: 'feather', description: 'Rooted in culture, care, and community pride.' },
+    { label: 'Community First', icon: 'heart-handshake', description: 'Built to support cultural and local impact.' },
+  ],
   socialLinks: [],
   newsletter: {
-    enabled: false,
-    heading: 'Subscribe',
-    description: 'Get the latest news and offers.',
+    enabled: true,
+    heading: 'First access to meaningful drops.',
+    description: 'New releases, restocks, stories, and community updates sent with care.',
     placeholder: 'Email address',
-    buttonLabel: 'Subscribe',
+    buttonLabel: 'Join',
   },
 };

@@ -25,7 +25,7 @@ export function generateMetadata(): Metadata {
     twitter: { card: 'summary_large_image' },
     robots: { index: true, follow: true },
     alternates: { canonical: url },
-    icons: { icon: '/images/brand/favicon.ico' },
+    icons: { icon: brandConfig.assets.favicon },
   };
 }
 

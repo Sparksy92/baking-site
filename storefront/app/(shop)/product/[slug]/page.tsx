@@ -1,7 +1,7 @@
 import type { Metadata } from 'next';
 import { notFound } from 'next/navigation';
 import { apiFetch, type Product, type ProductListItem } from '@/lib/api';
-import { formatCents, brandName, siteUrl } from '@/lib/format';
+import { brandName, siteUrl } from '@/lib/format';
 import { JsonLd } from '@/components/JsonLd';
 import { ProductCard } from '@/components/ProductCard';
 import { ProductInteractive } from './ProductInteractive';
@@ -45,13 +45,9 @@ export default async function ProductPage({ params }: Props) {
     notFound();
   }
 
-  const minPrice = Math.min(...product.variants.map((v) => v.price_cents));
-  const maxPrice = Math.max(...product.variants.map((v) => v.price_cents));
-  const inStock = product.variants.some((v) => v.stock_quantity > 0);
-  const image = product.images[0]?.url;
-
   return (
-    <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8 md:py-12">
+    <div className="bg-cream">
+      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-10 md:py-16">
       <JsonLd data={{
         '@context': 'https://schema.org',
         '@type': 'BreadcrumbList',
@@ -80,10 +76,10 @@ export default async function ProductPage({ params }: Props) {
         })),
       }} />
 
-      <ProductInteractive product={product} />
+        <ProductInteractive product={product} />
 
-      {/* Related products */}
-      <RelatedProducts categorySlug={product.category?.slug ?? null} currentSlug={slug} />
+        <RelatedProducts categorySlug={product.category?.slug ?? null} currentSlug={slug} />
+      </div>
     </div>
   );
 }
@@ -99,9 +95,10 @@ async function RelatedProducts({ categorySlug, currentSlug }: { categorySlug: st
     if (related.length === 0) return null;
 
     return (
-      <section className="mt-16 border-t border-gray-100 pt-12">
-        <h2 className="text-2xl font-bold text-gray-900 mb-6">You Might Also Like</h2>
-        <div className="grid grid-cols-2 md:grid-cols-4 gap-4 md:gap-6">
+      <section className="mt-20 border-t border-sand pt-12">
+        <p className="text-terracotta font-semibold tracking-widest uppercase text-xs mb-2">Keep Exploring</p>
+        <h2 className="text-3xl md:text-4xl font-bold text-earth mb-8">You Might Also Like</h2>
+        <div className="grid grid-cols-2 md:grid-cols-4 gap-5 md:gap-8">
           {related.map((product) => (
             <ProductCard key={product.id} product={product} />
           ))}

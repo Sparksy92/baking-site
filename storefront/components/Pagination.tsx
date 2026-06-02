@@ -23,22 +23,22 @@ export function Pagination({ currentPage, totalPages, buildHref }: PaginationPro
       {currentPage > 1 && (
         <Link
           href={buildHref(currentPage - 1)}
-          className="px-3 py-2 text-sm text-gray-600 hover:text-brand rounded-lg hover:bg-gray-100"
+          className="px-3 py-2 text-sm font-medium text-earth/70 hover:text-terracotta rounded-xl hover:bg-sand/60 transition-colors"
         >
           Prev
         </Link>
       )}
       {pages.map((p, i) =>
         p === '...' ? (
-          <span key={`dot-${i}`} className="px-2 py-2 text-sm text-gray-400">...</span>
+          <span key={`dot-${i}`} className="px-2 py-2 text-sm text-muted-earth/60">...</span>
         ) : (
           <Link
             key={p}
             href={buildHref(p)}
-            className={`px-3 py-2 text-sm rounded-lg font-medium ${
+            className={`px-3 py-2 text-sm rounded-xl font-semibold transition-colors ${
               p === currentPage
-                ? 'bg-brand text-white'
-                : 'text-gray-600 hover:text-brand hover:bg-gray-100'
+                ? 'bg-earth text-white'
+                : 'text-earth/70 hover:text-terracotta hover:bg-sand/60'
             }`}
           >
             {p}
@@ -48,7 +48,7 @@ export function Pagination({ currentPage, totalPages, buildHref }: PaginationPro
       {currentPage < totalPages && (
         <Link
           href={buildHref(currentPage + 1)}
-          className="px-3 py-2 text-sm text-gray-600 hover:text-brand rounded-lg hover:bg-gray-100"
+          className="px-3 py-2 text-sm font-medium text-earth/70 hover:text-terracotta rounded-xl hover:bg-sand/60 transition-colors"
         >
           Next
         </Link>

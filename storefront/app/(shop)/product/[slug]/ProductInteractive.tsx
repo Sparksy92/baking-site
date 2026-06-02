@@ -40,10 +40,15 @@ export function ProductInteractive({ product }: { product: Product }) {
   }
 
   return (
-    <div className="grid grid-cols-1 lg:grid-cols-2 gap-8 lg:gap-12">
+    <div className="grid grid-cols-1 lg:grid-cols-2 gap-10 lg:gap-16">
       <ImageGallery images={product.images} productName={product.name} selectedColor={selectedColor} />
       <div className="flex flex-col">
-      <h1 className="text-2xl md:text-3xl font-bold text-gray-900">{product.name}</h1>
+      {product.category && (
+        <Link href={`/categories/${product.category.slug}`} className="mb-3 text-xs font-semibold uppercase tracking-widest text-terracotta hover:text-earth transition-colors">
+          {product.category.name}
+        </Link>
+      )}
+      <h1 className="text-3xl md:text-5xl font-black tracking-tight text-earth">{product.name}</h1>
       <SocialProof productId={product.id} />
 
       {/* Tags */}
@@ -53,7 +58,7 @@ export function ProductInteractive({ product }: { product: Product }) {
             <Link
               key={tag.id}
               href={`/tags/${tag.slug}`}
-              className="inline-flex items-center px-3 py-1 rounded-full text-xs font-medium bg-gray-100 text-gray-600 hover:bg-brand/10 hover:text-brand transition-colors"
+              className="inline-flex items-center px-3 py-1 rounded-full text-xs font-semibold bg-warm border border-sand text-muted-earth hover:bg-terracotta/10 hover:text-terracotta transition-colors"
             >
               {tag.name}
             </Link>
@@ -63,11 +68,11 @@ export function ProductInteractive({ product }: { product: Product }) {
 
       {selectedVariant && (
         <div className="mt-3 flex items-center gap-3">
-          <span className="text-2xl font-bold text-gray-900">
+          <span className="text-3xl font-black text-earth">
             {formatCents(selectedVariant.price_cents || product.variants.find((v) => v.price_cents > 0)?.price_cents || 0)}
           </span>
           {selectedVariant.compare_at_price_cents && (
-            <span className="text-lg text-gray-400 line-through">
+            <span className="text-lg text-muted-earth/60 line-through">
               {formatCents(selectedVariant.compare_at_price_cents)}
             </span>
           )}
@@ -77,7 +82,7 @@ export function ProductInteractive({ product }: { product: Product }) {
       {/* Color selector */}
       {colors.length > 1 && (
         <div className="mt-6">
-          <h3 className="text-sm font-semibold text-gray-900 mb-2">Color — {selectedColor}</h3>
+          <h3 className="text-sm font-semibold text-earth mb-3">Color — {selectedColor}</h3>
           <div className="flex gap-2">
             {colors.map((color) => {
               const colorVariant = product.variants.find((v) => v.color === color);
@@ -97,8 +102,8 @@ export function ProductInteractive({ product }: { product: Product }) {
                       if (firstAvailable) setSelectedSize(firstAvailable.size);
                     }
                   }}
-                  className={`w-10 h-10 rounded-full border-2 transition-all ${
-                    selectedColor === color ? 'border-brand scale-110' : 'border-gray-200'
+                  className={`w-11 h-11 rounded-full border-2 transition-all shadow-earth-sm ${
+                    selectedColor === color ? 'border-terracotta scale-110' : 'border-sand hover:border-muted-earth'
                   }`}
                   style={hex ? { backgroundColor: hex } : undefined}
                   title={color}
@@ -115,7 +120,7 @@ export function ProductInteractive({ product }: { product: Product }) {
       {sizes.length > 0 && (
         <div className="mt-6">
           <div className="flex items-center justify-between mb-2">
-            <h3 className="text-sm font-semibold text-gray-900">Size</h3>
+            <h3 className="text-sm font-semibold text-earth">Size</h3>
             <SizeGuide category={product.category?.slug} />
           </div>
           <div className="flex flex-wrap gap-2">
@@ -137,12 +142,12 @@ export function ProductInteractive({ product }: { product: Product }) {
                     }
                   }}
                   disabled={soldOut}
-                  className={`px-4 py-2.5 rounded-lg border text-sm font-medium transition-all ${
+                  className={`px-4 py-2.5 rounded-xl border text-sm font-semibold transition-all ${
                     selectedSize === size
-                      ? 'border-brand bg-brand text-white'
+                      ? 'border-earth bg-earth text-white'
                       : soldOut
-                        ? 'border-gray-100 text-gray-300 cursor-not-allowed line-through'
-                        : 'border-gray-200 text-gray-700 hover:border-gray-400'
+                        ? 'border-sand/50 text-muted-earth/40 cursor-not-allowed line-through'
+                        : 'border-sand bg-cream text-earth hover:border-terracotta hover:text-terracotta'
                   }`}
                 >
                   {size}
@@ -157,9 +162,9 @@ export function ProductInteractive({ product }: { product: Product }) {
       {selectedVariant && (
         <div className="mt-4">
           {selectedVariant.stock_quantity <= 0 ? (
-            <span className="text-sm text-red-600 font-medium">Sold Out</span>
+            <span className="text-sm text-red-700 font-semibold">Sold Out</span>
           ) : selectedVariant.stock_quantity <= 3 ? (
-            <span className="text-sm text-amber-600 font-medium">
+            <span className="text-sm text-terracotta font-semibold">
               Only {selectedVariant.stock_quantity} left
             </span>
           ) : null}
@@ -170,12 +175,12 @@ export function ProductInteractive({ product }: { product: Product }) {
       <button
         onClick={handleAddToCart}
         disabled={!inStock}
-        className={`mt-8 w-full py-4 rounded-xl font-bold text-base transition-all ${
+        className={`mt-8 w-full py-4 rounded-2xl font-bold text-base transition-all shadow-earth-sm ${
           added
-            ? 'bg-green-600 text-white'
+            ? 'bg-sage text-white'
             : inStock
-              ? 'bg-brand text-white hover:bg-brand/90 active:scale-[0.98]'
-              : 'bg-gray-200 text-gray-400 cursor-not-allowed'
+              ? 'bg-terracotta text-white hover:bg-terracotta/90 hover:scale-[1.01] active:scale-[0.98]'
+              : 'bg-sand text-muted-earth/60 cursor-not-allowed shadow-none'
         }`}
       >
         {added ? 'Added to Cart' : inStock ? 'Add to Cart' : 'Sold Out'}
@@ -184,11 +189,11 @@ export function ProductInteractive({ product }: { product: Product }) {
       {/* Description */}
       {product.description && (
         <div
-          className="mt-8 pt-8 border-t border-gray-100"
+          className="mt-8 pt-8 border-t border-sand"
         >
-          <h3 className="text-sm font-semibold text-gray-900 mb-3">Description</h3>
+          <h3 className="text-sm font-semibold text-earth mb-3">Description</h3>
           <div
-            className="text-gray-600 leading-relaxed prose prose-sm max-w-none"
+            className="text-muted-earth leading-relaxed prose prose-sm max-w-none prose-headings:text-earth prose-a:text-terracotta"
             dangerouslySetInnerHTML={{ __html: product.description }}
           />
         </div>

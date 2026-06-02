@@ -31,13 +31,13 @@ describe('brandName', () => {
 
 describe('brandTagline', () => {
   it('returns brand config tagline', () => {
-    expect(brandTagline()).toBe('Your Tagline Here');
+    expect(brandTagline()).toBe('Rooted in Culture. Made with Purpose.');
   });
 });
 
 describe('brandLogo', () => {
   it('returns brand config logo path', () => {
-    expect(brandLogo()).toBe('/images/brand/logo.png');
+    expect(brandLogo()).toBe('/images/brand/logo.svg');
   });
 });
 

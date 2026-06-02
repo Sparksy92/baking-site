@@ -39,7 +39,7 @@ export default async function CategoryPage({ params, searchParams }: Props) {
   const totalPages = Math.ceil(data.total / PRODUCTS_PER_PAGE);
 
   return (
-    <div className="min-h-screen bg-gray-50/30 pb-20">
+    <div className="min-h-screen bg-cream pb-20">
       <JsonLd data={{
         '@context': 'https://schema.org',
         '@type': 'BreadcrumbList',
@@ -51,32 +51,33 @@ export default async function CategoryPage({ params, searchParams }: Props) {
       }} />
 
       {/* Hero Section */}
-      <div className="bg-white border-b border-gray-200">
+      <div className="bg-warm border-b border-sand">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-16 md:py-24 flex flex-col items-center text-center">
-          <h1 className="text-4xl md:text-5xl font-extrabold text-gray-900 tracking-tight mb-4">{name}</h1>
-          <p className="mt-2 text-lg text-gray-500 max-w-2xl">Explore our hand-picked selection of {name.toLowerCase()}.</p>
+          <p className="text-terracotta font-semibold tracking-widest uppercase text-xs mb-3">Curated Category</p>
+          <h1 className="text-4xl md:text-6xl font-black text-earth tracking-tight mb-4">{name}</h1>
+          <p className="mt-2 text-lg text-muted-earth max-w-2xl">Explore our hand-picked selection of {name.toLowerCase()}.</p>
         </div>
       </div>
 
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8 md:py-12">
         {/* Toolbar */}
-        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 bg-white p-4 rounded-2xl shadow-sm border border-gray-100 mb-8">
-          <p className="text-sm text-gray-600 font-medium">
-            Showing <span className="text-gray-900 font-bold">{data.total}</span> product{data.total !== 1 ? 's' : ''}
+        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 bg-warm p-4 rounded-2xl shadow-earth-sm border border-sand mb-8">
+          <p className="text-sm text-muted-earth font-semibold">
+            Showing <span className="text-earth font-bold">{data.total}</span> product{data.total !== 1 ? 's' : ''}
           </p>
           <div className="flex items-center gap-3">
-            <button className="flex items-center gap-2 px-4 py-2 bg-gray-50 hover:bg-gray-100 text-gray-700 rounded-xl text-sm font-medium border border-gray-200 transition-colors">
+            <button className="flex items-center gap-2 px-4 py-2 bg-cream hover:bg-sand/60 text-earth rounded-xl text-sm font-semibold border border-sand transition-colors">
               <SlidersHorizontal size={16} /> Filters
             </button>
-            <div className="h-6 w-[1px] bg-gray-200"></div>
+            <div className="h-6 w-[1px] bg-sand"></div>
             <SortSelect />
           </div>
         </div>
 
         {/* Product Grid */}
         {data.products.length === 0 ? (
-          <div className="py-20 text-center bg-white rounded-3xl border border-gray-100 border-dashed">
-            <p className="text-gray-500 text-lg">No products found in this category.</p>
+          <div className="py-20 text-center bg-warm rounded-3xl border border-sand border-dashed">
+            <p className="text-muted-earth text-lg">No products found in this category.</p>
           </div>
         ) : (
           <>

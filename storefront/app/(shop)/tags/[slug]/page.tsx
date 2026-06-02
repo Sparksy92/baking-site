@@ -38,31 +38,31 @@ export default async function TagPage({ params, searchParams }: Props) {
   const totalPages = Math.ceil(data.total / PRODUCTS_PER_PAGE);
 
   return (
-    <div className="min-h-screen bg-gray-50/30 pb-20">
+    <div className="min-h-screen bg-cream pb-20">
       {/* Hero */}
-      <div className="bg-white border-b border-gray-200">
+      <div className="bg-warm border-b border-sand">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-16 md:py-24 flex flex-col items-center text-center">
-          <div className="inline-flex items-center gap-2 px-4 py-2 bg-gray-100 rounded-full text-sm text-gray-600 mb-4">
+          <div className="inline-flex items-center gap-2 px-4 py-2 bg-cream border border-sand rounded-full text-sm font-semibold text-terracotta mb-4">
             <Tag size={14} /> Tag
           </div>
-          <h1 className="text-4xl md:text-5xl font-extrabold text-gray-900 tracking-tight">{name}</h1>
-          <p className="mt-4 text-lg text-gray-500">Browse all products tagged with &ldquo;{name}&rdquo;.</p>
+          <h1 className="text-4xl md:text-6xl font-black text-earth tracking-tight">{name}</h1>
+          <p className="mt-4 text-lg text-muted-earth">Browse all products tagged with &ldquo;{name}&rdquo;.</p>
         </div>
       </div>
 
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8 md:py-12">
         {/* Toolbar */}
-        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 bg-white p-4 rounded-2xl shadow-sm border border-gray-100 mb-8">
-          <p className="text-sm text-gray-600 font-medium">
-            <span className="text-gray-900 font-bold">{data.total}</span> product{data.total !== 1 ? 's' : ''}
+        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 bg-warm p-4 rounded-2xl shadow-earth-sm border border-sand mb-8">
+          <p className="text-sm text-muted-earth font-semibold">
+            <span className="text-earth font-bold">{data.total}</span> product{data.total !== 1 ? 's' : ''}
           </p>
           <SortSelect />
         </div>
 
         {/* Product Grid */}
         {data.products.length === 0 ? (
-          <div className="py-20 text-center bg-white rounded-3xl border border-gray-100 border-dashed">
-            <p className="text-gray-500 text-lg">No products found with this tag.</p>
+          <div className="py-20 text-center bg-warm rounded-3xl border border-sand border-dashed">
+            <p className="text-muted-earth text-lg">No products found with this tag.</p>
           </div>
         ) : (
           <>
