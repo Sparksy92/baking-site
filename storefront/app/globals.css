@@ -1,17 +1,6 @@
-@import "tailwindcss";
-@plugin "@tailwindcss/typography";
-
-@theme {
-  --color-brand: var(--brand-primary, #5C3D2E);
-  --color-accent: var(--brand-accent, #B85C38);
-  --color-surface: var(--brand-surface, #FBF7F4);
-  --color-warm: #F5EDE8;
-  --color-earth: #5C3D2E;
-  --color-terracotta: #B85C38;
-  --color-sage: #6B7F5E;
-  --color-sand: #E8DDD3;
-  --color-cream: #FBF7F4;
-}
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
 
 :root {
   --brand-primary: #5C3D2E;
@@ -25,6 +14,16 @@ body {
   -moz-osx-font-smoothing: grayscale;
   background-color: var(--brand-surface);
   color: #3D2E1F;
+  min-height: 100vh;
+}
+
+::selection {
+  background: rgba(184, 92, 56, 0.22);
+  color: #3D2E1F;
+}
+
+a, button, input, select, textarea {
+  outline-color: #B85C38;
 }
 
 @keyframes slide-in {
@@ -37,15 +36,130 @@ body {
 }
 
 @keyframes fade-up {
-  from { opacity: 0; transform: translateY(20px); }
+  from { opacity: 0; transform: translateY(24px); }
   to { opacity: 1; transform: translateY(0); }
 }
 
 .animate-fade-up {
-  animation: fade-up 0.6s ease-out forwards;
+  animation: fade-up 0.7s ease-out forwards;
 }
 
-.animate-fade-up-delay {
-  animation: fade-up 0.6s ease-out 0.2s forwards;
+.animate-fade-up-delay,
+.animate-fade-up-delay-1 {
+  animation: fade-up 0.7s ease-out 0.15s forwards;
   opacity: 0;
+}
+
+.animate-fade-up-delay-2 {
+  animation: fade-up 0.7s ease-out 0.3s forwards;
+  opacity: 0;
+}
+
+.animate-fade-up-delay-3 {
+  animation: fade-up 0.7s ease-out 0.45s forwards;
+  opacity: 0;
+}
+
+.site-shell {
+  width: min(100% - 2rem, 80rem);
+  margin-inline: auto;
+}
+
+.section-kicker {
+  color: #B85C38;
+  font-size: 0.75rem;
+  font-weight: 700;
+  letter-spacing: 0.14em;
+  line-height: 1;
+  text-transform: uppercase;
+}
+
+.section-heading {
+  color: #5C3D2E;
+  font-size: clamp(2rem, 4vw, 3rem);
+  font-weight: 900;
+  letter-spacing: 0;
+  line-height: 1.03;
+}
+
+.section-copy {
+  color: #8B7B6B;
+  font-size: 1rem;
+  line-height: 1.75;
+}
+
+.btn-primary,
+.btn-secondary,
+.btn-outline-light {
+  align-items: center;
+  border-radius: 999px;
+  display: inline-flex;
+  font-weight: 800;
+  gap: 0.5rem;
+  justify-content: center;
+  min-height: 3.5rem;
+  padding: 0 2rem;
+  text-decoration: none;
+  transition: transform 500ms ease, background-color 500ms ease, border-color 500ms ease, color 500ms ease, box-shadow 500ms ease;
+}
+
+.btn-primary {
+  background: #B85C38;
+  box-shadow: 0 18px 36px -20px rgba(184, 92, 56, 0.8);
+  color: #fff;
+}
+
+.btn-primary:hover {
+  background: #A94F30;
+  transform: translateY(-1px) scale(1.02);
+}
+
+.btn-secondary {
+  background: #F5EDE8;
+  border: 1px solid #E8DDD3;
+  color: #5C3D2E;
+}
+
+.btn-secondary:hover {
+  border-color: #B85C38;
+  color: #B85C38;
+  transform: translateY(-1px) scale(1.02);
+}
+
+.btn-outline-light {
+  border: 1px solid rgba(255, 255, 255, 0.35);
+  color: #fff;
+}
+
+.btn-outline-light:hover {
+  background: rgba(255, 255, 255, 0.12);
+  border-color: rgba(255, 255, 255, 0.55);
+  transform: translateY(-1px) scale(1.02);
+}
+
+.premium-card {
+  border: 1px solid rgba(232, 221, 211, 0.9);
+  border-radius: 1rem;
+  box-shadow: 0 18px 50px -34px rgba(61, 46, 31, 0.55);
+  overflow: hidden;
+  transition: transform 600ms ease, box-shadow 600ms ease;
+}
+
+.premium-card:hover {
+  box-shadow: 0 28px 70px -38px rgba(61, 46, 31, 0.7);
+  transform: translateY(-3px);
+}
+
+.brand-mark {
+  align-items: center;
+  background: #B85C38;
+  border-radius: 999px;
+  color: #fff;
+  display: inline-flex;
+  font-size: 0.75rem;
+  font-weight: 900;
+  height: 2rem;
+  justify-content: center;
+  letter-spacing: 0;
+  width: 2rem;
 }
