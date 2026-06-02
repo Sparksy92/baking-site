@@ -4,25 +4,25 @@ export const brandConfig: BrandConfig = {
   id: 'baseline-store',
   metadata: {
     name: 'Baseline Store',
-    tagline: 'Your Tagline Here',
-    description: 'High quality products for your brand.',
+    tagline: 'Rooted in Culture. Made with Purpose.',
+    description: 'Ethically crafted goods rooted in Indigenous culture and tradition.',
     siteName: 'Baseline Store',
     baseUrl: 'https://yourdomain.com',
-    locale: 'en-US',
+    locale: 'en-CA',
     defaultRegion: 'ca',
   },
   colors: {
-    primary: '#0f172a', // slate-900 (brand color previously used)
-    secondary: '#334155', // slate-700
-    accent: '#ef4444', // red-500
-    background: '#ffffff',
-    surface: '#f8fafc',
-    text: '#0f172a',
-    textMuted: '#64748b',
-    border: '#e2e8f0',
-    error: '#ef4444',
-    success: '#10b981',
-    warning: '#f59e0b',
+    primary: '#5C3D2E', // earth brown
+    secondary: '#6B7F5E', // sage green
+    accent: '#B85C38', // terracotta
+    background: '#FBF7F4', // warm cream
+    surface: '#F5EDE8', // warm white
+    text: '#3D2E1F', // deep brown
+    textMuted: '#8B7B6B', // muted earth
+    border: '#E8DDD3', // sand
+    error: '#C53030',
+    success: '#6B7F5E', // sage
+    warning: '#D4A574', // warm amber
   },
   fonts: {
     heading: 'var(--font-geist-sans), sans-serif',
@@ -84,13 +84,13 @@ export const brandConfig: BrandConfig = {
     ],
   },
   content: {
-    copyright: '© {year} Baseline Store. All rights reserved.',
+    copyright: '© {year} Baseline Store. All rights reserved. | Indigenous owned & operated.',
     poweredBy: '',
     pages: {},
   },
   announcementBar: {
     enabled: true,
-    text: 'Free shipping on orders over $100',
+    text: 'Free shipping on orders over $100 | Indigenous owned & operated',
   },
   trustIndicators: [],
   socialLinks: [],

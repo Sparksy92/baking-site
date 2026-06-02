@@ -40,7 +40,7 @@ export function Header() {
         </div>
       )}
 
-      <header className="sticky top-0 z-50 bg-white border-b border-gray-100">
+      <header className="sticky top-0 z-50 bg-cream/95 backdrop-blur-md border-b border-sand/60">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 h-16 flex items-center justify-between">
           {/* Mobile menu toggle */}
           <button
@@ -66,7 +66,7 @@ export function Header() {
                 key={link.href}
                 href={link.href}
                 className={`text-sm font-medium transition-colors ${
-                  pathname === link.href ? 'text-brand' : 'text-gray-700 hover:text-brand'
+                  pathname === link.href ? 'text-terracotta' : 'text-earth/70 hover:text-terracotta'
                 }`}
               >
                 {link.label}
@@ -107,13 +107,13 @@ export function Header() {
 
         {/* Mobile nav drawer */}
         {mobileOpen && (
-          <nav className="md:hidden border-t border-gray-100 bg-white px-4 py-4 space-y-1">
+          <nav className="md:hidden border-t border-sand/60 bg-cream px-4 py-4 space-y-1">
             {navLinks.map((link) => (
               <Link
                 key={link.href}
                 href={link.href}
                 className={`block py-2.5 text-sm font-medium rounded-lg px-3 ${
-                  pathname === link.href ? 'bg-gray-100 text-brand' : 'text-gray-700 hover:bg-gray-50'
+                  pathname === link.href ? 'bg-sand text-terracotta' : 'text-earth/70 hover:bg-sand/50'
                 }`}
               >
                 {link.label}
