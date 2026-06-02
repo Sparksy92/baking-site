@@ -8,6 +8,7 @@ import { addToast } from '@/lib/toast';
 import { SizeGuide } from '@/components/SizeGuide';
 import { SocialProof } from '@/components/SocialProof';
 import { ImageGallery } from './ImageGallery';
+import { NotifyMeButton } from '@/components/product/NotifyMeButton';
 
 export function ProductInteractive({ product }: { product: Product }) {
   const sizes = [...new Set(product.variants.map((v) => v.size))];
@@ -151,19 +152,27 @@ export function ProductInteractive({ product }: { product: Product }) {
       )}
 
       {/* Add to cart */}
-      <button
-        onClick={handleAddToCart}
-        disabled={!inStock}
-        className={`mt-8 w-full py-4 rounded-xl font-bold text-base transition-all ${
-          added
-            ? 'bg-green-600 text-white'
-            : inStock
-              ? 'bg-brand text-white hover:bg-brand/90 active:scale-[0.98]'
-              : 'bg-gray-200 text-gray-400 cursor-not-allowed'
-        }`}
-      >
-        {added ? 'Added to Cart' : inStock ? 'Add to Cart' : 'Sold Out'}
-      </button>
+      {inStock ? (
+        <button
+          onClick={handleAddToCart}
+          className={`mt-8 w-full py-4 rounded-xl font-bold text-base transition-all ${
+            added
+              ? 'bg-green-600 text-white'
+              : 'bg-brand text-white hover:bg-brand/90 active:scale-[0.98]'
+          }`}
+        >
+          {added ? 'Added to Cart' : 'Add to Cart'}
+        </button>
+      ) : selectedVariant ? (
+        <NotifyMeButton variantId={selectedVariant.id} productName={product.name} />
+      ) : (
+        <button
+          disabled
+          className="mt-8 w-full py-4 rounded-xl font-bold text-base transition-all bg-gray-200 text-gray-400 cursor-not-allowed"
+        >
+          Sold Out
+        </button>
+      )}
 
       {/* Description */}
       {product.description && (

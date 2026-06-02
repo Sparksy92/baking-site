@@ -5,6 +5,7 @@ import { formatCents, brandName, siteUrl } from '@/lib/format';
 import { JsonLd } from '@/components/JsonLd';
 import { ProductCard } from '@/components/ProductCard';
 import { ProductInteractive } from './ProductInteractive';
+import { ProductReviews } from '@/components/product/ProductReviews';
 
 interface Props {
   params: Promise<{ slug: string }>;
@@ -81,6 +82,9 @@ export default async function ProductPage({ params }: Props) {
       }} />
 
       <ProductInteractive product={product} />
+
+      {/* Reviews section */}
+      <ProductReviews productId={product.id} />
 
       {/* Related products */}
       <RelatedProducts categorySlug={product.category?.slug ?? null} currentSlug={slug} />
