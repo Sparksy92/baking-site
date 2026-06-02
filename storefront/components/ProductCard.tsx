@@ -1,6 +1,6 @@
 import Link from 'next/link';
 import Image from 'next/image';
-import { ImageIcon, ArrowUpRight } from 'lucide-react';
+import { ArrowUpRight } from 'lucide-react';
 import { formatCents } from '@/lib/format';
 import type { ProductListItem } from '@/lib/api';
 
@@ -30,9 +30,13 @@ export function ProductCard({ product }: { product: ProductListItem }) {
             className="object-cover group-hover:scale-[1.06] transition-transform duration-700 ease-out"
           />
         ) : (
-          <div className="w-full h-full flex items-center justify-center text-earth/20">
-            <ImageIcon className="w-10 h-10" strokeWidth={1.1} aria-hidden="true" />
-          </div>
+          <Image
+            src="/images/product-placeholder.svg"
+            alt={product.name}
+            fill
+            sizes="(max-width: 640px) 50vw, (max-width: 1024px) 33vw, 25vw"
+            className="object-cover"
+          />
         )}
 
         {/* Hover reveal overlay */}
