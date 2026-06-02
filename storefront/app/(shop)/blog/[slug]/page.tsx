@@ -5,7 +5,7 @@ import Image from 'next/image';
 import { apiFetch } from '@/lib/api';
 import { brandName, siteUrl } from '@/lib/format';
 import { JsonLd } from '@/components/JsonLd';
-import { ArrowLeft, Calendar, User } from 'lucide-react';
+import { ArrowLeft, BookOpen, Calendar, User } from 'lucide-react';
 
 interface BlogPost {
   id: number;
@@ -73,49 +73,58 @@ export default async function BlogPostPage({ params }: Props) {
         url: `${siteUrl()}/blog/${slug}`,
       }} />
 
-      {/* Hero image */}
-      {post.featured_image_url && (
-        <div className="relative w-full h-64 md:h-96 bg-sand">
+      <div className="relative overflow-hidden bg-deep text-white">
+        {post.featured_image_url ? (
           <Image
             src={post.featured_image_url}
             alt={post.title}
             fill
             priority
             sizes="100vw"
-            className="object-cover"
+            className="object-cover opacity-35"
           />
+        ) : (
+          <div className="absolute inset-0 bg-[radial-gradient(ellipse_at_top_right,rgba(184,92,56,0.2),transparent_58%),radial-gradient(ellipse_at_bottom_left,rgba(107,127,94,0.12),transparent_55%)]" aria-hidden="true" />
+        )}
+        <div className="absolute inset-0 bg-gradient-to-r from-deep via-deep/88 to-deep/55" />
+        <div className="grain" aria-hidden="true" />
+
+        <div className="relative site-shell py-16 md:py-24">
+          <Link href="/blog" className="inline-flex items-center gap-1.5 text-sm font-bold text-white/60 hover:text-terracotta transition-colors mb-10">
+            <ArrowLeft size={14} /> Back to Field Notes
+          </Link>
+
+          <div className="max-w-4xl">
+            <p className="section-kicker mb-5">Field Note</p>
+            <h1 className="text-4xl md:text-7xl font-black tracking-[-0.035em] leading-[0.92]">
+              {post.title}
+            </h1>
+
+            <div className="mt-8 flex flex-wrap items-center gap-4 text-sm text-white/55">
+              {post.author && (
+                <span className="flex items-center gap-1.5 rounded-full border border-white/10 bg-white/[0.04] px-3 py-1.5">
+                  <User size={14} /> {post.author}
+                </span>
+              )}
+              {post.published_at && (
+                <span className="flex items-center gap-1.5 rounded-full border border-white/10 bg-white/[0.04] px-3 py-1.5">
+                  <Calendar size={14} />
+                  {new Date(post.published_at).toLocaleDateString('en-CA', { year: 'numeric', month: 'long', day: 'numeric' })}
+                </span>
+              )}
+              {!post.author && !post.published_at && (
+                <span className="flex items-center gap-1.5 rounded-full border border-white/10 bg-white/[0.04] px-3 py-1.5">
+                  <BookOpen size={14} /> Terra Supply Co.
+                </span>
+              )}
+            </div>
+          </div>
         </div>
-      )}
+      </div>
 
-      <div className="max-w-3xl mx-auto px-4 sm:px-6 lg:px-8 py-12">
-        {/* Back link */}
-        <Link href="/blog" className="inline-flex items-center gap-1.5 text-sm font-semibold text-muted-earth hover:text-terracotta transition-colors mb-8">
-          <ArrowLeft size={14} /> Back to Blog
-        </Link>
-
-        {/* Title */}
-        <h1 className="text-4xl md:text-6xl font-black text-earth tracking-tight leading-tight">
-          {post.title}
-        </h1>
-
-        {/* Meta */}
-        <div className="mt-5 flex items-center gap-4 text-sm text-muted-earth">
-          {post.author && (
-            <span className="flex items-center gap-1.5">
-              <User size={14} /> {post.author}
-            </span>
-          )}
-          {post.published_at && (
-            <span className="flex items-center gap-1.5">
-              <Calendar size={14} />
-              {new Date(post.published_at).toLocaleDateString('en-CA', { year: 'numeric', month: 'long', day: 'numeric' })}
-            </span>
-          )}
-        </div>
-
-        {/* Content */}
+      <div className="site-shell py-12">
         <div
-          className="mt-10 prose prose-lg max-w-none prose-headings:font-bold prose-headings:text-earth prose-p:text-muted-earth prose-a:text-terracotta prose-strong:text-earth prose-img:rounded-2xl"
+          className="prose prose-lg mx-auto max-w-3xl prose-headings:font-black prose-headings:tracking-tight prose-headings:text-earth prose-p:text-muted-earth prose-p:leading-relaxed prose-a:text-terracotta prose-strong:text-earth prose-img:rounded-3xl prose-img:shadow-earth-sm"
           dangerouslySetInnerHTML={{ __html: post.content_html }}
         />
       </div>

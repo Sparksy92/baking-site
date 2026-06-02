@@ -4,7 +4,7 @@ import Image from 'next/image';
 import { apiFetch } from '@/lib/api';
 import { brandName, siteUrl } from '@/lib/format';
 import { Pagination } from '@/components/Pagination';
-import { Calendar, User } from 'lucide-react';
+import { ArrowRight, BookOpen, Calendar, User } from 'lucide-react';
 
 export const metadata: Metadata = {
   title: 'Blog',
@@ -36,28 +36,31 @@ export default async function BlogPage({ searchParams }: { searchParams: Promise
 
   return (
     <div className="min-h-screen bg-cream pb-20">
-      {/* Header */}
-      <div className="bg-warm border-b border-sand">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-16 md:py-20 text-center">
-          <p className="text-terracotta font-semibold tracking-widest uppercase text-xs mb-3">Stories</p>
-          <h1 className="text-4xl md:text-6xl font-black text-earth tracking-tight">Blog</h1>
-          <p className="mt-4 text-lg text-muted-earth max-w-2xl mx-auto">
-            Stories, culture, and updates from {brandName()}.
+      <div className="relative overflow-hidden bg-deep text-white">
+        <div className="absolute inset-0 bg-[radial-gradient(ellipse_at_top_right,rgba(184,92,56,0.18),transparent_58%),radial-gradient(ellipse_at_bottom_left,rgba(107,127,94,0.12),transparent_55%)]" aria-hidden="true" />
+        <div className="grain" aria-hidden="true" />
+        <div className="relative site-shell py-16 md:py-24 text-center">
+          <p className="section-kicker mb-4">Field Notes</p>
+          <h1 className="text-5xl md:text-7xl font-black tracking-[-0.03em] leading-[0.9]">Stories from the supply line.</h1>
+          <p className="mt-6 text-lg text-white/55 max-w-2xl mx-auto leading-relaxed">
+            Material notes, product decisions, and practical stories from {brandName()}.
           </p>
         </div>
       </div>
 
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-12">
+      <div className="site-shell py-12 md:py-16">
         {data.pages.length === 0 ? (
-          <div className="py-20 text-center bg-warm rounded-3xl border border-sand border-dashed">
-            <p className="text-muted-earth text-lg">No posts yet. Check back soon.</p>
+          <div className="py-20 text-center bg-warm rounded-3xl border border-sand border-dashed px-6">
+            <p className="section-kicker mb-3">Quiet for now</p>
+            <h2 className="text-3xl font-black text-earth">No field notes yet.</h2>
+            <p className="mt-3 text-muted-earth">We are probably outside testing gear. Check back soon.</p>
           </div>
         ) : (
           <>
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
               {data.pages.map((post) => (
-                <article key={post.id} className="group bg-warm rounded-2xl border border-sand overflow-hidden shadow-earth-sm hover:shadow-earth transition-all duration-500">
-                  <Link href={`/blog/${post.slug}`}>
+                <article key={post.id} className="group bg-warm rounded-3xl border border-sand overflow-hidden shadow-earth-sm hover:shadow-earth transition-all duration-500 hover:-translate-y-1">
+                  <Link href={`/blog/${post.slug}`} className="block h-full">
                     <div className="aspect-[16/9] bg-sand relative overflow-hidden">
                       {post.featured_image_url ? (
                         <Image
@@ -69,20 +72,21 @@ export default async function BlogPage({ searchParams }: { searchParams: Promise
                         />
                       ) : (
                         <div className="w-full h-full flex items-center justify-center text-earth/30 bg-gradient-to-br from-warm via-sand to-cream">
-                          <svg className="w-12 h-12" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M19 20H5a2 2 0 01-2-2V6a2 2 0 012-2h10a2 2 0 012 2v1m2 13a2 2 0 01-2-2V7m2 13a2 2 0 002-2V9a2 2 0 00-2-2h-2m-4-3H9M7 16h6M7 8h6v4H7V8z" />
-                          </svg>
+                          <BookOpen className="w-12 h-12" strokeWidth={1.25} aria-hidden="true" />
                         </div>
                       )}
+                      <div className="absolute left-4 top-4 rounded-full bg-deep/80 px-3 py-1 text-[10px] font-black uppercase tracking-[0.16em] text-white/70 backdrop-blur">
+                        Field note
+                      </div>
                     </div>
                     <div className="p-6">
-                      <h2 className="text-lg font-bold text-earth group-hover:text-terracotta transition-colors line-clamp-2">
+                      <h2 className="text-xl font-black leading-tight text-earth group-hover:text-terracotta transition-colors line-clamp-2">
                         {post.title}
                       </h2>
                       {post.meta_description && (
-                        <p className="mt-2 text-sm text-muted-earth line-clamp-3">{post.meta_description}</p>
+                        <p className="mt-3 text-sm leading-relaxed text-muted-earth line-clamp-3">{post.meta_description}</p>
                       )}
-                      <div className="mt-4 flex items-center gap-4 text-xs text-muted-earth/70">
+                      <div className="mt-5 flex items-center gap-4 text-xs text-muted-earth/70">
                         {post.author && (
                           <span className="flex items-center gap-1">
                             <User size={12} /> {post.author}
@@ -95,6 +99,9 @@ export default async function BlogPage({ searchParams }: { searchParams: Promise
                           </span>
                         )}
                       </div>
+                      <span className="mt-6 inline-flex items-center gap-1.5 text-sm font-black text-terracotta">
+                        Read note <ArrowRight size={14} className="transition-transform duration-500 group-hover:translate-x-1" />
+                      </span>
                     </div>
                   </Link>
                 </article>

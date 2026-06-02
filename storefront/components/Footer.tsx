@@ -59,9 +59,9 @@ export function Footer() {
             }} />
           </p>
           <div className="flex items-center gap-6 text-xs text-white/25">
-            <Link href="/privacy" className="hover:text-white/50 transition-colors duration-200">Privacy</Link>
-            <Link href="/terms" className="hover:text-white/50 transition-colors duration-200">Terms</Link>
-            <Link href="/accessibility" className="hover:text-white/50 transition-colors duration-200">Accessibility</Link>
+            <Link href="/privacy-policy" className="hover:text-white/50 transition-colors duration-200">Privacy</Link>
+            <Link href="/terms-of-service" className="hover:text-white/50 transition-colors duration-200">Terms</Link>
+            <Link href="/contact" className="hover:text-white/50 transition-colors duration-200">Support</Link>
           </div>
         </div>
       </div>

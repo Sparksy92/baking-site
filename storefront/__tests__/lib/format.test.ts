@@ -25,13 +25,13 @@ describe('formatCents', () => {
 
 describe('brandName', () => {
   it('returns brand config name', () => {
-    expect(brandName()).toBe('Baseline Store');
+    expect(brandName()).toBe('Terra Supply Co.');
   });
 });
 
 describe('brandTagline', () => {
   it('returns brand config tagline', () => {
-    expect(brandTagline()).toBe('Rooted in Culture. Made with Purpose.');
+    expect(brandTagline()).toBe('Built for the Long Haul.');
   });
 });
 
