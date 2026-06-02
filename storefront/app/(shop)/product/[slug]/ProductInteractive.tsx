@@ -10,6 +10,7 @@ import { addToast } from '@/lib/toast';
 import { SizeGuide } from '@/components/SizeGuide';
 import { SocialProof } from '@/components/SocialProof';
 import { ImageGallery } from './ImageGallery';
+import { NotifyMeButton } from '@/components/product/NotifyMeButton';
 
 export function ProductInteractive({ product }: { product: Product }) {
   const sizes = [...new Set(product.variants.map((v) => v.size))];
@@ -222,31 +223,37 @@ export function ProductInteractive({ product }: { product: Product }) {
 
         {/* Add to cart */}
         <div className="mt-6 space-y-3">
-          <button
-            onClick={handleAddToCart}
-            disabled={!inStock}
-            className={`w-full flex items-center justify-center gap-3 py-4 rounded-2xl font-bold text-base transition-all duration-300 ${
-              added
-                ? 'bg-sage text-white scale-[0.99]'
-                : inStock
-                  ? 'bg-terracotta text-white hover:bg-earth hover:scale-[1.01] active:scale-[0.98] shadow-earth-sm hover:shadow-earth'
-                  : 'bg-sand text-muted-earth/50 cursor-not-allowed'
-            }`}
-          >
-            {added ? (
-              <>
-                <Check size={20} strokeWidth={2.5} />
-                Added to Cart
-              </>
-            ) : inStock ? (
-              <>
-                <ShoppingBag size={20} />
-                Add to Cart
-              </>
-            ) : (
-              'Sold Out'
-            )}
-          </button>
+          {inStock ? (
+            <button
+              onClick={handleAddToCart}
+              className={`w-full flex items-center justify-center gap-3 py-4 rounded-2xl font-bold text-base transition-all duration-300 ${
+                added
+                  ? 'bg-sage text-white scale-[0.99]'
+                  : 'bg-terracotta text-white hover:bg-earth hover:scale-[1.01] active:scale-[0.98] shadow-earth-sm hover:shadow-earth'
+              }`}
+            >
+              {added ? (
+                <>
+                  <Check size={20} strokeWidth={2.5} />
+                  Added to Cart
+                </>
+              ) : (
+                <>
+                  <ShoppingBag size={20} />
+                  Add to Cart
+                </>
+              )}
+            </button>
+          ) : selectedVariant ? (
+            <NotifyMeButton variantId={selectedVariant.id} productName={product.name} />
+          ) : (
+            <button
+              disabled
+              className="w-full flex items-center justify-center gap-3 py-4 rounded-2xl font-bold text-base transition-all duration-300 bg-sand text-muted-earth/50 cursor-not-allowed"
+            >
+              Sold Out
+            </button>
+          )}
 
           <Link
             href="/cart"

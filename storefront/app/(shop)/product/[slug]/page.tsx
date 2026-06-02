@@ -5,6 +5,7 @@ import { brandName, siteUrl } from '@/lib/format';
 import { JsonLd } from '@/components/JsonLd';
 import { ProductCard } from '@/components/ProductCard';
 import { ProductInteractive } from './ProductInteractive';
+import { ProductReviews } from '@/components/product/ProductReviews';
 
 interface Props {
   params: Promise<{ slug: string }>;
@@ -77,6 +78,10 @@ export default async function ProductPage({ params }: Props) {
       }} />
 
         <ProductInteractive product={product} />
+
+        <div className="mt-16">
+          <ProductReviews productId={product.id} />
+        </div>
 
         <RelatedProducts categorySlug={product.category?.slug ?? null} currentSlug={slug} />
       </div>
