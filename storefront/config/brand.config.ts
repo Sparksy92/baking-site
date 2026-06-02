@@ -36,7 +36,7 @@ export const brandConfig: BrandConfig = {
     provider: 'stripe',
   },
   features: {
-    blog: false,
+    blog: true,
     accounts: true,
     search: false,
     newsletter: false,
@@ -50,6 +50,7 @@ export const brandConfig: BrandConfig = {
       { label: 'Shop', href: '/search' },
       { label: 'New Arrivals', href: '/collections/new-arrivals' },
       { label: 'Categories', href: '/categories' },
+      { label: 'Blog', href: '/blog' },
       { label: 'About', href: '/about' },
     ],
     footerColumns: [
@@ -65,6 +66,7 @@ export const brandConfig: BrandConfig = {
         title: 'Company',
         links: [
           { label: 'Our Story', href: '/about' },
+          { label: 'Blog', href: '/blog' },
           { label: 'Contact', href: '/contact' },
           { label: 'FAQ', href: '/faq' },
           { label: 'Track Order', href: '/order-lookup' },

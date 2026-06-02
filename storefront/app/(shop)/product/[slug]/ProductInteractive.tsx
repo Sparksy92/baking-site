@@ -1,6 +1,7 @@
 'use client';
 
 import { useState } from 'react';
+import Link from 'next/link';
 import type { Product } from '@/lib/api';
 import { cart } from '@/lib/cart';
 import { formatCents } from '@/lib/format';
@@ -44,6 +45,21 @@ export function ProductInteractive({ product }: { product: Product }) {
       <div className="flex flex-col">
       <h1 className="text-2xl md:text-3xl font-bold text-gray-900">{product.name}</h1>
       <SocialProof productId={product.id} />
+
+      {/* Tags */}
+      {product.tags && product.tags.length > 0 && (
+        <div className="mt-3 flex flex-wrap gap-2">
+          {product.tags.map((tag) => (
+            <Link
+              key={tag.id}
+              href={`/tags/${tag.slug}`}
+              className="inline-flex items-center px-3 py-1 rounded-full text-xs font-medium bg-gray-100 text-gray-600 hover:bg-brand/10 hover:text-brand transition-colors"
+            >
+              {tag.name}
+            </Link>
+          ))}
+        </div>
+      )}
 
       {selectedVariant && (
         <div className="mt-3 flex items-center gap-3">

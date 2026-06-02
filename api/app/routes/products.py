@@ -6,17 +6,33 @@ from fastapi import APIRouter, Depends, HTTPException, Query, status
 import aiosqlite
 
 from app.database import get_db
-from app.models.schemas import ProductListItem, ProductResponse, VariantResponse, ImageResponse, CategoryResponse
+from app.models.schemas import ProductListItem, ProductResponse, VariantResponse, ImageResponse, CategoryResponse, TagResponse
 
 logger = logging.getLogger(__name__)
 
 router = APIRouter(tags=["products"])
 
 
+@router.get("/tags")
+async def list_tags(db: aiosqlite.Connection = Depends(get_db)):
+    """List all tags that have at least one active product."""
+    cursor = await db.execute(
+        """SELECT t.id, t.name, t.slug, COUNT(pt.product_id) as product_count
+           FROM tags t
+           JOIN product_tags pt ON pt.tag_id = t.id
+           JOIN products p ON p.id = pt.product_id AND p.is_active = 1
+           GROUP BY t.id
+           ORDER BY t.name"""
+    )
+    rows = await cursor.fetchall()
+    return [dict(r) for r in rows]
+
+
 @router.get("/products", response_model=dict)
 async def list_products(
     category: str | None = None,
     collection: str | None = None,
+    tag: str | None = None,
     featured: bool | None = None,
     search: str | None = None,
     sort: str | None = None,
@@ -44,6 +60,14 @@ async def list_products(
     if featured is not None:
         conditions.append("p.is_featured = ?")
         params.append(1 if featured else 0)
+
+    if tag:
+        conditions.append("""p.id IN (
+            SELECT pt.product_id FROM product_tags pt
+            JOIN tags t ON t.id = pt.tag_id
+            WHERE t.slug = ?
+        )""")
+        params.append(tag)
 
     if search:
         conditions.append("(p.name LIKE ? OR p.description LIKE ?)")
@@ -171,13 +195,24 @@ async def get_product(slug: str, db: aiosqlite.Connection = Depends(get_db)):
         color=i["variant_color"],
     ) for i in img_rows]
 
+    # Tags
+    tag_cursor = await db.execute(
+        """SELECT t.id, t.name, t.slug FROM tags t
+           JOIN product_tags pt ON pt.tag_id = t.id
+           WHERE pt.product_id = ?
+           ORDER BY t.name""",
+        (product["id"],),
+    )
+    tag_rows = await tag_cursor.fetchall()
+    tags = [TagResponse(id=t["id"], name=t["name"], slug=t["slug"]) for t in tag_rows]
+
     return ProductResponse(
         id=product["id"], name=product["name"], slug=product["slug"],
         description=product["description"], category=category,
         is_active=bool(product["is_active"]), is_featured=bool(product["is_featured"]),
         sort_order=product["sort_order"],
         meta_title=product["meta_title"], meta_description=product["meta_description"],
-        variants=variants, images=images,
+        variants=variants, images=images, tags=tags,
     )
 
 
