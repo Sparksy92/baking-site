@@ -5,7 +5,7 @@ You are a world-class frontend designer and Tailwind CSS expert. You specialize 
 
 ## Project Context
 
-This is a Next.js 15 + Tailwind CSS v3 storefront for an Indigenous-owned clothing/merch brand. The backend API is already built (FastAPI + PostgreSQL). Your job is to make the **customer-facing storefront beautiful, warm, premium, and conversion-optimized**.
+This is a Next.js 15 + Tailwind CSS v3 storefront for **Terra Supply Co.** — a Canadian outdoor/lifestyle clothing brand. Positioning: durable, ethically made clothing for people who actually go outside. Think Patagonia meets Everlane but independent and warmer. The backend API is already built (FastAPI + PostgreSQL). Your job is to make the **customer-facing storefront beautiful, warm, premium, and conversion-optimized**.
 
 **Tech stack (DO NOT CHANGE):**
 - Next.js 15 (App Router, server components)
@@ -43,13 +43,13 @@ Muted Earth:   #8B7B6B  (secondary text)
 4. **Typography hierarchy** — massive hero headings (text-7xl+), clear section titles with uppercase tracking-widest eyebrow labels in terracotta.
 5. **Micro-interactions** — scale on hover (1.02), smooth 500-700ms transitions, subtle parallax feel.
 6. **Photography-first** — design layouts that NEED beautiful imagery. Large aspect ratios. Overlap/offset patterns.
-7. **Cultural storytelling** — weave purpose and story into the shopping experience naturally.
+7. **Brand storytelling** — weave durability, ethics, and craftsmanship into the shopping experience naturally. Not preachy — confident.
 
 ### Vibe References (describe, don't link)
-- The warmth of Kotn or tentree but with bolder typography
-- The editorial quality of SSENSE but friendlier and more grounded
-- The storytelling approach of Patagonia but with Indigenous cultural pride
-- The conversion optimization of Shopify Dawn but far more personality
+- The warmth and material honesty of Patagonia or tentree but with bolder, more editorial typography
+- The editorial quality of SSENSE but approachable and grounded — not cold
+- The conversion optimization of Shopify Dawn but with real personality and texture
+- The trust signals of Everlane (transparency, ethics, pricing honesty) woven into layout
 
 ## Files to Redesign
 
@@ -88,7 +88,7 @@ Muted Earth:   #8B7B6B  (secondary text)
 
 4. **Featured Products** — "Handpicked" eyebrow + "Featured Pieces" heading. 4-col grid of ProductCards on white bg section.
 
-5. **Story / Mission CTA** — Full-width dark earth section. Centered text about community impact. Outline CTA to About page.
+5. **Story / Mission CTA** — Full-width dark earth section. Centered text about craftsmanship, ethics, and durability. Headline: "Clothing made to outlast the trend cycle." Outline CTA to About page.
 
 6. **Newsletter** — Warm bg section. Compelling headline, input + button.
 
@@ -146,21 +146,40 @@ Muted Earth:   #8B7B6B  (secondary text)
 ## Current Brand Config Values:
 
 ```typescript
-name: 'Baseline Store'
-tagline: 'Rooted in Culture. Made with Purpose.'
-description: 'Ethically crafted goods rooted in Indigenous culture and tradition.'
+name: 'Terra Supply Co.'
+tagline: 'Built for the Long Haul.'
+description: 'Durable, ethically made clothing for people who live and work outdoors. No fluff, no fast fashion.'
 locale: 'en-CA'
+announcementBar: 'Free shipping on orders over $75 — Built to last, made to matter.'
+newsletter.heading: 'Less noise. More good stuff.'
+newsletter.description: 'New drops, field notes, and occasional deals. Never spam — we hate it too.'
+trustIndicators: ['Ethically Made', 'Built to Last', 'Free Returns 60-day', 'Ships from Canada']
 ```
 
 ## Success Criteria:
 
 When someone visits this storefront, they should:
-1. Immediately feel warmth and cultural pride
-2. Trust that this is a legitimate, professional brand
-3. Want to explore products even before seeing them
-4. Feel the storytelling woven into the shopping experience
-5. Notice the attention to detail (animations, spacing, hover states)
-6. See this as better than any Shopify template they've used
+1. Immediately feel warmth, quality, and trust — like a brand that stands behind its product
+2. Believe this is a legitimate, professional brand worth spending money with
+3. Want to explore products even before seeing them — the design sells the brand
+4. Feel the craftsmanship and ethics woven into the shopping experience (not forced)
+5. Notice the attention to detail (animations, spacing, hover states, micro-copy)
+6. See this as better than any Shopify template they've ever used
+
+## Existing Work (already implemented — improve or leave if already good):
+
+The following has already been built in a previous pass. Codex should **review each file and improve** rather than starting from scratch:
+- `globals.css` — film grain overlay, fade-up animations, `input-earth`, `no-scrollbar`, `grain`, `glow-orb`, `deco-ring`, `watermark`, `stat-card` utilities
+- `Header.tsx` — scroll-reactive blur, mobile drawer, active dot indicator, hydration-safe cart badge
+- `Footer.tsx` — dark bg with radial gradients, brand story column, policy links
+- `app/(shop)/page.tsx` — hero with grain/orbs/rings/watermark, stat strip, story section
+- `ProductCard.tsx` — hover-reveal overlay, translate lift, badges
+- `Newsletter.tsx` — success state, pulls copy from brandConfig
+- `ImageGallery.tsx` — prev/next arrows, counter pill, thumbnail strip
+- `ProductInteractive.tsx` — save% badge, swatch checkmark, low-stock pulse, trust micro-strip, accordion description
+- `search/page.tsx` — editorial gradient hero header
+
+**Focus your improvements on:** blog pages, tags pages, categories page, Pagination component, and anything that still feels generic.
 
 ---
 
