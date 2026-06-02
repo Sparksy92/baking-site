@@ -17,7 +17,7 @@ export function Footer() {
           {/* Brand column */}
           <div className="col-span-2 md:col-span-1 space-y-5">
             <div className="flex items-center gap-2.5">
-              <span className="brand-mark" aria-hidden="true">B</span>
+              <span className="brand-mark" aria-hidden="true">T</span>
               <span className="text-xl font-black tracking-tight text-white">{name}</span>
             </div>
             {tagline && (
@@ -25,7 +25,7 @@ export function Footer() {
             )}
             <div className="h-px w-10 bg-terracotta/60" />
             <p className="text-xs text-white/35 leading-relaxed">
-              Indigenous-owned. Ethically crafted.<br />Every piece carries purpose.
+              Durable, ethically made clothing<br />for people who actually go outside.
             </p>
           </div>
 

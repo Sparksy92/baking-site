@@ -56,7 +56,7 @@ export function Header() {
 
           {/* Logo */}
           <Link href="/" className="flex items-center gap-2.5 flex-shrink-0 group">
-            <span className="brand-mark group-hover:scale-105 transition-transform duration-300" aria-hidden="true">B</span>
+            <span className="brand-mark group-hover:scale-105 transition-transform duration-300" aria-hidden="true">T</span>
             <span className="text-xl font-black tracking-tight text-earth group-hover:text-terracotta transition-colors duration-300">{brandName()}</span>
           </Link>
 

@@ -3,8 +3,10 @@
 import { useState } from 'react';
 import { api } from '@/lib/api';
 import { addToast } from '@/lib/toast';
+import { brandConfig } from '@/config/brand.config';
 
 export function Newsletter() {
+  const { heading, description, placeholder, buttonLabel } = brandConfig.newsletter;
   const [email, setEmail] = useState('');
   const [loading, setLoading] = useState(false);
   const [done, setDone] = useState(false);
@@ -51,10 +53,10 @@ export function Newsletter() {
           Stay Connected
         </span>
         <h2 className="text-3xl sm:text-4xl md:text-5xl font-black tracking-[-0.02em] leading-[0.92] text-earth">
-          First access to<br />meaningful drops.
+          {heading}
         </h2>
         <p className="mt-5 text-base sm:text-lg text-muted-earth leading-relaxed max-w-md mx-auto">
-          New releases, restocks, stories, and community updates — sent with care, never spam.
+          {description}
         </p>
 
         <form onSubmit={handleSubmit} className="mt-8 flex flex-col sm:flex-row gap-3 max-w-lg mx-auto">
@@ -63,7 +65,7 @@ export function Newsletter() {
             required
             value={email}
             onChange={(e) => setEmail(e.target.value)}
-            placeholder="your@email.com"
+            placeholder={placeholder}
             className="input-earth flex-1"
             aria-label="Email address"
           />
@@ -72,7 +74,7 @@ export function Newsletter() {
             disabled={loading}
             className="flex-shrink-0 px-7 py-3.5 bg-terracotta text-white font-bold text-sm rounded-2xl hover:bg-terracotta/90 transition-all duration-200 hover:scale-[1.02] active:scale-[0.98] disabled:opacity-50 disabled:hover:scale-100 disabled:cursor-not-allowed shadow-earth-sm"
           >
-            {loading ? 'Joining...' : 'Join the Community'}
+            {loading ? 'Sending...' : buttonLabel}
           </button>
         </form>
 

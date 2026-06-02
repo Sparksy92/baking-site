@@ -98,7 +98,7 @@ export default async function Home() {
         <div className="glow-orb hidden lg:block" style={{ width: '34rem', height: '34rem', right: '10%', top: '16%', backgroundColor: '#B85C38' }} aria-hidden="true" />
         {/* Watermark */}
         <div className="watermark hidden lg:block" style={{ fontSize: '20vw', top: '10%', left: '50%', transform: 'translateX(-50%)' }} aria-hidden="true">
-          BASELINE
+          TERRA
         </div>
 
         <div className="relative z-10 site-shell flex flex-col justify-center py-28 sm:py-36 lg:py-44" style={{ minHeight: '92svh' }}>
@@ -106,33 +106,33 @@ export default async function Home() {
             {/* Eyebrow */}
             <div className="animate-fade-up mb-6 flex flex-wrap items-center gap-3">
               <span className="inline-flex items-center rounded-full border border-white/12 bg-white/[0.04] px-4 py-2 text-[10px] font-bold uppercase tracking-[0.28em] text-white/70">
-                Indigenous Owned
+                Canadian Made
               </span>
               <span className="h-px w-8 bg-terracotta/80" />
               <span className="text-[10px] font-bold uppercase tracking-[0.32em] text-terracotta">
-                Rooted in Culture
+                Since 2019
               </span>
             </div>
 
             {/* Heading */}
             <h1 className="animate-fade-up font-black leading-[0.88] tracking-[-0.03em]">
-              <span className="block text-[clamp(3rem,8vw,6.5rem)] text-white">Wear Your</span>
+              <span className="block text-[clamp(3rem,8vw,6.5rem)] text-white">Built for the</span>
               <span
                 className="block text-[clamp(4.5rem,14vw,11rem)] leading-[0.82]"
                 style={{ color: '#B85C38', textShadow: '0 0 120px rgba(184,92,56,0.28)' }}
               >
-                Story.
+                Long Haul.
               </span>
             </h1>
 
             {/* Body copy */}
             <p className="animate-fade-up-delay-1 mt-7 max-w-lg text-base sm:text-lg leading-relaxed text-white/60">
-              Handcrafted designs rooted in Indigenous culture and tradition. Every piece carries a story, a purpose, a people.
+              Durable, no-nonsense clothing built for people who actually go outside. Ethical supply chain, honest prices, zero fluff.
             </p>
 
             {/* Pill tags */}
             <div className="animate-fade-up-delay-1 mt-6 flex flex-wrap gap-2.5">
-              {['Ethically Made', 'Free Shipping $100+', 'CA Owned'].map((pill) => (
+              {['Ethically Sourced', 'Free Shipping $75+', 'Made in Canada'].map((pill) => (
                 <span
                   key={pill}
                   className="inline-flex items-center rounded-full border border-white/10 bg-white/[0.04] px-3.5 py-1.5 text-[10px] font-semibold uppercase tracking-[0.14em] text-white/60"
@@ -156,9 +156,9 @@ export default async function Home() {
           {/* Stat strip */}
           <div className="animate-fade-up-delay-3 mt-16 grid grid-cols-3 gap-3 max-w-sm">
             {[
-              { value: '100%', label: 'Indigenous owned' },
+              { value: '60-day', label: 'Free returns' },
               { value: '$75+', label: 'Free shipping' },
-              { value: '∞', label: 'Cultural pride' },
+              { value: '5yr', label: 'Craftsmanship guarantee' },
             ].map((stat) => (
               <div key={stat.label} className="stat-card">
                 <span className="block mb-1.5 h-[2px] w-6 bg-terracotta/70 rounded-full" />
@@ -179,9 +179,9 @@ export default async function Home() {
           <div className="grid grid-cols-2 md:grid-cols-4 gap-6 text-center">
             {[
               { icon: Leaf, label: 'Ethically Made' },
-              { icon: Feather, label: 'Indigenous Owned' },
-              { icon: Truck, label: 'Free Shipping $100+' },
-              { icon: HeartHandshake, label: 'Community First' },
+              { icon: Truck, label: 'Free Shipping $75+' },
+              { icon: HeartHandshake, label: '60-Day Returns' },
+              { icon: Feather, label: 'Carbon Offset' },
             ].map((item) => (
               <div key={item.label} className="flex flex-col items-center gap-1.5">
                 <span className="w-11 h-11 rounded-full bg-warm border border-sand flex items-center justify-center text-terracotta">
@@ -278,11 +278,11 @@ export default async function Home() {
               <span className="h-px w-10 bg-terracotta/60" />
             </div>
             <h2 className="text-4xl md:text-5xl lg:text-6xl font-black leading-[0.92] tracking-[-0.02em]">
-              Every Purchase<br />
-              <span style={{ color: '#B85C38' }}>Supports</span> Indigenous<br />Communities
+              Clothing made to<br />
+              <span style={{ color: '#B85C38' }}>outlast</span> the trend cycle.
             </h2>
             <p className="mt-8 text-white/55 text-base sm:text-lg leading-relaxed max-w-xl mx-auto">
-              We&apos;re more than a brand. A portion of every sale goes directly to cultural preservation, language revitalization, and youth programs on Turtle Island.
+              We design pieces you&apos;ll wear for years, not seasons. Ethical factories, traceable materials, and a 5-year craftsmanship guarantee on everything we make.
             </p>
             <div className="mt-10 flex flex-col sm:flex-row items-center justify-center gap-4">
               <Link href="/about" className="btn-outline-light">

@@ -1,12 +1,12 @@
 import { BrandConfig } from '../types/brand';
 
 export const brandConfig: BrandConfig = {
-  id: 'baseline-store',
+  id: 'terra-supply-co',
   metadata: {
-    name: 'Baseline Store',
-    tagline: 'Rooted in Culture. Made with Purpose.',
-    description: 'Ethically crafted goods rooted in Indigenous culture and tradition.',
-    siteName: 'Baseline Store',
+    name: 'Terra Supply Co.',
+    tagline: 'Built for the Long Haul.',
+    description: 'Durable, ethically made clothing for people who live and work outdoors. No fluff, no fast fashion.',
+    siteName: 'Terra Supply Co.',
     baseUrl: 'https://yourdomain.com',
     locale: 'en-CA',
     defaultRegion: 'ca',
@@ -84,25 +84,26 @@ export const brandConfig: BrandConfig = {
     ],
   },
   content: {
-    copyright: '© {year} Baseline Store. All rights reserved. | Indigenous owned & operated.',
+    copyright: '© {year} Terra Supply Co. All rights reserved.',
     poweredBy: '',
     pages: {},
   },
   announcementBar: {
     enabled: true,
-    text: 'Free shipping on orders over $100 | Indigenous owned & operated',
+    text: 'Free shipping on orders over $75 — Built to last, made to matter.',
   },
   trustIndicators: [
-    { label: 'Ethically Made', icon: 'leaf', description: 'Thoughtful production and responsible sourcing.' },
-    { label: 'Indigenous Owned', icon: 'feather', description: 'Rooted in culture, care, and community pride.' },
-    { label: 'Community First', icon: 'heart-handshake', description: 'Built to support cultural and local impact.' },
+    { label: 'Ethically Made', icon: 'leaf', description: 'Responsible sourcing, fair wages, lower footprint.' },
+    { label: 'Built to Last', icon: 'shield', description: 'No fast fashion. Every piece is meant to go the distance.' },
+    { label: 'Free Returns', icon: 'refresh-cw', description: '60-day hassle-free returns on everything we sell.' },
+    { label: 'Ships from Canada', icon: 'truck', description: 'Fast domestic shipping, carbon offset on every order.' },
   ],
   socialLinks: [],
   newsletter: {
     enabled: true,
-    heading: 'First access to meaningful drops.',
-    description: 'New releases, restocks, stories, and community updates sent with care.',
-    placeholder: 'Email address',
-    buttonLabel: 'Join',
+    heading: 'Less noise. More good stuff.',
+    description: 'New drops, field notes, and occasional deals. Never spam — we hate it too.',
+    placeholder: 'your@email.com',
+    buttonLabel: 'Subscribe',
   },
 };
