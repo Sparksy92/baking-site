@@ -90,16 +90,16 @@ export function Header() {
               <Search size={18} />
             </Link>
             <Link
-              href={customer ? '/account' : '/account/login'}
+              href={mounted && customer ? '/account' : '/account/login'}
               className="w-9 h-9 flex items-center justify-center rounded-full text-earth/60 hover:bg-sand/70 hover:text-terracotta transition-all duration-200"
-              aria-label={customer ? 'Account' : 'Sign in'}
+              aria-label="Account"
             >
               <User size={18} />
             </Link>
             <Link
               href="/cart"
               className="relative w-9 h-9 flex items-center justify-center rounded-full text-earth/60 hover:bg-sand/70 hover:text-terracotta transition-all duration-200"
-              aria-label={`Cart${count > 0 ? ` (${count} items)` : ''}`}
+              aria-label="Cart"
             >
               <ShoppingBag size={18} />
               {mounted && count > 0 && (
