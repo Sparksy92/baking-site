@@ -1,45 +1,45 @@
 import { BrandConfig } from '../types/brand';
 
 export const brandConfig: BrandConfig = {
-  id: 'baseline-store',
+  id: 'terra-supply-co',
   metadata: {
-    name: 'Baseline Store',
-    tagline: 'Your Tagline Here',
-    description: 'High quality products for your brand.',
-    siteName: 'Baseline Store',
+    name: 'Terra Supply Co.',
+    tagline: 'Built for the Long Haul.',
+    description: 'Durable, ethically made clothing for people who live and work outdoors. No fluff, no fast fashion.',
+    siteName: 'Terra Supply Co.',
     baseUrl: 'https://yourdomain.com',
-    locale: 'en-US',
+    locale: 'en-CA',
     defaultRegion: 'ca',
   },
   colors: {
-    primary: '#0f172a', // slate-900 (brand color previously used)
-    secondary: '#334155', // slate-700
-    accent: '#ef4444', // red-500
-    background: '#ffffff',
-    surface: '#f8fafc',
-    text: '#0f172a',
-    textMuted: '#64748b',
-    border: '#e2e8f0',
-    error: '#ef4444',
-    success: '#10b981',
-    warning: '#f59e0b',
+    primary: '#5C3D2E', // earth brown
+    secondary: '#6B7F5E', // sage green
+    accent: '#B85C38', // terracotta
+    background: '#FBF7F4', // warm cream
+    surface: '#F5EDE8', // warm white
+    text: '#3D2E1F', // deep brown
+    textMuted: '#8B7B6B', // muted earth
+    border: '#E8DDD3', // sand
+    error: '#C53030',
+    success: '#6B7F5E', // sage
+    warning: '#D4A574', // warm amber
   },
   fonts: {
     heading: 'var(--font-geist-sans), sans-serif',
     body: 'var(--font-geist-sans), sans-serif',
   },
   assets: {
-    logo: '/images/brand/logo.png',
-    favicon: '/images/brand/favicon.ico',
+    logo: '/images/brand/logo.svg',
+    favicon: '/images/brand/favicon.svg',
   },
   payment: {
     provider: 'stripe',
   },
   features: {
-    blog: false,
+    blog: true,
     accounts: true,
-    search: false,
-    newsletter: false,
+    search: true,
+    newsletter: true,
     reviews: false,
     wishlists: false,
     multiCurrency: false,
@@ -50,6 +50,7 @@ export const brandConfig: BrandConfig = {
       { label: 'Shop', href: '/search' },
       { label: 'New Arrivals', href: '/collections/new-arrivals' },
       { label: 'Categories', href: '/categories' },
+      { label: 'Blog', href: '/blog' },
       { label: 'About', href: '/about' },
     ],
     footerColumns: [
@@ -65,6 +66,7 @@ export const brandConfig: BrandConfig = {
         title: 'Company',
         links: [
           { label: 'Our Story', href: '/about' },
+          { label: 'Blog', href: '/blog' },
           { label: 'Contact', href: '/contact' },
           { label: 'FAQ', href: '/faq' },
           { label: 'Track Order', href: '/order-lookup' },
@@ -82,21 +84,26 @@ export const brandConfig: BrandConfig = {
     ],
   },
   content: {
-    copyright: '© {year} Baseline Store. All rights reserved.',
+    copyright: '© {year} Terra Supply Co. All rights reserved.',
     poweredBy: '',
     pages: {},
   },
   announcementBar: {
     enabled: true,
-    text: 'Free shipping on orders over $100',
+    text: 'Free shipping on orders over $75 — Built to last, made to matter.',
   },
-  trustIndicators: [],
+  trustIndicators: [
+    { label: 'Ethically Made', icon: 'leaf', description: 'Responsible sourcing, fair wages, lower footprint.' },
+    { label: 'Built to Last', icon: 'shield', description: 'No fast fashion. Every piece is meant to go the distance.' },
+    { label: 'Free Returns', icon: 'refresh-cw', description: '60-day hassle-free returns on everything we sell.' },
+    { label: 'Ships from Canada', icon: 'truck', description: 'Fast domestic shipping, carbon offset on every order.' },
+  ],
   socialLinks: [],
   newsletter: {
-    enabled: false,
-    heading: 'Subscribe',
-    description: 'Get the latest news and offers.',
-    placeholder: 'Email address',
+    enabled: true,
+    heading: 'Less noise. More good stuff.',
+    description: 'New drops, field notes, and occasional deals. Never spam — we hate it too.',
+    placeholder: 'your@email.com',
     buttonLabel: 'Subscribe',
   },
 };

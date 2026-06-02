@@ -79,6 +79,12 @@ class ImageResponse(BaseModel):
     color: str | None = None
 
 
+class TagResponse(BaseModel):
+    id: int
+    name: str
+    slug: str
+
+
 class ProductResponse(BaseModel):
     id: int
     name: str
@@ -92,6 +98,7 @@ class ProductResponse(BaseModel):
     meta_description: str | None = None
     variants: list[VariantResponse] = []
     images: list[ImageResponse] = []
+    tags: list[TagResponse] = []
 
 
 class ProductListItem(BaseModel):

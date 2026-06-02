@@ -1,0 +1,6 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 256 256" role="img" aria-label="Baseline Store">
+  <rect width="256" height="256" rx="64" fill="#FBF7F4"/>
+  <circle cx="128" cy="128" r="92" fill="#5C3D2E"/>
+  <path d="M73 162c54-5 94-49 105-106 11 69-28 119-94 139 18-31 42-60 78-89-40 16-69 41-98 79Z" fill="#B85C38"/>
+  <path d="M92 180c32-16 59-44 82-86" fill="none" stroke="#F5EDE8" stroke-width="12" stroke-linecap="round"/>
+</svg>

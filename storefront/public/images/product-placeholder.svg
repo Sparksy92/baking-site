@@ -1,0 +1,27 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 600 800" fill="none">
+  <rect width="600" height="800" fill="#F0EBE5"/>
+  <rect width="600" height="800" fill="url(#grain)" opacity="0.06"/>
+  <!-- Subtle woven texture lines -->
+  <line x1="0" y1="80" x2="600" y2="80" stroke="#D4C9BE" stroke-width="0.5" opacity="0.4"/>
+  <line x1="0" y1="160" x2="600" y2="160" stroke="#D4C9BE" stroke-width="0.5" opacity="0.4"/>
+  <line x1="0" y1="240" x2="600" y2="240" stroke="#D4C9BE" stroke-width="0.5" opacity="0.4"/>
+  <line x1="0" y1="320" x2="600" y2="320" stroke="#D4C9BE" stroke-width="0.5" opacity="0.4"/>
+  <line x1="0" y1="400" x2="600" y2="400" stroke="#D4C9BE" stroke-width="0.5" opacity="0.4"/>
+  <line x1="0" y1="480" x2="600" y2="480" stroke="#D4C9BE" stroke-width="0.5" opacity="0.4"/>
+  <line x1="0" y1="560" x2="600" y2="560" stroke="#D4C9BE" stroke-width="0.5" opacity="0.4"/>
+  <line x1="0" y1="640" x2="600" y2="640" stroke="#D4C9BE" stroke-width="0.5" opacity="0.4"/>
+  <line x1="0" y1="720" x2="600" y2="720" stroke="#D4C9BE" stroke-width="0.5" opacity="0.4"/>
+  <!-- T-shirt outline, centered -->
+  <g transform="translate(170, 280)" opacity="0.22">
+    <!-- Body -->
+    <path d="M60 40 L0 80 L30 100 L30 240 L230 240 L230 100 L260 80 L200 40 Q190 10 160 10 Q145 25 130 25 Q115 25 100 10 Q70 10 60 40Z"
+      stroke="#5C3D2E" stroke-width="3" stroke-linecap="round" stroke-linejoin="round" fill="none"/>
+    <!-- Collar curve -->
+    <path d="M100 10 Q130 40 160 10" stroke="#5C3D2E" stroke-width="2.5" stroke-linecap="round" fill="none"/>
+  </g>
+  <defs>
+    <filter id="grain">
+      <feTurbulence type="fractalNoise" baseFrequency="0.75" numOctaves="4" stitchTiles="stitch"/>
+    </filter>
+  </defs>
+</svg>
