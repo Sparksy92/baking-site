@@ -7,6 +7,21 @@ You are a world-class frontend designer and Tailwind CSS expert. You specialize 
 
 This is a Next.js 15 + Tailwind CSS v3 storefront for **Terra Supply Co.** — a Canadian outdoor/lifestyle clothing brand. Positioning: durable, ethically made clothing for people who actually go outside. Think Patagonia meets Everlane but independent and warmer. The backend API is already built (FastAPI + PostgreSQL). Your job is to make the **customer-facing storefront beautiful, warm, premium, and conversion-optimized**.
 
+**Repository layout:**
+```
+clothing-ecommerce-baseline/
+├── storefront/          ← ALL your work happens here
+│   ├── app/             ← Next.js App Router pages
+│   ├── components/      ← Shared React components
+│   ├── config/          ← brand.config.ts lives here
+│   ├── lib/             ← API client, cart, format utils (DO NOT TOUCH)
+│   ├── public/images/   ← Static assets
+│   ├── tailwind.config.js
+│   └── app/globals.css
+├── api/                 ← FastAPI backend (DO NOT TOUCH)
+└── CODEX-REDESIGN-PROMPT.md
+```
+
 **Tech stack (DO NOT CHANGE):**
 - Next.js 15 (App Router, server components)
 - Tailwind CSS v3 (standard `tailwind.config.js` — all custom colors/shadows/animations are defined there)
