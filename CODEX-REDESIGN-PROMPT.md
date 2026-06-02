@@ -5,15 +5,15 @@ You are a world-class frontend designer and Tailwind CSS expert. You specialize 
 
 ## Project Context
 
-This is a Next.js 15 + Tailwind CSS v4 storefront for an Indigenous-owned clothing/merch brand. The backend API is already built (FastAPI + PostgreSQL). Your job is to make the **customer-facing storefront beautiful, warm, premium, and conversion-optimized**.
+This is a Next.js 15 + Tailwind CSS v3 storefront for an Indigenous-owned clothing/merch brand. The backend API is already built (FastAPI + PostgreSQL). Your job is to make the **customer-facing storefront beautiful, warm, premium, and conversion-optimized**.
 
 **Tech stack (DO NOT CHANGE):**
 - Next.js 15 (App Router, server components)
-- Tailwind CSS v4 (uses `@theme` directive, NOT tailwind.config.js)
+- Tailwind CSS v3 (standard `tailwind.config.js` — all custom colors/shadows/animations are defined there)
 - TypeScript
 - Lucide React icons
 - `next/image` for all images
-- CSS file: `app/globals.css` uses `@import "tailwindcss"`, `@plugin`, and `@theme` (Tailwind v4 syntax)
+- CSS file: `app/globals.css` uses `@tailwind base/components/utilities` (Tailwind v3 syntax)
 
 **DO NOT:**
 - Install new packages (use what's there)
@@ -135,9 +135,9 @@ Muted Earth:   #8B7B6B  (secondary text)
 
 ## Important Notes:
 
-- Tailwind v4 uses `@theme {}` block in CSS for custom colors, NOT `tailwind.config.js`
-- Custom colors defined in `@theme` can be used as `text-earth`, `bg-terracotta`, etc.
-- The `@plugin "@tailwindcss/typography"` directive enables prose classes
+- Tailwind v3 uses `tailwind.config.js` for custom colors — all earthy tokens (`earth`, `terracotta`, `sage`, `sand`, `cream`, `warm`, `deep`, `muted-earth`) and custom shadows (`shadow-earth`, `shadow-earth-sm`) are already defined there
+- Use them as standard utilities: `text-earth`, `bg-terracotta`, `shadow-earth`, etc.
+- `@tailwindcss/typography` is already installed and registered in `tailwind.config.js` plugins — use `prose` classes for blog content
 - Products may have no images — always handle the empty state elegantly
 - The site must look premium even WITHOUT product images (rely on color, typography, spacing)
 - Responsive: mobile-first, looks incredible on all breakpoints
