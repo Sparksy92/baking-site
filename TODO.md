@@ -1,6 +1,6 @@
 # TODO — clothing-ecommerce-baseline
 
-## Completed (feature/audit-fixes branch)
+## Completed — Security & Audit Fixes
 
 - [x] **Stripe discount mismatch** — Fixed: use Stripe coupons for discounts so checkout total is correct
 - [x] **Checkout rollback on Stripe failure** — Fixed: added `db.rollback()` before raising 502
@@ -14,7 +14,7 @@
 - [x] **Admin orders list: clickable rows + status tabs + search** — Built: color-coded badges, filter by status, search by name/email/order number
 - [x] **SQLite backup script** — Added: `scripts/backup-db.sh` with retention, compression, crontab example
 
-## Completed (feature/customer-accounts branch)
+## Completed — Customer Accounts
 
 - [x] **Customer accounts** — Full implementation:
   - DB migration `006_customer_accounts.sql`: `customers`, `customer_addresses` tables, `customer_id` FK on orders
@@ -63,7 +63,6 @@
 - [x] **Bulk order actions** — Batch status update (up to 100), CSV export with filters, 4 tests
 - [x] **Staff roles & permissions** — 8 permissions, owner-only management, `require_permission()` factory, JWT integration, 7 tests
 - [x] **Order editing** — Edit qty / remove / add items pre-fulfillment, auto stock + total recalculation, 5 tests
-- [ ] Playwright E2E in CI (needs headless browser in runner)
 
 ## Completed — Tier 6: Content & Marketing
 
@@ -96,22 +95,23 @@
 - [ ] **Multi-currency support** — Currently CAD only (future international expansion)
 - [ ] **Keycloak OIDC integration** — Optional SSO (needs Keycloak instance)
 - [ ] **Subscription / recurring orders** — Low priority for clothing
-- [ ] Playwright E2E in CI (needs headless browser in runner)
+- [ ] **Playwright E2E in CI** — Needs headless browser in runner image
 
 ---
 
 ## Deploy Checklist (per brand fork)
 
-When forking the baseline for a new brand, these env vars must be configured per environment.
+When forking the baseline for a new brand, configure these per environment.
 Email and Stripe gracefully degrade when unconfigured (emails skip, Stripe fails at checkout).
 
 - [ ] Set `BRAND_NAME`, `BRAND_TAGLINE`, logo/favicon paths
 - [ ] Generate `ADMIN_JWT_SECRET` and `CUSTOMER_JWT_SECRET` (`openssl rand -base64 32`)
+- [ ] Set `POSTGRES_USER`, `POSTGRES_PASSWORD`, `POSTGRES_DB`, `POSTGRES_HOST`
 - [ ] Create Stripe account → set `STRIPE_SECRET_KEY`, `STRIPE_PUBLISHABLE_KEY`
 - [ ] Register Stripe webhook → set `STRIPE_WEBHOOK_SECRET` (point to production URL)
 - [ ] Add sending domain in Resend → add DNS records (TXT/MX) → set `RESEND_API_KEY`, `EMAIL_FROM`
 - [ ] Set `CONTACT_EMAIL` (inbox where contact form submissions are delivered)
 - [ ] Set `STORE_DOMAIN`, `NEXT_PUBLIC_SITE_URL` to production URL
 - [ ] Set `DEV_MODE=false`, `TAX_RATE` to applicable rate
-- [ ] Set up crontab for `scripts/backup-db.sh`
 - [ ] Review CSP policy in storefront middleware for production domain
+- [ ] Verify PostgreSQL backup cron is active (managed by Ansible)

@@ -11,12 +11,12 @@ A lightweight, white-label ecommerce platform purpose-built for **clothing and a
 └────────────────────┬────────────────────────────┘
                      │ /api/* (proxy rewrite)
 ┌────────────────────▼────────────────────────────┐
-│  API (Python 3.12 + FastAPI + SQLite)           │
+│  API (Python 3.12 + FastAPI + asyncpg)          │
 │  60+ endpoints • 29 migration files • 337 tests│
 └────────────────────┬────────────────────────────┘
                      │
 ┌────────────────────▼────────────────────────────┐
-│  SQLite (WAL mode) — single file, no container  │
+│  PostgreSQL 16 (containerized)                  │
 └─────────────────────────────────────────────────┘
 ```
 
@@ -24,8 +24,8 @@ A lightweight, white-label ecommerce platform purpose-built for **clothing and a
 
 | Layer | Technology |
 |-------|-----------|
-| **API** | Python 3.12 + FastAPI + uvicorn + aiosqlite |
-| **Database** | SQLite (WAL mode) — zero infrastructure |
+| **API** | Python 3.12 + FastAPI + uvicorn + asyncpg |
+| **Database** | PostgreSQL 16 |
 | **Frontend** | Next.js 15 (App Router) + TypeScript + Tailwind CSS v4 |
 | **SEO** | Metadata API, JSON-LD, dynamic sitemap.xml, robots.txt |
 | **Payments** | Stripe Checkout (card payments) |
@@ -56,9 +56,28 @@ Edit `.env` — for local dev the defaults work fine. Set these at minimum:
 DEV_MODE=true                  # Enables Swagger docs at /api/docs
 ADMIN_JWT_SECRET=dev-secret    # Any string works for local
 CUSTOMER_JWT_SECRET=dev-cust   # Any string works for local
+POSTGRES_USER=ecommerce
+POSTGRES_PASSWORD=ecommerce_password
+POSTGRES_DB=ecommerce
+POSTGRES_HOST=localhost        # or 'postgres' if using compose
+POSTGRES_PORT=5432
 ```
 
-### 2. Backend (API)
+### 2. PostgreSQL
+
+```bash
+# Option A: Run PostgreSQL via podman/docker
+podman run -d --name ecommerce-postgres \
+  -e POSTGRES_USER=ecommerce \
+  -e POSTGRES_PASSWORD=ecommerce_password \
+  -e POSTGRES_DB=ecommerce \
+  -p 5432:5432 postgres:16-alpine
+
+# Option B: Use system PostgreSQL and create the database
+createdb ecommerce
+```
+
+### 3. Backend (API)
 
 ```bash
 cd api
@@ -66,21 +85,21 @@ python3 -m venv .venv
 source .venv/bin/activate
 pip install -r requirements.txt
 
-# Start the API server (auto-creates DB + runs migrations on first boot)
+# Start the API server (auto-runs migrations on first boot)
 uvicorn app.main:create_app --factory --reload --port 8100
 
 # In another terminal — seed sample data & create admin user:
 cd api && source .venv/bin/activate
-python cli.py seed           # 6 products, 3 categories, 2 collections
+python cli.py seed           # 7 clan tees, categories, collections
 python cli.py create-admin   # interactive prompt for email/password
 ```
 
 The API will:
-- Auto-create `data/store.db` on first run
-- Run all 29 SQL migrations automatically
+- Connect to PostgreSQL using the `POSTGRES_*` env vars
+- Run all 29 SQL migrations automatically on startup
 - Serve Swagger docs at `http://localhost:8100/api/docs` (when `DEV_MODE=true`)
 
-### 3. Storefront (Next.js)
+### 4. Storefront (Next.js)
 
 ```bash
 cd storefront
@@ -96,9 +115,9 @@ The storefront `.env.local` is already committed with local defaults. If you nee
 
 The storefront proxies `/api/*` to `http://localhost:8100` via `next.config.ts` rewrites.
 
-### 4. Login to Admin
+### 5. Login to Admin
 
-Navigate to `http://localhost:5173/admin` and log in with the credentials you created in step 2.
+Navigate to `http://localhost:5173/admin` and log in with the credentials you created in step 3.
 
 ---
 
@@ -168,7 +187,11 @@ See `.env.example` for the full list. Key variables:
 
 | Variable | Description | Default |
 |----------|-------------|---------|
-| `DATABASE_PATH` | SQLite file path | `./data/store.db` |
+| `POSTGRES_USER` | PostgreSQL username | `ecommerce` |
+| `POSTGRES_PASSWORD` | PostgreSQL password | Must set |
+| `POSTGRES_DB` | PostgreSQL database name | `ecommerce` |
+| `POSTGRES_HOST` | PostgreSQL host | `localhost` |
+| `POSTGRES_PORT` | PostgreSQL port | `5432` |
 | `ADMIN_JWT_SECRET` | JWT signing key (admin) | Must change in prod |
 | `CUSTOMER_JWT_SECRET` | JWT signing key (customers) | Must change in prod |
 | `STRIPE_SECRET_KEY` | Stripe API key | `sk_test_...` |
@@ -214,18 +237,13 @@ npx playwright test
 
 ## Deployment
 
-Two containers: API (FastAPI/uvicorn) + Storefront (Next.js standalone).
-nginx reverse-proxies both behind a single domain.
+Three containers: API (FastAPI/uvicorn) + Storefront (Next.js standalone) + PostgreSQL 16.
+nginx reverse-proxies API and storefront behind a single domain.
 
-```bash
-# Build
-podman-compose -f infra/docker/docker-compose.prod.yml build
+Production deployments are managed by Ansible via the `ansible-infrastructure` repo.
+CI/CD triggers a cross-project pipeline on push to `staging` (auto) or `main` (manual gate).
 
-# Run
-podman-compose -f infra/docker/docker-compose.prod.yml up -d
-```
-
-See `infra/` for Docker and nginx configuration.
+See `infra/docker/` for Dockerfiles and the Ansible role for compose templates.
 
 ---
 
@@ -236,7 +254,7 @@ See `infra/` for Docker and nginx configuration.
 │   ├── app/
 │   │   ├── main.py              # FastAPI app factory
 │   │   ├── config.py            # Settings (from env)
-│   │   ├── database.py          # SQLite connection + migrations
+│   │   ├── database.py          # PostgreSQL pool + migrations
 │   │   ├── auth.py              # Admin JWT auth
 │   │   ├── customer_auth.py     # Customer JWT auth
 │   │   ├── middleware/          # Rate limiting, request ID, logging
@@ -258,6 +276,7 @@ See `infra/` for Docker and nginx configuration.
 ├── infra/                       # Docker + nginx configs
 ├── .env.example                 # Environment template
 ├── TODO.md                      # Feature tracking
+├── PROGRESS.md                  # Sprint history
 └── README.md                    # This file
 ```
 
