@@ -90,6 +90,34 @@ export default async function Home() {
           sameAs: brandConfig.socialLinks.map((s) => s.href),
         } : {}),
       }} />
+      {brandConfig.localBusiness && (() => {
+        const lb = brandConfig.localBusiness!;
+        return (
+          <JsonLd data={{
+            '@context': 'https://schema.org',
+            '@type': lb.type,
+            name: brandName(),
+            url: siteUrl(),
+            ...(lb.telephone ? { telephone: lb.telephone } : {}),
+            ...(lb.priceRange ? { priceRange: lb.priceRange } : {}),
+            ...(lb.openingHours ? { openingHours: lb.openingHours } : {}),
+            ...(lb.hasMap ? { hasMap: lb.hasMap } : {}),
+            ...(lb.streetAddress ? {
+              address: {
+                '@type': 'PostalAddress',
+                streetAddress: lb.streetAddress,
+                addressLocality: lb.addressLocality,
+                addressRegion: lb.addressRegion,
+                postalCode: lb.postalCode,
+                addressCountry: lb.addressCountry,
+              },
+            } : {}),
+            ...(lb.latitude != null && lb.longitude != null ? {
+              geo: { '@type': 'GeoCoordinates', latitude: lb.latitude, longitude: lb.longitude },
+            } : {}),
+          }} />
+        );
+      })()}
 
       {/* Hero */}
       <section className="relative isolate overflow-hidden bg-deep text-white" style={{ minHeight: '92svh' }}>

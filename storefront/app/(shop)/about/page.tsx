@@ -1,5 +1,7 @@
 import type { Metadata } from 'next';
 import { brandName, brandTagline, siteUrl } from '@/lib/format';
+import { JsonLd } from '@/components/JsonLd';
+import { brandConfig } from '@/config/brand.config';
 
 export function generateMetadata(): Metadata {
   return {
@@ -12,9 +14,25 @@ export function generateMetadata(): Metadata {
 export default function AboutPage() {
   const name = brandName();
   const tagline = brandTagline();
+  const url = `${siteUrl()}/about`;
 
   return (
     <div className="bg-white min-h-screen">
+      <JsonLd data={{
+        '@context': 'https://schema.org',
+        '@type': 'AboutPage',
+        name: `About ${name}`,
+        description: tagline || brandConfig.metadata.description,
+        url,
+        isPartOf: { '@type': 'WebSite', url: siteUrl(), name },
+        breadcrumb: {
+          '@type': 'BreadcrumbList',
+          itemListElement: [
+            { '@type': 'ListItem', position: 1, name: 'Home', item: siteUrl() },
+            { '@type': 'ListItem', position: 2, name: 'About', item: url },
+          ],
+        },
+      }} />
       {/* Hero */}
       <div className="relative bg-gray-900 text-white py-24 sm:py-32 overflow-hidden">
         <div className="absolute inset-0 bg-brand/20 mix-blend-multiply"></div>

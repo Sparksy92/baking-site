@@ -120,4 +120,15 @@ export const brandConfig: BrandConfig = {
     placeholder: 'your@email.com',
     buttonLabel: 'Subscribe',
   },
+  // localBusiness: {
+  //   type: 'ClothingStore',          // schema.org type — change per fork
+  //   streetAddress: '123 Main St',
+  //   addressLocality: 'Toronto',
+  //   addressRegion: 'ON',
+  //   postalCode: 'M5V 1A1',
+  //   addressCountry: 'CA',
+  //   telephone: '+1-416-555-0100',
+  //   openingHours: ['Mo-Fr 10:00-18:00', 'Sa 10:00-16:00'],
+  //   priceRange: '$$',
+  // },
 };

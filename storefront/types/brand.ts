@@ -202,6 +202,33 @@ export interface BrandSeo {
   heroStats: BrandStat[]
 }
 
+export interface BrandLocalBusiness {
+  /** Schema.org @type — e.g. 'LocalBusiness', 'ClothingStore', 'SportingGoodsStore', 'AutoRepair' */
+  type: string
+  /** Physical street address */
+  streetAddress?: string
+  /** City / locality */
+  addressLocality?: string
+  /** Province / state */
+  addressRegion?: string
+  /** Postal / ZIP code */
+  postalCode?: string
+  /** ISO 3166-1 alpha-2 country code e.g. 'CA', 'US' */
+  addressCountry?: string
+  /** Phone number in E.164 or local format */
+  telephone?: string
+  /** Opening hours in schema.org format e.g. ['Mo-Fr 09:00-17:00', 'Sa 10:00-15:00'] */
+  openingHours?: string[]
+  /** Google Maps or other map URL */
+  hasMap?: string
+  /** Latitude for geo coordinates */
+  latitude?: number
+  /** Longitude for geo coordinates */
+  longitude?: number
+  /** Price range indicator e.g. '$$' */
+  priceRange?: string
+}
+
 export interface BrandConfig {
   /** Unique brand identifier (matches directory name in sites/) */
   id: string
@@ -223,4 +250,6 @@ export interface BrandConfig {
   newsletter: BrandNewsletterConfig
   /** SEO defaults and brand-specific content values */
   seo: BrandSeo
+  /** Optional LocalBusiness structured data — omit for pure e-commerce with no physical location */
+  localBusiness?: BrandLocalBusiness
 }
