@@ -175,6 +175,7 @@ async def get_product(slug: str, db: aiosqlite.Connection = Depends(get_db)):
         compare_at_price_cents=v["compare_at_price_cents"], sku=v["sku"],
         stock_quantity=v["stock_quantity"], is_active=bool(v["is_active"]),
         sort_order=v["sort_order"],
+        available_at=v["available_at"] if "available_at" in v.keys() else None,
     ) for v in variant_rows]
 
     # Images — resolve color from linked variant
@@ -212,6 +213,11 @@ async def get_product(slug: str, db: aiosqlite.Connection = Depends(get_db)):
         is_active=bool(product["is_active"]), is_featured=bool(product["is_featured"]),
         sort_order=product["sort_order"],
         meta_title=product["meta_title"], meta_description=product["meta_description"],
+        noindex=bool(product["noindex"] or False),
+        canonical_url=product["canonical_url"],
+        og_image_url=product["og_image_url"],
+        allow_preorder=bool(product["allow_preorder"]) if "allow_preorder" in product.keys() else False,
+        available_at=product["available_at"] if "available_at" in product.keys() else None,
         variants=variants, images=images, tags=tags,
     )
 
@@ -233,7 +239,33 @@ async def list_categories(db: aiosqlite.Connection = Depends(get_db)):
         description=r["description"], image_url=r["image_url"],
         sort_order=r["sort_order"], is_active=bool(r["is_active"]),
         product_count=r["product_count"],
+        meta_title=r["meta_title"], meta_description=r["meta_description"],
+        intro_copy=r["intro_copy"], noindex=bool(r["noindex"] or False),
     ) for r in rows]
+
+
+@router.get("/categories/{slug}", response_model=CategoryResponse)
+async def get_category(slug: str, db: aiosqlite.Connection = Depends(get_db)):
+    """Get a single category by slug with SEO fields."""
+    cursor = await db.execute("""
+        SELECT c.*, COUNT(p.id) as product_count
+        FROM categories c
+        LEFT JOIN products p ON p.category_id = c.id AND p.is_active = 1
+        WHERE c.slug = ? AND c.is_active = 1
+        GROUP BY c.id
+    """, (slug,))
+    row = await cursor.fetchone()
+    if not row:
+        from fastapi import HTTPException
+        raise HTTPException(status_code=404, detail="Category not found")
+    return CategoryResponse(
+        id=row["id"], name=row["name"], slug=row["slug"],
+        description=row["description"], image_url=row["image_url"],
+        sort_order=row["sort_order"], is_active=bool(row["is_active"]),
+        product_count=row["product_count"],
+        meta_title=row["meta_title"], meta_description=row["meta_description"],
+        intro_copy=row["intro_copy"], noindex=bool(row["noindex"] or False),
+    )
 
 
 @router.get("/collections", response_model=list)
@@ -254,6 +286,8 @@ async def list_collections(db: aiosqlite.Connection = Depends(get_db)):
         "description": r["description"], "image_url": r["image_url"],
         "is_active": bool(r["is_active"]), "sort_order": r["sort_order"],
         "product_count": r["product_count"],
+        "meta_title": r["meta_title"], "meta_description": r["meta_description"],
+        "intro_copy": r["intro_copy"], "noindex": bool(r["noindex"] or False),
     } for r in rows]
 
 
@@ -269,4 +303,9 @@ async def get_collection(slug: str, db: aiosqlite.Connection = Depends(get_db)):
         "id": collection["id"], "name": collection["name"],
         "slug": collection["slug"], "description": collection["description"],
         "image_url": collection["image_url"],
+        "is_active": bool(collection["is_active"]),
+        "sort_order": collection["sort_order"],
+        "product_count": 0,
+        "meta_title": collection["meta_title"], "meta_description": collection["meta_description"],
+        "intro_copy": collection["intro_copy"], "noindex": bool(collection["noindex"] or False),
     }

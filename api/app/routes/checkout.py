@@ -9,6 +9,7 @@ from app.customer_auth import get_optional_customer
 from app.database import get_db
 from app.models.schemas import CheckoutRequest, CheckoutResponse, OrderResponse, OrderItemResponse
 from app.services.order_service import CheckoutError, create_order, validate_checkout
+from app.routes.admin.store_credit import _apply_credit
 from app.services.email_service import send_order_confirmation
 from app.services import stripe_service
 
@@ -31,9 +32,11 @@ async def checkout(
     Stripe session is created after the order to avoid orphan sessions.
     """
     # Acquire exclusive lock: validate + create order + decrement stock atomically
+    customer_id = int(customer["sub"]) if customer else None
+
     await db.execute("BEGIN EXCLUSIVE")
     try:
-        validated = await validate_checkout(db, body)
+        validated = await validate_checkout(db, body, customer_id=customer_id)
         order_number = await create_order(
             db, body, validated,
             payment_method=body.payment_method,
@@ -89,6 +92,20 @@ async def checkout(
                 (int(customer["sub"]), order_number),
             )
             
+    # Deduct store credit if applied
+    if validated.get("store_credit_applied_cents", 0) > 0 and customer_id:
+        order_cursor = await db.execute(
+            "SELECT id FROM orders WHERE order_number = ?", (order_number,)
+        )
+        order_row = await order_cursor.fetchone()
+        await _apply_credit(
+            db,
+            customer_id=customer_id,
+            amount_cents=-validated["store_credit_applied_cents"],
+            reason="redemption",
+            order_id=order_row["id"] if order_row else None,
+        )
+
     await db.commit()
 
     # Send order confirmation email (order received, payment still pending)
@@ -103,12 +120,12 @@ async def checkout(
                 "shipping_cents": validated["shipping_cents"],
                 "tax_cents": validated["tax_cents"],
                 "total_cents": validated["total_cents"],
-                "shipping_address_line1": body.shipping_address_line1,
-                "shipping_address_line2": body.shipping_address_line2,
-                "shipping_city": body.shipping_city,
-                "shipping_state": body.shipping_state,
-                "shipping_postal_code": body.shipping_postal_code,
-                "shipping_country": body.shipping_country,
+                "shipping_address_line1": body.shipping_address.line1,
+                "shipping_address_line2": body.shipping_address.line2,
+                "shipping_address_city": body.shipping_address.city,
+                "shipping_address_province": body.shipping_address.province,
+                "shipping_address_postal": body.shipping_address.postal_code,
+                "shipping_address_country": body.shipping_address.country,
             },
             validated["order_items"],
         )
@@ -118,7 +135,85 @@ async def checkout(
     return CheckoutResponse(
         order_number=order_number,
         stripe_checkout_url=checkout_url,
+        store_credit_applied_cents=validated.get("store_credit_applied_cents", 0),
     )
+
+
+@router.post("/checkout/payment-intent", status_code=status.HTTP_201_CREATED)
+async def create_payment_intent(
+    body: CheckoutRequest,
+    request: Request,
+    db: aiosqlite.Connection = Depends(get_db),
+    customer: dict | None = Depends(get_optional_customer),
+):
+    """Create order + Stripe PaymentIntent for Apple Pay / Google Pay express checkout.
+
+    The storefront confirms the PaymentIntent client-side via Stripe.js.
+    Stripe webhook updates payment_status to 'paid' on confirmation.
+    """
+    customer_id = int(customer["sub"]) if customer else None
+
+    await db.execute("BEGIN EXCLUSIVE")
+    try:
+        validated = await validate_checkout(db, body, customer_id=customer_id)
+        order_number = await create_order(
+            db, body, validated,
+            payment_method="stripe",
+            payment_status="pending",
+            stripe_session_id=None,
+        )
+    except CheckoutError as e:
+        await db.rollback()
+        raise HTTPException(status_code=e.status_code, detail=e.detail)
+    except Exception:
+        await db.rollback()
+        raise
+
+    try:
+        from app.config import get_settings
+        settings = get_settings()
+        client_secret, pi_id = await stripe_service.create_payment_intent(
+            order_number=order_number,
+            total_cents=validated["total_cents"],
+            currency=settings.store_currency,
+            customer_email=body.customer_email,
+        )
+    except Exception:
+        await db.rollback()
+        logger.exception("PaymentIntent creation failed")
+        raise HTTPException(
+            status_code=status.HTTP_502_BAD_GATEWAY,
+            detail="Payment service unavailable. Please try again.",
+        )
+
+    # Link payment intent and customer to order
+    await db.execute(
+        "UPDATE orders SET stripe_session_id = ?, customer_id = ? WHERE order_number = ?",
+        (pi_id, customer_id, order_number),
+    )
+
+    # Deduct store credit if applied
+    if validated.get("store_credit_applied_cents", 0) > 0 and customer_id:
+        order_cursor = await db.execute(
+            "SELECT id FROM orders WHERE order_number = ?", (order_number,)
+        )
+        order_row = await order_cursor.fetchone()
+        await _apply_credit(
+            db,
+            customer_id=customer_id,
+            amount_cents=-validated["store_credit_applied_cents"],
+            reason="redemption",
+            order_id=order_row["id"] if order_row else None,
+        )
+
+    await db.commit()
+
+    return {
+        "order_number": order_number,
+        "client_secret": client_secret,
+        "total_cents": validated["total_cents"],
+        "store_credit_applied_cents": validated.get("store_credit_applied_cents", 0),
+    }
 
 
 @router.get("/orders/{order_number}", response_model=OrderResponse)

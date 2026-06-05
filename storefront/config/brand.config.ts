@@ -99,6 +99,20 @@ export const brandConfig: BrandConfig = {
     { label: 'Ships from Canada', icon: 'truck', description: 'Fast domestic shipping, carbon offset on every order.' },
   ],
   socialLinks: [],
+  seo: {
+    abbreviation: 'TERRA',
+    currency: 'CAD',
+    twitterHandle: '',
+    googleVerification: '',
+    defaultOgImage: '/images/brand/og-default.jpg',
+    blogSectionName: 'Field Notes',
+    blogPostLabel: 'Field Note',
+    heroStats: [
+      { value: '60-day', label: 'Free returns' },
+      { value: '$75+', label: 'Free shipping' },
+      { value: '5yr', label: 'Craftsmanship guarantee' },
+    ],
+  },
   newsletter: {
     enabled: true,
     heading: 'Less noise. More good stuff.',

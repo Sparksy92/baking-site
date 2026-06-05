@@ -1,6 +1,7 @@
 'use client';
 
 import { useEffect, useState } from 'react';
+import Link from 'next/link';
 import { api } from '@/lib/api';
 
 interface Page {
@@ -94,7 +95,10 @@ export default function PagesPage() {
                   </span>
                 </td>
                 <td className="px-4 py-3">
-                  <button onClick={() => remove(p.id)} className="text-xs text-red-600 hover:underline">Delete</button>
+                  <div className="flex items-center gap-3">
+                    <Link href={`/admin/pages/${p.id}`} className="text-xs text-brand hover:underline font-medium">Edit</Link>
+                    <button onClick={() => remove(p.id)} className="text-xs text-red-600 hover:underline">Delete</button>
+                  </div>
                 </td>
               </tr>
             ))}

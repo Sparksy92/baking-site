@@ -88,6 +88,28 @@ async def create_checkout_session(
     return session.url, session.id
 
 
+async def create_payment_intent(
+    order_number: str,
+    total_cents: int,
+    currency: str,
+    customer_email: str,
+) -> tuple[str, str]:
+    """Create a Stripe PaymentIntent for client-side confirmation (Apple/Google Pay).
+
+    Returns (client_secret, payment_intent_id).
+    """
+    s = _get_stripe()
+    pi = s.PaymentIntent.create(
+        amount=total_cents,
+        currency=currency.lower(),
+        receipt_email=customer_email,
+        metadata={"order_number": order_number},
+        automatic_payment_methods={"enabled": True},
+    )
+    logger.info("PaymentIntent created: %s for order %s", pi.id, order_number)
+    return pi.client_secret, pi.id
+
+
 async def create_refund(
     payment_intent_id: str,
     amount_cents: int | None = None,

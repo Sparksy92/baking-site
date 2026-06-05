@@ -8,6 +8,18 @@ import { Pagination } from '@/components/Pagination';
 import { SortSelect } from '@/components/SortSelect';
 import { SlidersHorizontal } from 'lucide-react';
 
+export const revalidate = 3600;
+export const dynamicParams = true;
+
+export async function generateStaticParams() {
+  try {
+    const collections = await apiFetch<Collection[]>('/api/collections');
+    return collections.map((c) => ({ slug: c.slug }));
+  } catch {
+    return [];
+  }
+}
+
 const PRODUCTS_PER_PAGE = 24;
 
 interface Props {
@@ -15,21 +27,26 @@ interface Props {
   searchParams: Promise<{ page?: string; sort?: string }>;
 }
 
-export async function generateMetadata({ params }: Props): Promise<Metadata> {
+export async function generateMetadata({ params, searchParams }: Props): Promise<Metadata> {
   const { slug } = await params;
+  const sp = await searchParams;
+  const page = Math.max(1, parseInt(sp.page || '1', 10) || 1);
   try {
     const collection = await apiFetch<Collection>(`/api/collections/${slug}`);
     const url = `${siteUrl()}/collections/${slug}`;
+    const title = collection.meta_title || collection.name;
+    const description = collection.meta_description || collection.description || `Shop ${collection.name} from ${brandName()}`;
     return {
-      title: collection.name,
-      description: collection.description || `Shop ${collection.name} from ${brandName()}`,
+      title,
+      description,
       openGraph: {
-        title: collection.name,
-        description: collection.description || `Shop ${collection.name}`,
+        title,
+        description,
         url,
         images: collection.image_url ? [{ url: collection.image_url, alt: collection.name }] : [],
       },
-      alternates: { canonical: url },
+      alternates: { canonical: page > 1 ? `${siteUrl()}/collections/${slug}` : url },
+      ...(collection.noindex ? { robots: { index: false, follow: true } } : {}),
     };
   } catch {
     return { title: 'Collection Not Found' };
@@ -78,6 +95,21 @@ export default async function CollectionPage({ params, searchParams }: Props) {
         description: collection.description,
         url: `${siteUrl()}/collections/${slug}`,
       }} />
+      {products.length > 0 && (
+        <JsonLd data={{
+          '@context': 'https://schema.org',
+          '@type': 'ItemList',
+          name: collection.name,
+          url: `${siteUrl()}/collections/${slug}`,
+          numberOfItems: total,
+          itemListElement: products.map((p, i) => ({
+            '@type': 'ListItem',
+            position: (page - 1) * PRODUCTS_PER_PAGE + i + 1,
+            url: `${siteUrl()}/product/${p.slug}`,
+            name: p.name,
+          })),
+        }} />
+      )}
 
       {/* Hero Section */}
       <div className="bg-white border-b border-gray-200">

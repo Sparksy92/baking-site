@@ -1,6 +1,7 @@
 'use client';
 
 import { useEffect, useState } from 'react';
+import Link from 'next/link';
 import { api } from '@/lib/api';
 
 export default function AdminCollections() {
@@ -18,7 +19,9 @@ export default function AdminCollections() {
 
   return (
     <div>
-      <h1 className="text-2xl font-bold text-gray-900 mb-6">Collections</h1>
+      <div className="flex items-center justify-between mb-6">
+        <h1 className="text-2xl font-bold text-gray-900">Collections</h1>
+      </div>
       <div className="bg-white rounded-xl border border-gray-200 overflow-hidden">
         <table className="w-full text-sm">
           <thead className="bg-gray-50 border-b border-gray-200">
@@ -27,6 +30,7 @@ export default function AdminCollections() {
               <th className="px-4 py-3 text-left font-medium text-gray-600">Slug</th>
               <th className="px-4 py-3 text-right font-medium text-gray-600">Products</th>
               <th className="px-4 py-3 text-left font-medium text-gray-600">Status</th>
+              <th className="px-4 py-3 text-right font-medium text-gray-600">Actions</th>
             </tr>
           </thead>
           <tbody className="divide-y divide-gray-100">
@@ -39,6 +43,11 @@ export default function AdminCollections() {
                   <span className={`px-2 py-0.5 rounded text-xs font-medium ${c.is_active ? 'bg-green-100 text-green-700' : 'bg-gray-100 text-gray-500'}`}>
                     {c.is_active ? 'Active' : 'Draft'}
                   </span>
+                </td>
+                <td className="px-4 py-3 text-right">
+                  <Link href={`/admin/collections/${c.id}`} className="text-xs font-medium text-brand hover:underline">
+                    Edit
+                  </Link>
                 </td>
               </tr>
             ))}

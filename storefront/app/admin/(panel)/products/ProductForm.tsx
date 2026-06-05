@@ -5,6 +5,7 @@ import { useRouter } from 'next/navigation';
 import dynamic from 'next/dynamic';
 import { Trash2, Tag, X, ChevronDown, ChevronUp } from 'lucide-react';
 import { api, type Product, type Category, type Variant, type ProductImage } from '@/lib/api';
+import { siteUrl } from '@/lib/format';
 import { addToast } from '@/lib/toast';
 import SortableImageGallery from '@/components/admin/SortableImageGallery';
 import VariantMatrixBuilder from '@/components/admin/VariantMatrixBuilder';
@@ -30,11 +31,17 @@ export default function ProductForm({ productId }: Props) {
   const [weightG, setWeightG] = useState<number | null>(null);
   const [metaTitle, setMetaTitle] = useState('');
   const [metaDescription, setMetaDescription] = useState('');
+  const [noindex, setNoindex] = useState(false);
+  const [canonicalUrl, setCanonicalUrl] = useState('');
+  const [ogImageUrl, setOgImageUrl] = useState('');
+  const [allowPreorder, setAllowPreorder] = useState(false);
+  const [availableAt, setAvailableAt] = useState('');
   const [categories, setCategories] = useState<Category[]>([]);
   const [variants, setVariants] = useState<Variant[]>([]);
   const [images, setImages] = useState<ProductImage[]>([]);
   const [tags, setTags] = useState<TagItem[]>([]);
   const [allTags, setAllTags] = useState<TagItem[]>([]);
+  const [originalSlug, setOriginalSlug] = useState('');
   const [saving, setSaving] = useState(false);
   const [loading, setLoading] = useState(!isNew);
   const [seoOpen, setSeoOpen] = useState(false);
@@ -47,6 +54,7 @@ export default function ProductForm({ productId }: Props) {
         .then((p) => {
           setName(p.name);
           setSlug(p.slug);
+          setOriginalSlug(p.slug);
           setDescription(p.description || '');
           setCategoryId(p.category_id);
           setIsActive(p.is_active);
@@ -54,6 +62,11 @@ export default function ProductForm({ productId }: Props) {
           setWeightG(p.weight_g ?? null);
           setMetaTitle(p.meta_title || '');
           setMetaDescription(p.meta_description || '');
+          setNoindex(p.noindex ?? false);
+          setCanonicalUrl(p.canonical_url || '');
+          setOgImageUrl(p.og_image_url || '');
+          setAllowPreorder(p.allow_preorder ?? false);
+          setAvailableAt(p.available_at ? p.available_at.slice(0, 16) : '');
           setVariants(p.variants);
           setImages(p.images);
           setTags(p.tags ?? []);
@@ -76,6 +89,11 @@ export default function ProductForm({ productId }: Props) {
         weight_g: weightG,
         meta_title: metaTitle || null,
         meta_description: metaDescription || null,
+        noindex,
+        canonical_url: canonicalUrl || null,
+        og_image_url: ogImageUrl || null,
+        allow_preorder: allowPreorder,
+        available_at: availableAt ? new Date(availableAt).toISOString() : null,
       };
       if (isNew) {
         const created = await api.post<{ id: number }>('/api/admin/products', body);
@@ -83,7 +101,21 @@ export default function ProductForm({ productId }: Props) {
         router.push(`/admin/products/${created.id}`);
       } else {
         await api.patch(`/api/admin/products/${productId}`, body);
-        addToast('Product saved', 'success');
+        if (slug !== originalSlug && originalSlug) {
+          try {
+            await api.post('/api/admin/redirects', {
+              from_path: `/product/${originalSlug}`,
+              to_path: `/product/${slug}`,
+              status_code: 301,
+            });
+            addToast(`Redirect created: /product/${originalSlug} → /product/${slug}`, 'success');
+          } catch {
+            addToast('Product saved but redirect creation failed', 'error');
+          }
+          setOriginalSlug(slug);
+        } else {
+          addToast('Product saved', 'success');
+        }
       }
     } catch (err) {
       console.error(err);
@@ -155,6 +187,11 @@ export default function ProductForm({ productId }: Props) {
           <div>
             <label className="text-sm font-medium text-gray-700 block mb-1">Slug</label>
             <input value={slug} onChange={(e) => setSlug(e.target.value)} required className={inputClass} />
+            {!isNew && originalSlug && slug !== originalSlug && (
+              <p className="mt-1.5 text-xs text-amber-700 bg-amber-50 border border-amber-200 rounded-lg px-3 py-2">
+                ⚠ Slug changed from <span className="font-mono font-semibold">{originalSlug}</span> to <span className="font-mono font-semibold">{slug}</span>. A 301 redirect will be created automatically on save.
+              </p>
+            )}
           </div>
           <div>
             <label className="text-sm font-medium text-gray-700 block mb-1">Description</label>
@@ -176,6 +213,37 @@ export default function ProductForm({ productId }: Props) {
             <label className="flex items-center gap-2 text-sm"><input type="checkbox" checked={isActive} onChange={(e) => setIsActive(e.target.checked)} /> Active</label>
             <label className="flex items-center gap-2 text-sm"><input type="checkbox" checked={isFeatured} onChange={(e) => setIsFeatured(e.target.checked)} /> Featured</label>
           </div>
+        </div>
+
+        {/* Pre-order / Scheduled Drop */}
+        <div className="bg-white rounded-xl border border-gray-200 p-6 space-y-4">
+          <h2 className="font-semibold text-gray-900">Pre-order &amp; Scheduled Drop</h2>
+          <div>
+            <label className="text-sm font-medium text-gray-700 block mb-1">Drop Date <span className="text-gray-400 font-normal">(optional)</span></label>
+            <input
+              type="datetime-local"
+              value={availableAt}
+              onChange={(e) => setAvailableAt(e.target.value)}
+              className={inputClass}
+            />
+            <p className="text-xs text-gray-400 mt-1">Leave blank for products available now. Set a future date to show a &ldquo;Coming Soon&rdquo; / &ldquo;Pre-order&rdquo; badge on the storefront.</p>
+          </div>
+          <label className="flex items-center gap-3 cursor-pointer select-none">
+            <input type="checkbox" checked={allowPreorder} onChange={(e) => setAllowPreorder(e.target.checked)} className="w-4 h-4 rounded border-gray-300" />
+            <span className="text-sm font-medium text-gray-700">
+              Allow pre-orders <span className="text-gray-400 font-normal">(shows &ldquo;Pre-order Now&rdquo; button before drop date)</span>
+            </span>
+          </label>
+          {availableAt && !allowPreorder && (
+            <p className="text-xs text-amber-600 bg-amber-50 border border-amber-200 rounded-lg px-3 py-2">
+              Drop date is set but pre-orders are off &mdash; the product will show &ldquo;Coming Soon&rdquo; and cannot be added to cart until the drop date.
+            </p>
+          )}
+          {availableAt && allowPreorder && (
+            <p className="text-xs text-green-700 bg-green-50 border border-green-200 rounded-lg px-3 py-2">
+              Customers can pre-order now. The drop date badge will show on the product page.
+            </p>
+          )}
         </div>
 
         {/* Tags */}
@@ -276,11 +344,30 @@ export default function ProductForm({ productId }: Props) {
                 <textarea value={metaDescription} onChange={(e) => setMetaDescription(e.target.value)} placeholder="Brief description for search results..." maxLength={160} rows={2} className={`${inputClass} resize-none`} />
                 <p className="text-xs text-gray-400 mt-1">{metaDescription.length}/160 characters. Shown in Google search results.</p>
               </div>
+              <div>
+                <label className="text-sm font-medium text-gray-700 block mb-1">Social Share Image URL <span className="text-gray-400 font-normal">(OG image override)</span></label>
+                <input value={ogImageUrl} onChange={(e) => setOgImageUrl(e.target.value)} placeholder="https://… (leave blank to use first product image)" className={inputClass} />
+                <p className="text-xs text-gray-400 mt-1">Overrides the default social share image for this product.</p>
+              </div>
+              <div>
+                <label className="text-sm font-medium text-gray-700 block mb-1">Canonical URL <span className="text-gray-400 font-normal">(optional override)</span></label>
+                <input value={canonicalUrl} onChange={(e) => setCanonicalUrl(e.target.value)} placeholder={`${siteUrl()}/product/${slug || 'product-slug'}`} className={inputClass} />
+                <p className="text-xs text-gray-400 mt-1">Leave blank to use the default URL. Only set if you need to point to a different canonical.</p>
+              </div>
+              <label className="flex items-center gap-3 cursor-pointer select-none">
+                <input type="checkbox" checked={noindex} onChange={(e) => setNoindex(e.target.checked)} className="w-4 h-4 rounded border-gray-300 text-brand" />
+                <span className="text-sm font-medium text-gray-700">Hide from search engines <span className="text-gray-400 font-normal">(noindex)</span></span>
+              </label>
+              {noindex && (
+                <p className="text-xs text-amber-600 bg-amber-50 border border-amber-200 rounded-lg px-3 py-2">
+                  ⚠ This product will not appear in Google search results.
+                </p>
+              )}
               {/* Preview */}
               <div className="bg-gray-50 rounded-lg p-4">
                 <p className="text-xs text-gray-400 mb-1">Search result preview:</p>
                 <p className="text-blue-700 text-base font-medium truncate">{metaTitle || name || 'Product Title'}</p>
-                <p className="text-green-700 text-xs">yourstore.com/products/{slug || 'product-slug'}</p>
+                <p className="text-green-700 text-xs">{siteUrl().replace(/^https?:\/\//, '')}/product/{slug || 'product-slug'}</p>
                 <p className="text-sm text-gray-600 line-clamp-2">{metaDescription || description?.replace(/<[^>]*>/g, '').slice(0, 160) || 'Product description will appear here...'}</p>
               </div>
             </div>

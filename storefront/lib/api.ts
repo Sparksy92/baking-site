@@ -54,7 +54,7 @@ const API_INTERNAL = process.env.API_URL || 'http://localhost:8100';
 
 export async function apiFetch<T>(path: string): Promise<T> {
   const res = await fetch(`${API_INTERNAL}${path}`, {
-    next: { revalidate: 60 },
+    next: { revalidate: 300 },
   });
   if (!res.ok) throw new Error(`API ${res.status}: ${path}`);
   return res.json();
@@ -85,6 +85,7 @@ export interface Variant {
   stock_quantity: number;
   is_active: boolean;
   sort_order: number;
+  available_at: string | null;
 }
 
 export interface ProductImage {
@@ -117,6 +118,11 @@ export interface Product {
   weight_g: number | null;
   meta_title: string | null;
   meta_description: string | null;
+  noindex: boolean;
+  canonical_url: string | null;
+  og_image_url: string | null;
+  allow_preorder: boolean;
+  available_at: string | null;
   variants: Variant[];
   images: ProductImage[];
   tags: ProductTag[];
@@ -146,10 +152,15 @@ export interface Collection {
   is_active: boolean;
   sort_order: number;
   product_count: number;
+  meta_title: string | null;
+  meta_description: string | null;
+  intro_copy: string | null;
+  noindex: boolean;
 }
 
 export interface PublicSettings {
   brand_name: string;
+  brand_tagline: string;
   store_announcement: string;
   shipping_flat_rate_cents: number;
   shipping_free_threshold_cents: number;

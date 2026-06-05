@@ -176,6 +176,32 @@ export interface BrandNewsletterConfig {
   buttonLabel: string
 }
 
+export interface BrandStat {
+  /** Display value e.g. "60-day" */
+  value: string
+  /** Label e.g. "Free returns" */
+  label: string
+}
+
+export interface BrandSeo {
+  /** Short uppercase abbreviation shown as watermark/accent e.g. "TERRA", "DFL", "CC" */
+  abbreviation: string
+  /** ISO 4217 currency code e.g. "CAD", "USD" */
+  currency: string
+  /** Twitter/X handle without @ */
+  twitterHandle: string
+  /** Google Search Console meta verification token */
+  googleVerification: string
+  /** Relative path to default Open Graph / social share image */
+  defaultOgImage: string
+  /** Name for the blog/articles section e.g. "Field Notes", "Blog", "News" */
+  blogSectionName: string
+  /** Singular label for a blog entry e.g. "Field Note", "Article", "Post" */
+  blogPostLabel: string
+  /** Hero stats strip shown below the headline — brand-specific values */
+  heroStats: BrandStat[]
+}
+
 export interface BrandConfig {
   /** Unique brand identifier (matches directory name in sites/) */
   id: string
@@ -195,4 +221,6 @@ export interface BrandConfig {
   socialLinks: BrandSocialLink[]
   /** Newsletter signup configuration */
   newsletter: BrandNewsletterConfig
+  /** SEO defaults and brand-specific content values */
+  seo: BrandSeo
 }

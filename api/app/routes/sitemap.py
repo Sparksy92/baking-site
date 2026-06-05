@@ -25,7 +25,7 @@ async def sitemap(db: aiosqlite.Connection = Depends(get_db)):
 
     # Products
     cursor = await db.execute(
-        "SELECT slug, updated_at FROM products WHERE is_active = 1 ORDER BY updated_at DESC"
+        "SELECT slug, updated_at FROM products WHERE is_active = 1 AND noindex = false ORDER BY updated_at DESC"
     )
     for row in await cursor.fetchall():
         urls.append({
@@ -36,14 +36,14 @@ async def sitemap(db: aiosqlite.Connection = Depends(get_db)):
 
     # Categories
     cursor = await db.execute(
-        "SELECT slug FROM categories WHERE is_active = 1"
+        "SELECT slug FROM categories WHERE is_active = 1 AND (noindex IS NULL OR noindex = false)"
     )
     for row in await cursor.fetchall():
         urls.append({"loc": f"{domain}/shop/{row['slug']}", "priority": "0.7"})
 
     # Collections
     cursor = await db.execute(
-        "SELECT slug FROM collections WHERE is_active = 1"
+        "SELECT slug FROM collections WHERE is_active = 1 AND (noindex IS NULL OR noindex = false)"
     )
     for row in await cursor.fetchall():
         urls.append({"loc": f"{domain}/collections/{row['slug']}", "priority": "0.7"})
