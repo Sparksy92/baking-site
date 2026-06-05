@@ -9,6 +9,8 @@ import aiosqlite
 
 from app.auth import require_admin
 from app.database import get_db
+from app.services.ai_service import generate_blog_post
+from app.services.meta_service import run_social_sync
 
 logger = logging.getLogger(__name__)
 
@@ -28,6 +30,8 @@ class PageCreate(BaseModel):
     noindex: bool = False
     canonical_url: str | None = None
 
+class GenerateAIPrompt(BaseModel):
+    prompt: str = Field(min_length=5, max_length=1000)
 
 class PageUpdate(BaseModel):
     title: str | None = None
@@ -181,3 +185,29 @@ async def delete_page(
     await db.execute("DELETE FROM pages WHERE id = ?", (page_id,))
     await db.commit()
     return {"deleted": True}
+
+
+@router.post("/generate-ai")
+async def generate_ai_post(
+    body: GenerateAIPrompt,
+    user: dict = Depends(require_admin),
+):
+    try:
+        content = await generate_blog_post(body.prompt)
+        return {"content": content}
+    except ValueError as e:
+        raise HTTPException(status_code=400, detail=str(e))
+    except Exception as e:
+        logger.error(f"AI Generation failed: {e}")
+        raise HTTPException(status_code=500, detail="Failed to generate AI content.")
+
+@router.post("/sync-social")
+async def sync_social(
+    user: dict = Depends(require_admin),
+):
+    try:
+        await run_social_sync()
+        return {"success": True}
+    except Exception as e:
+        logger.error(f"Social sync failed: {e}")
+        raise HTTPException(status_code=500, detail="Failed to sync social media posts.")

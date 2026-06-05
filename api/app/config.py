@@ -80,6 +80,13 @@ class Settings(BaseSettings):
     # ── Dev ──────────────────────────────────────────────────────
     dev_mode: bool = True
 
+    # ── Integrations ─────────────────────────────────────────────
+    meta_page_access_token: str = ""
+    meta_facebook_page_id: str = ""
+    meta_instagram_account_id: str = ""
+    openai_api_key: str = ""
+    gemini_api_key: str = ""
+
     # ── App version ──────────────────────────────────────────────
     app_version: str = "0.1.0"
 
