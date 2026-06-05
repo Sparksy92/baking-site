@@ -9,6 +9,7 @@ from fastapi.staticfiles import StaticFiles
 
 from app.config import get_settings
 from app.database import init_db
+from app.services.meta_service import run_social_sync
 from app.middleware.logging import setup_logging
 from app.middleware.rate_limit import RateLimitMiddleware
 from app.middleware.request_id import RequestIdMiddleware
@@ -67,10 +68,34 @@ async def lifespan(app: FastAPI):
             "CUSTOMER_JWT_SECRET is set to the default value. "
             "Generate a real secret: openssl rand -base64 32"
         )
+    
+    import asyncio, sys, os
+    async def _background_seed():
+        try:
+            if "pytest" not in sys.modules:
+                sys.path.insert(0, os.path.dirname(os.path.dirname(__file__)))
+                from cli import seed
+                await seed()
+                logger.info("Database seeded successfully")
+        except Exception as e:
+            logger.error(f"Error seeding database: {e}", exc_info=True)
+
+    async def _background_social_sync():
+        while True:
+            try:
+                await asyncio.sleep(10)
+                await run_social_sync()
+            except Exception as e:
+                logger.error(f"Background social sync error: {e}", exc_info=True)
+            await asyncio.sleep(3600)
+
+    asyncio.ensure_future(_background_seed())
+    sync_task = asyncio.ensure_future(_background_social_sync())
 
     await init_db()
     logger.info("Database initialized")
     yield
+    sync_task.cancel()
     logger.info("Shutting down")
 
 
@@ -181,6 +206,10 @@ def create_app() -> FastAPI:
     uploads_dir = app_settings.uploads_dir
     uploads_dir.mkdir(parents=True, exist_ok=True)
     app.mount("/images/uploads/products", StaticFiles(directory=str(uploads_dir)), name="product-images")
+
+    blog_uploads_dir = uploads_dir.parent / "blog"
+    blog_uploads_dir.mkdir(parents=True, exist_ok=True)
+    app.mount("/images/uploads/blog", StaticFiles(directory=str(blog_uploads_dir)), name="blog-images")
 
     return app
 
