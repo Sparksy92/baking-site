@@ -25,6 +25,8 @@ class PageCreate(BaseModel):
     page_type: str = "page"  # 'page' | 'blog_post'
     status: str = "draft"
     author: str | None = None
+    noindex: bool = False
+    canonical_url: str | None = None
 
 
 class PageUpdate(BaseModel):
@@ -33,9 +35,13 @@ class PageUpdate(BaseModel):
     content_html: str | None = None
     meta_title: str | None = None
     meta_description: str | None = None
+    noindex: bool = False
+    canonical_url: str | None = None
     featured_image_url: str | None = None
+    page_type: str | None = None
     status: str | None = None
     author: str | None = None
+    published_at: str | None = None
 
 
 @router.get("")
@@ -92,17 +98,33 @@ async def create_page(
     try:
         cursor = await db.execute(
             """INSERT INTO pages (title, slug, content_html, meta_title, meta_description,
-                                 featured_image_url, page_type, status, author, published_at)
-               VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?,
+                                 featured_image_url, page_type, status, author, noindex, canonical_url,
+                                 published_at)
+               VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?,
                        CASE WHEN ? = 'published' THEN CURRENT_TIMESTAMP ELSE NULL END)""",
             (body.title, body.slug, body.content_html, body.meta_title, body.meta_description,
-             body.featured_image_url, body.page_type, body.status, body.author, body.status),
+             body.featured_image_url, body.page_type, body.status, body.author,
+             body.noindex, body.canonical_url, body.status),
         )
+        new_id = cursor.lastrowid
         await db.commit()
     except aiosqlite.IntegrityError:
         raise HTTPException(status_code=status.HTTP_409_CONFLICT, detail="Slug already exists")
 
-    return {"id": cursor.lastrowid, "slug": body.slug}
+    return {"id": new_id, "slug": body.slug}
+
+
+@router.get("/{page_id}")
+async def get_page(
+    page_id: int,
+    db: aiosqlite.Connection = Depends(get_db),
+    user: dict = Depends(require_admin),
+):
+    cursor = await db.execute("SELECT * FROM pages WHERE id = ?", (page_id,))
+    row = await cursor.fetchone()
+    if not row:
+        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Page not found")
+    return dict(row)
 
 
 @router.patch("/{page_id}")
@@ -117,18 +139,20 @@ async def update_page(
     if not existing:
         raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Page not found")
 
-    updates = {k: v for k, v in body.model_dump().items() if v is not None}
+    updates = body.model_dump(exclude_unset=True)
     if not updates:
         raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail="No fields to update")
 
-    # Set published_at if transitioning to published
-    if updates.get("status") == "published" and existing["status"] != "published":
-        updates["published_at"] = None  # handled below
+    # Postgres handles booleans natively
+
+    # Auto-set published_at when transitioning to published and no explicit date given
+    if updates.get("status") == "published" and existing["status"] != "published" and "published_at" not in updates:
+        updates["published_at"] = "__now__"
 
     set_parts = []
     values = []
     for k, v in updates.items():
-        if k == "published_at":
+        if k == "published_at" and v == "__now__":
             set_parts.append("published_at = CURRENT_TIMESTAMP")
         else:
             set_parts.append(f"{k} = ?")

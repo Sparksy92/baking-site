@@ -25,8 +25,7 @@ async def list_pages(
     total = (await cursor.fetchone())[0]
 
     cursor = await db.execute(
-        """SELECT id, title, slug, meta_description, featured_image_url, author, published_at
-           FROM pages WHERE page_type = ? AND status = 'published'
+        """SELECT * FROM pages WHERE page_type = ? AND status = 'published'
            ORDER BY published_at DESC LIMIT ? OFFSET ?""",
         (page_type, limit, offset),
     )

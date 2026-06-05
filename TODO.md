@@ -96,6 +96,36 @@
 - [ ] **Keycloak OIDC integration** — Optional SSO (needs Keycloak instance)
 - [ ] **Subscription / recurring orders** — Low priority for clothing
 - [ ] **Playwright E2E in CI** — Needs headless browser in runner image
+- [x] **Pre-orders + scheduled drop publishing** — `available_at` on products + variants, `allow_preorder` flag. Drop date badge + Pre-order/Coming Soon CTA on PDP. Admin UI in ProductForm. Migration `004_preorders.sql`. 5 tests.
+- [ ] **Shipping zones + weight-tier rates** — Flat rate fine for now. Revisit when a client has mixed-weight catalog or ships to multiple regions.
+- [x] **Recently viewed products** — `lib/recently-viewed.ts` (localStorage, max 8). `RecentlyViewed` component on PDP (below related) and cart page.
+- [ ] **Guest checkout → account claiming** — Post-purchase prompt to link order to new/existing account.
+- [x] **Customer LTV report** — `GET /admin/reports/ltv`. Ranked by total spend, AOV, first/last order, min_orders filter. Admin page `/admin/ltv` with summary cards + table. 4 tests.
+- [ ] **Inventory stock adjustment UI** — Adjust stock from admin with reason log. Low priority at current client scale.
+
+---
+
+## Completed — Sprint: Admin UX + Store Credit + Express Checkout
+
+### 1. Admin UI Progressive Disclosure
+- [x] **Collapse admin nav into sections** — Core always visible. Marketing + Advanced collapsed by default. localStorage remembers open state per session.
+
+### 2. Store Credit
+- [x] **Migration** (`003_store_credit.sql`) — `store_credit_cents` on customers; `store_credit_transactions` ledger table
+- [x] **API** — Issue, adjust, balance, history endpoints. Return resolution `store_credit` auto-issues credit on `refunded` transition.
+- [x] **Checkout integration** — `use_store_credit` flag on `CheckoutRequest`; deducted before tax; `store_credit_applied_cents` returned in response.
+- [x] **Admin UI** — `/admin/store-credit` page: lookup by customer ID, issue, adjust, transaction history table.
+- [x] **Tests** — `tests/test_store_credit.py`: 11 tests covering issue, adjust, insufficient balance, balance/history, return resolution → credit issuance.
+
+### 3. Apple Pay / Google Pay (Stripe Payment Request Button)
+- [x] **`@stripe/stripe-js`** installed in storefront
+- [x] **`NEXT_PUBLIC_STRIPE_PUBLISHABLE_KEY`** added to `.env.example`
+- [x] **`stripe_service.create_payment_intent()`** — new Stripe PaymentIntent flow (vs. Checkout Session redirect)
+- [x] **`POST /api/checkout/payment-intent`** — creates order + returns `client_secret` for client-side confirmation
+- [x] **`ExpressCheckout` component** — renders Payment Request Button only when browser supports Apple Pay or Google Pay. Shows nothing on unsupported browsers.
+- [x] **PDP integration** — button appears below Add to Cart when item is in stock
+- [x] **Checkout page integration** — express lane above the standard form with "or pay with card below" divider
+- [x] **Tests** — `tests/test_express_checkout.py`: 6 tests covering client_secret response, order creation, stock decrement, OOS rejection, Stripe failure rollback, promo code with PI.
 
 ---
 
@@ -115,3 +145,5 @@ Email and Stripe gracefully degrade when unconfigured (emails skip, Stripe fails
 - [ ] Set `DEV_MODE=false`, `TAX_RATE` to applicable rate
 - [ ] Review CSP policy in storefront middleware for production domain
 - [ ] Verify PostgreSQL backup cron is active (managed by Ansible)
+- [ ] Set `NEXT_PUBLIC_STRIPE_PUBLISHABLE_KEY` in storefront env (same `pk_live_` key as `STRIPE_PUBLISHABLE_KEY`)
+- [ ] **Apple Pay domain verification** — Stripe Dashboard → Settings → Payment Methods → Apple Pay → Add domain → download `apple-developer-merchantid-domain-association` → place in `storefront/public/.well-known/`. Google Pay needs no extra setup.

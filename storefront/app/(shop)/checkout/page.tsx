@@ -8,6 +8,7 @@ import { useCustomer } from '@/lib/customer';
 import { api, type CheckoutResponse, type PublicSettings, type CustomerAddress } from '@/lib/api';
 import { formatCents } from '@/lib/format';
 import { AlertCircle, CheckCircle2, Loader2, Lock, Tag } from 'lucide-react';
+import { ExpressCheckout } from '@/components/ExpressCheckout';
 
 export default function CheckoutPage() {
   const { items, subtotal } = useCart();
@@ -285,6 +286,11 @@ export default function CheckoutPage() {
 
           {/* Left Column: Form */}
           <div className="flex-1">
+            {/* Express checkout — Apple Pay / Google Pay (only rendered when browser supports it) */}
+            <div className="mb-6">
+              <ExpressCheckout mode="cart" totalCents={total} />
+            </div>
+
             <form onSubmit={handleSubmit} className="space-y-8">
               
               {/* Contact */}

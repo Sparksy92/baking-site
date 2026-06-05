@@ -1,5 +1,6 @@
 from __future__ import annotations
 
+from datetime import datetime
 from typing import Literal
 
 from pydantic import BaseModel, EmailStr, Field
@@ -34,22 +35,36 @@ class CategoryResponse(BaseModel):
     sort_order: int
     is_active: bool
     product_count: int = 0
+    meta_title: str | None = None
+    meta_description: str | None = None
+    intro_copy: str | None = None
+    noindex: bool = False
 
 
 class CategoryCreate(BaseModel):
     name: str = Field(min_length=1, max_length=200)
     slug: str = Field(min_length=1, max_length=200)
     description: str | None = None
+    image_url: str | None = None
     sort_order: int = 0
     is_active: bool = True
+    meta_title: str | None = None
+    meta_description: str | None = None
+    intro_copy: str | None = None
+    noindex: bool = False
 
 
 class CategoryUpdate(BaseModel):
     name: str | None = None
     slug: str | None = None
     description: str | None = None
+    image_url: str | None = None
     sort_order: int | None = None
     is_active: bool | None = None
+    meta_title: str | None = None
+    meta_description: str | None = None
+    intro_copy: str | None = None
+    noindex: bool | None = None
 
 
 # ── Products ────────────────────────────────────────────────────
@@ -66,6 +81,7 @@ class VariantResponse(BaseModel):
     stock_quantity: int
     is_active: bool
     sort_order: int
+    available_at: datetime | None = None
 
 
 class ImageResponse(BaseModel):
@@ -96,6 +112,11 @@ class ProductResponse(BaseModel):
     sort_order: int
     meta_title: str | None = None
     meta_description: str | None = None
+    noindex: bool = False
+    canonical_url: str | None = None
+    og_image_url: str | None = None
+    allow_preorder: bool = False
+    available_at: datetime | None = None
     variants: list[VariantResponse] = []
     images: list[ImageResponse] = []
     tags: list[TagResponse] = []
@@ -127,6 +148,11 @@ class ProductCreate(BaseModel):
     weight_g: int | None = None
     meta_title: str | None = None
     meta_description: str | None = None
+    noindex: bool = False
+    canonical_url: str | None = None
+    og_image_url: str | None = None
+    allow_preorder: bool = False
+    available_at: datetime | None = None
 
 
 class ProductUpdate(BaseModel):
@@ -140,6 +166,11 @@ class ProductUpdate(BaseModel):
     weight_g: int | None = None
     meta_title: str | None = None
     meta_description: str | None = None
+    noindex: bool | None = None
+    canonical_url: str | None = None
+    og_image_url: str | None = None
+    allow_preorder: bool | None = None
+    available_at: datetime | None = None
 
 
 class VariantCreate(BaseModel):
@@ -152,6 +183,7 @@ class VariantCreate(BaseModel):
     stock_quantity: int = Field(ge=0, default=0)
     is_active: bool = True
     sort_order: int = 0
+    available_at: datetime | None = None
 
 
 class VariantUpdate(BaseModel):
@@ -164,6 +196,7 @@ class VariantUpdate(BaseModel):
     stock_quantity: int | None = None
     is_active: bool | None = None
     sort_order: int | None = None
+    available_at: datetime | None = None
 
 
 # ── Collections ─────────────────────────────────────────────────
@@ -185,6 +218,10 @@ class CollectionCreate(BaseModel):
     description: str | None = None
     is_active: bool = True
     sort_order: int = 0
+    meta_title: str | None = None
+    meta_description: str | None = None
+    intro_copy: str | None = None
+    noindex: bool = False
 
 
 class CollectionUpdate(BaseModel):
@@ -193,6 +230,25 @@ class CollectionUpdate(BaseModel):
     description: str | None = None
     is_active: bool | None = None
     sort_order: int | None = None
+    meta_title: str | None = None
+    meta_description: str | None = None
+    intro_copy: str | None = None
+    noindex: bool | None = None
+
+
+class CollectionDetail(BaseModel):
+    id: int
+    name: str
+    slug: str
+    description: str | None = None
+    image_url: str | None = None
+    is_active: bool
+    sort_order: int
+    product_count: int = 0
+    meta_title: str | None = None
+    meta_description: str | None = None
+    intro_copy: str | None = None
+    noindex: bool = False
 
 
 # ── Checkout ────────────────────────────────────────────────────
@@ -218,6 +274,7 @@ class CheckoutRequest(BaseModel):
     shipping_address: ShippingAddress
     items: list[CheckoutItem] = Field(min_length=1)
     promo_code: str | None = None
+    use_store_credit: bool = False
     customer_notes: str | None = None
     utm_source: str | None = None
     utm_medium: str | None = None
@@ -227,6 +284,7 @@ class CheckoutRequest(BaseModel):
 class CheckoutResponse(BaseModel):
     order_number: str
     stripe_checkout_url: str | None = None
+    store_credit_applied_cents: int = 0
 
 # ── Orders ──────────────────────────────────────────────────────
 
@@ -306,6 +364,7 @@ class PromoValidateResponse(BaseModel):
 
 class PublicSettingsResponse(BaseModel):
     brand_name: str
+    brand_tagline: str = ""
     store_announcement: str
     shipping_flat_rate_cents: int
     shipping_free_threshold_cents: int
@@ -313,6 +372,12 @@ class PublicSettingsResponse(BaseModel):
     currency: str
     analytics_id: str = ""
     etransfer_email: str = ""
+    default_og_image: str = ""
+    twitter_handle: str = ""
+    google_verification: str = ""
+    blog_section_name: str = ""
+    brand_abbreviation: str = ""
+    store_domain: str = ""
 
 # ── Contact ────────────────────────────────────────────────────
 

@@ -1,6 +1,7 @@
 'use client';
 
 import { useEffect, useState } from 'react';
+import Link from 'next/link';
 import { Plus, Pencil, Trash2, X, Check } from 'lucide-react';
 import { api } from '@/lib/api';
 
@@ -249,10 +250,17 @@ export default function AdminCategories() {
                 </td>
                 <td className="px-4 py-3 text-right">
                   <div className="flex items-center justify-end gap-1">
+                    <Link
+                      href={`/admin/categories/${cat.id}`}
+                      className="px-2 py-1 text-xs font-medium text-brand hover:underline"
+                      title="Edit SEO & details"
+                    >
+                      SEO
+                    </Link>
                     <button
                       onClick={() => startEdit(cat)}
                       className="p-1.5 text-gray-400 hover:text-brand rounded hover:bg-gray-100"
-                      title="Edit"
+                      title="Quick edit"
                     >
                       <Pencil size={14} />
                     </button>

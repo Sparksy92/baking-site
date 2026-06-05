@@ -1,6 +1,7 @@
 import type { Metadata } from 'next';
 import Link from 'next/link';
 import { brandName, siteUrl } from '@/lib/format';
+import { JsonLd } from '@/components/JsonLd';
 import ContactForm from './ContactForm';
 import { Mail, Clock, FileText, ExternalLink } from 'lucide-react';
 
@@ -14,9 +15,25 @@ export function generateMetadata(): Metadata {
 
 export default function ContactPage() {
   const name = brandName();
+  const url = `${siteUrl()}/contact`;
 
   return (
     <div className="bg-gray-50/50 min-h-screen py-16 md:py-24">
+      <JsonLd data={{
+        '@context': 'https://schema.org',
+        '@type': 'ContactPage',
+        name: `Contact ${name}`,
+        description: `Get in touch with ${name}.`,
+        url,
+        isPartOf: { '@type': 'WebSite', url: siteUrl(), name },
+        breadcrumb: {
+          '@type': 'BreadcrumbList',
+          itemListElement: [
+            { '@type': 'ListItem', position: 1, name: 'Home', item: siteUrl() },
+            { '@type': 'ListItem', position: 2, name: 'Contact', item: url },
+          ],
+        },
+      }} />
       <div className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8">
         
         <div className="text-center max-w-2xl mx-auto mb-16">

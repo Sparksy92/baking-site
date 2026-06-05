@@ -99,6 +99,20 @@ export const brandConfig: BrandConfig = {
     { label: 'Ships from Canada', icon: 'truck', description: 'Fast domestic shipping, carbon offset on every order.' },
   ],
   socialLinks: [],
+  seo: {
+    abbreviation: 'TERRA',
+    currency: 'CAD',
+    twitterHandle: '',
+    googleVerification: '',
+    defaultOgImage: '/images/brand/og-default.jpg',
+    blogSectionName: 'Field Notes',
+    blogPostLabel: 'Field Note',
+    heroStats: [
+      { value: '60-day', label: 'Free returns' },
+      { value: '$75+', label: 'Free shipping' },
+      { value: '5yr', label: 'Craftsmanship guarantee' },
+    ],
+  },
   newsletter: {
     enabled: true,
     heading: 'Less noise. More good stuff.',
@@ -106,4 +120,15 @@ export const brandConfig: BrandConfig = {
     placeholder: 'your@email.com',
     buttonLabel: 'Subscribe',
   },
+  // localBusiness: {
+  //   type: 'ClothingStore',          // schema.org type — change per fork
+  //   streetAddress: '123 Main St',
+  //   addressLocality: 'Toronto',
+  //   addressRegion: 'ON',
+  //   postalCode: 'M5V 1A1',
+  //   addressCountry: 'CA',
+  //   telephone: '+1-416-555-0100',
+  //   openingHours: ['Mo-Fr 10:00-18:00', 'Sa 10:00-16:00'],
+  //   priceRange: '$$',
+  // },
 };

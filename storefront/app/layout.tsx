@@ -8,8 +8,9 @@ import './globals.css';
 export function generateMetadata(): Metadata {
   const name = brandName();
   const tagline = brandTagline();
-  const description = tagline || `Shop ${name} — premium streetwear and apparel.`;
+  const description = brandConfig.metadata.description || tagline || `Shop ${name} — premium streetwear and apparel.`;
   const url = siteUrl();
+  const { seo } = brandConfig;
 
   return {
     title: { default: `${name} — ${tagline || 'Shop'}`, template: `%s | ${name}` },
@@ -21,11 +22,17 @@ export function generateMetadata(): Metadata {
       title: `${name} — ${tagline || 'Shop'}`,
       description,
       url,
+      ...(seo.defaultOgImage ? { images: [{ url: seo.defaultOgImage }] } : {}),
     },
-    twitter: { card: 'summary_large_image' },
+    twitter: {
+      card: 'summary_large_image',
+      ...(seo.twitterHandle ? { site: `@${seo.twitterHandle}` } : {}),
+    },
     robots: { index: true, follow: true },
     alternates: { canonical: url },
     icons: { icon: brandConfig.assets.favicon },
+    other: { 'theme-color': brandConfig.colors.primary },
+    ...(seo.googleVerification ? { verification: { google: seo.googleVerification } } : {}),
   };
 }
 

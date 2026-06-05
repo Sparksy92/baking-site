@@ -36,11 +36,17 @@ async def create_category(
     """Create a new category."""
     try:
         cursor = await db.execute(
-            "INSERT INTO categories (name, slug, description, sort_order, is_active) VALUES (?, ?, ?, ?, ?)",
-            (body.name, body.slug, body.description, body.sort_order, int(body.is_active)),
+            """INSERT INTO categories (name, slug, description, image_url, sort_order, is_active,
+                                      meta_title, meta_description, intro_copy, noindex)
+               VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)""",
+            (body.name, body.slug, body.description, body.image_url, body.sort_order, body.is_active,
+             body.meta_title, body.meta_description, body.intro_copy, body.noindex),
         )
+        new_id = cursor.lastrowid
         await db.commit()
-        return {"id": cursor.lastrowid, "slug": body.slug}
+        row_cur = await db.execute("SELECT * FROM categories WHERE id = ?", (new_id,))
+        row = await row_cur.fetchone()
+        return dict(row)
     except aiosqlite.IntegrityError:
         raise HTTPException(status_code=status.HTTP_409_CONFLICT, detail="Category slug already exists")
 
@@ -67,12 +73,9 @@ async def update_category(
     user: dict = Depends(require_admin),
 ):
     """Update category fields."""
-    updates = {k: v for k, v in body.model_dump().items() if v is not None}
+    updates = body.model_dump(exclude_unset=True)
     if not updates:
         raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail="No fields to update")
-
-    if "is_active" in updates:
-        updates["is_active"] = int(updates["is_active"])
 
     set_clause = ", ".join(f"{k} = ?" for k in updates)
     values = list(updates.values()) + [category_id]

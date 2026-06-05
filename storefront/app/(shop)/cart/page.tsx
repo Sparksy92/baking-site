@@ -6,6 +6,7 @@ import { Trash2, Plus, Minus, ShoppingBag, ArrowRight, PackageCheck } from 'luci
 import { useCart } from '@/lib/cart';
 import { formatCents } from '@/lib/format';
 import { api, type PublicSettings } from '@/lib/api';
+import { RecentlyViewed } from '@/components/RecentlyViewed';
 import { useEffect, useState } from 'react';
 
 export default function CartPage() {
@@ -134,6 +135,9 @@ export default function CartPage() {
             </p>
           </div>
         </div>
+      </div>
+      <div className="max-w-7xl mx-auto px-4 pb-20">
+        <RecentlyViewed title="Recently Viewed" maxItems={4} />
       </div>
     </div>
   );

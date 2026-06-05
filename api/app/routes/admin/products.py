@@ -45,14 +45,19 @@ async def create_product(
     """Create a new product."""
     try:
         cursor = await db.execute(
-            """INSERT INTO products (name, slug, description, category_id, is_active, is_featured, sort_order, weight_g, meta_title, meta_description)
-               VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)""",
+            """INSERT INTO products (name, slug, description, category_id, is_active, is_featured, sort_order, weight_g, meta_title, meta_description, noindex, canonical_url, og_image_url, allow_preorder, available_at)
+               VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)""",
             (body.name, body.slug, body.description, body.category_id,
-             int(body.is_active), int(body.is_featured), body.sort_order, body.weight_g,
-             body.meta_title, body.meta_description),
+             body.is_active, body.is_featured, body.sort_order, body.weight_g,
+             body.meta_title, body.meta_description,
+             body.noindex, body.canonical_url, body.og_image_url,
+             body.allow_preorder, body.available_at),
         )
+        new_id = cursor.lastrowid
         await db.commit()
-        return {"id": cursor.lastrowid, "slug": body.slug}
+        row_cursor = await db.execute("SELECT * FROM products WHERE id = ?", (new_id,))
+        row = await row_cursor.fetchone()
+        return dict(row)
     except aiosqlite.IntegrityError:
         raise HTTPException(status_code=status.HTTP_409_CONFLICT, detail="Product slug already exists")
 
@@ -112,14 +117,9 @@ async def update_product(
     user: dict = Depends(require_admin),
 ):
     """Update product fields."""
-    updates = {k: v for k, v in body.model_dump().items() if v is not None}
+    updates = body.model_dump(exclude_unset=True)
     if not updates:
         raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail="No fields to update")
-
-    # Convert booleans to int for SQLite
-    for k in ("is_active", "is_featured"):
-        if k in updates:
-            updates[k] = int(updates[k])
 
     set_clause = ", ".join(f"{k} = ?" for k in updates)
     values = list(updates.values()) + [product_id]
@@ -169,11 +169,11 @@ async def create_variant(
     """Add a variant to a product."""
     cursor = await db.execute(
         """INSERT INTO product_variants
-           (product_id, size, color, color_hex, price_cents, compare_at_price_cents, sku, stock_quantity, is_active, sort_order)
-           VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)""",
+           (product_id, size, color, color_hex, price_cents, compare_at_price_cents, sku, stock_quantity, is_active, sort_order, available_at)
+           VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)""",
         (product_id, body.size, body.color, body.color_hex, body.price_cents,
          body.compare_at_price_cents, body.sku, body.stock_quantity,
-         int(body.is_active), body.sort_order),
+         body.is_active, body.sort_order, body.available_at),
     )
     await db.commit()
     variant_id = cursor.lastrowid
@@ -206,8 +206,7 @@ async def update_variant(
         if current and current["stock_quantity"] == 0:
             trigger_back_in_stock = True
 
-    if "is_active" in updates:
-        updates["is_active"] = int(updates["is_active"])
+    # Postgres handles bool natively — no int() cast needed
 
     set_clause = ", ".join(f"{k} = ?" for k in updates)
     values = list(updates.values()) + [variant_id, product_id]

@@ -12,7 +12,7 @@ from app.database import init_db
 from app.middleware.logging import setup_logging
 from app.middleware.rate_limit import RateLimitMiddleware
 from app.middleware.request_id import RequestIdMiddleware
-from app.routes import health, products, settings, auth, checkout, webhooks, promos, newsletter, customers, contact, shipping, wishlist, reviews, related_products, back_in_stock, cart, pages, size_guides, gift_cards, loyalty, bundles, sitemap, events, returns, social_proof
+from app.routes import health, products, settings, auth, checkout, webhooks, promos, newsletter, customers, contact, shipping, wishlist, reviews, related_products, back_in_stock, cart, pages, size_guides, gift_cards, loyalty, bundles, sitemap, events, returns, social_proof, store_credit
 from app.routes.admin import (
     products as admin_products,
     collections as admin_collections,
@@ -43,6 +43,8 @@ from app.routes.admin import (
     reports as admin_reports,
     returns as admin_returns,
     webhooks as admin_webhooks,
+    redirects as admin_redirects,
+    store_credit as admin_store_credit,
 )
 
 logger = logging.getLogger(__name__)
@@ -140,11 +142,13 @@ def create_app() -> FastAPI:
     app.include_router(returns.router, prefix="/api")
     app.include_router(sitemap.router, prefix="/api")
     app.include_router(social_proof.router, prefix="/api")
+    app.include_router(store_credit.router, prefix="/api")
 
     # ── Admin routes ───────────────────────────────────────────
     app.include_router(admin_csv.router, prefix="/api")  # must be before admin_products (static paths before {product_id})
     app.include_router(admin_products.router, prefix="/api")
     app.include_router(admin_collections.router, prefix="/api")
+    app.include_router(admin_redirects.router, prefix="/api")
     app.include_router(admin_categories.router, prefix="/api")
     app.include_router(admin_orders.router, prefix="/api")
     app.include_router(admin_settings.router, prefix="/api")
@@ -171,6 +175,7 @@ def create_app() -> FastAPI:
     app.include_router(admin_reports.router, prefix="/api")
     app.include_router(admin_returns.router, prefix="/api")
     app.include_router(admin_webhooks.router, prefix="/api")
+    app.include_router(admin_store_credit.router, prefix="/api")
 
     # ── Static files (uploaded images) ─────────────────────────
     uploads_dir = app_settings.uploads_dir

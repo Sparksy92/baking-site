@@ -9,6 +9,7 @@ import aiosqlite
 
 from app.auth import require_admin
 from app.database import get_db
+from app.routes.admin.store_credit import _apply_credit
 
 logger = logging.getLogger(__name__)
 
@@ -19,6 +20,7 @@ class ReturnStatusUpdate(BaseModel):
     status: str  # 'approved', 'rejected', 'received', 'refunded'
     admin_notes: str | None = None
     refund_amount_cents: int | None = None
+    resolution: str | None = None  # 'refund' | 'store_credit' | 'exchange'
 
 
 @router.get("")
@@ -116,6 +118,8 @@ async def update_return_status(
         updates["admin_notes"] = body.admin_notes
     if body.refund_amount_cents is not None:
         updates["refund_amount_cents"] = body.refund_amount_cents
+    if body.resolution is not None:
+        updates["resolution"] = body.resolution
 
     set_clause = ", ".join(f"{k} = ?" for k in updates)
     values = list(updates.values()) + [return_id]
@@ -140,5 +144,39 @@ async def update_return_status(
                 )
         logger.info("Return %d received — stock restored", return_id)
 
+    # Issue store credit when resolution is 'store_credit' and transition reaches 'refunded'
+    store_credit_issued = 0
+    if body.status == "refunded":
+        resolution = body.resolution or rr["resolution"]
+        if resolution == "store_credit":
+            credit_cents = body.refund_amount_cents or rr["refund_amount_cents"] or 0
+            if credit_cents > 0:
+                # Resolve customer_id from the linked order
+                cursor = await db.execute(
+                    "SELECT customer_id FROM orders WHERE id = ?", (rr["order_id"],)
+                )
+                order_row = await cursor.fetchone()
+                customer_id = order_row["customer_id"] if order_row else None
+                if customer_id:
+                    await _apply_credit(
+                        db,
+                        customer_id=customer_id,
+                        amount_cents=credit_cents,
+                        reason="return",
+                        order_id=rr["order_id"],
+                        return_request_id=return_id,
+                        issued_by=user["sub"],
+                    )
+                    store_credit_issued = credit_cents
+                    logger.info(
+                        "Return %d resolved as store_credit — issued %d¢ to customer %d",
+                        return_id, credit_cents, customer_id,
+                    )
+                else:
+                    logger.warning(
+                        "Return %d: store_credit resolution but order has no linked customer — skipped",
+                        return_id,
+                    )
+
     await db.commit()
-    return {"updated": True, "status": body.status}
+    return {"updated": True, "status": body.status, "store_credit_issued_cents": store_credit_issued}

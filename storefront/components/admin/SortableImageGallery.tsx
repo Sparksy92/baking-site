@@ -16,7 +16,7 @@ interface Props {
 
 interface ColorOption { variantId: number | null; color: string; hex: string | null }
 
-function SortableImage({ image, onDelete, onSetPrimary, colorOptions, onColorChange }: { image: ProductImage; onDelete: () => void; onSetPrimary: () => void; colorOptions: ColorOption[]; onColorChange: (variantId: number | null) => void }) {
+function SortableImage({ image, onDelete, onSetPrimary, colorOptions, onColorChange, onAltChange }: { image: ProductImage; onDelete: () => void; onSetPrimary: () => void; colorOptions: ColorOption[]; onColorChange: (variantId: number | null) => void; onAltChange: (alt: string) => void }) {
   const { attributes, listeners, setNodeRef, transform, transition, isDragging } = useSortable({ id: image.id });
   const style = {
     transform: CSS.Transform.toString(transform),
@@ -25,7 +25,8 @@ function SortableImage({ image, onDelete, onSetPrimary, colorOptions, onColorCha
   };
 
   return (
-    <div ref={setNodeRef} style={style} className="relative group w-28 h-28 rounded-lg overflow-hidden border border-gray-200 bg-gray-50">
+    <div ref={setNodeRef} style={style} className="flex flex-col gap-1 w-28">
+    <div className="relative group w-28 h-28 rounded-lg overflow-hidden border border-gray-200 bg-gray-50">
       <img src={image.url} alt="" className="w-full h-full object-cover" />
       <div className="absolute inset-0 bg-black/0 group-hover:bg-black/30 transition-colors" />
       <button type="button" {...attributes} {...listeners} className="absolute top-1 left-1 opacity-0 group-hover:opacity-100 bg-white/90 rounded p-0.5 cursor-grab active:cursor-grabbing" title="Drag to reorder">
@@ -63,6 +64,15 @@ function SortableImage({ image, onDelete, onSetPrimary, colorOptions, onColorCha
         );
       })()}
     </div>
+    <input
+      type="text"
+      value={image.alt_text || ''}
+      onChange={(e) => onAltChange(e.target.value)}
+      placeholder="Alt text…"
+      className="w-full text-[10px] px-1.5 py-1 rounded border border-gray-200 focus:border-brand outline-none text-gray-600 truncate"
+      title="Image alt text for accessibility and SEO"
+    />
+    </div>
   );
 }
 
@@ -89,6 +99,15 @@ export default function SortableImageGallery({ productId, images, variants, onIm
       ));
     } catch (err) {
       console.error('Failed to set image color:', err);
+    }
+  }
+
+  async function handleSetAlt(imageId: number, altText: string) {
+    onImagesChange(images.map((img) => img.id === imageId ? { ...img, alt_text: altText } : img));
+    try {
+      await api.patch(`/api/admin/products/${productId}/images/${imageId}`, { alt_text: altText });
+    } catch (err) {
+      console.error('Failed to save alt text:', err);
     }
   }
 
@@ -182,6 +201,7 @@ export default function SortableImageGallery({ productId, images, variants, onIm
                   onSetPrimary={() => handleSetPrimary(img.id)}
                   colorOptions={colorOptions}
                   onColorChange={(variantId) => handleSetColor(img.id, variantId)}
+                  onAltChange={(alt) => handleSetAlt(img.id, alt)}
                 />
               );
             })}

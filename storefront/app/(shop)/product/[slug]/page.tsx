@@ -2,10 +2,24 @@ import type { Metadata } from 'next';
 import { notFound } from 'next/navigation';
 import { apiFetch, type Product, type ProductListItem } from '@/lib/api';
 import { brandName, siteUrl } from '@/lib/format';
+import { brandConfig } from '@/config/brand.config';
 import { JsonLd } from '@/components/JsonLd';
 import { ProductCard } from '@/components/ProductCard';
+import { RecentlyViewed } from '@/components/RecentlyViewed';
 import { ProductInteractive } from './ProductInteractive';
 import { ProductReviews } from '@/components/product/ProductReviews';
+
+export const revalidate = 3600; // re-generate at most once per hour
+export const dynamicParams = true; // new products added after build still work
+
+export async function generateStaticParams() {
+  try {
+    const data = await apiFetch<{ products: ProductListItem[] }>('/api/products?limit=200');
+    return data.products.map((p) => ({ slug: p.slug }));
+  } catch {
+    return [];
+  }
+}
 
 interface Props {
   params: Promise<{ slug: string }>;
@@ -15,8 +29,9 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
   const { slug } = await params;
   try {
     const product = await apiFetch<Product>(`/api/products/${slug}`);
-    const image = product.images[0]?.url;
-    const url = `${siteUrl()}/product/${slug}`;
+    const image = product.og_image_url || product.images[0]?.url;
+    const defaultUrl = `${siteUrl()}/product/${slug}`;
+    const canonicalUrl = product.canonical_url || defaultUrl;
     const title = product.meta_title || product.name;
     const description = product.meta_description || product.description || `Shop ${product.name} from ${brandName()}`;
 
@@ -26,11 +41,12 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
       openGraph: {
         title,
         description,
-        url,
-        type: 'website',
+        url: canonicalUrl,
+        type: 'website' as const, // og:type 'product' is not a valid Next.js OpenGraph type literal; 'website' is correct here — the Product schema handles the product signal
         images: image ? [{ url: image, alt: product.name }] : [],
       },
-      alternates: { canonical: url },
+      alternates: { canonical: canonicalUrl },
+      ...(product.noindex ? { robots: { index: false, follow: true } } : {}),
     };
   } catch {
     return { title: 'Product Not Found' };
@@ -68,7 +84,7 @@ export default async function ProductPage({ params }: Props) {
         offers: product.variants.map((v) => ({
           '@type': 'Offer',
           price: (v.price_cents / 100).toFixed(2),
-          priceCurrency: 'CAD',
+          priceCurrency: brandConfig.seo.currency,
           availability: v.stock_quantity > 0
             ? 'https://schema.org/InStock'
             : 'https://schema.org/OutOfStock',
@@ -84,6 +100,7 @@ export default async function ProductPage({ params }: Props) {
         </div>
 
         <RelatedProducts categorySlug={product.category?.slug ?? null} currentSlug={slug} />
+        <RecentlyViewed excludeId={product.id} title="Recently Viewed" />
       </div>
     </div>
   );

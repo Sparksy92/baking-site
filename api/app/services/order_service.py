@@ -19,7 +19,7 @@ class CheckoutError(Exception):
         self.status_code = status_code
 
 
-async def validate_checkout(db: aiosqlite.Connection, body: CheckoutRequest) -> dict:
+async def validate_checkout(db: aiosqlite.Connection, body: CheckoutRequest, customer_id: int | None = None) -> dict:
     """Validate checkout items and calculate totals.
 
     Returns dict with: order_items, subtotal_cents, shipping_cents, tax_cents, total_cents
@@ -93,17 +93,30 @@ async def validate_checkout(db: aiosqlite.Connection, body: CheckoutRequest) -> 
         cp_rate = await get_cheapest_rate(body.shipping_address.postal_code, weight_kg=order_weight_kg)
         shipping_cents = cp_rate if cp_rate is not None else settings.shipping_flat_rate_cents
 
+    # Store credit redemption (applied after promo, before tax)
+    store_credit_applied = 0
+    if body.use_store_credit and customer_id:
+        cursor = await db.execute(
+            "SELECT store_credit_cents FROM customers WHERE id = ?", (customer_id,)
+        )
+        row = await cursor.fetchone()
+        if row and row["store_credit_cents"] > 0:
+            remaining_after_promo = max(0, subtotal_cents - discount_cents)
+            store_credit_applied = min(row["store_credit_cents"], remaining_after_promo)
+            discount_cents += store_credit_applied
+
     # Tax (on subtotal after discount)
     taxable = subtotal_cents - discount_cents
     tax_cents = int(taxable * settings.tax_rate)
 
-    total_cents = subtotal_cents - discount_cents + shipping_cents + tax_cents
+    total_cents = max(0, subtotal_cents - discount_cents + shipping_cents + tax_cents)
 
     return {
         "order_items": order_items,
         "subtotal_cents": subtotal_cents,
         "discount_cents": discount_cents,
         "promo_code": applied_promo,
+        "store_credit_applied_cents": store_credit_applied,
         "shipping_cents": shipping_cents,
         "tax_cents": tax_cents,
         "total_cents": total_cents,

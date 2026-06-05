@@ -5,6 +5,7 @@ import { ProductCard } from '@/components/ProductCard';
 import { JsonLd } from '@/components/JsonLd';
 import { Newsletter } from '@/components/Newsletter';
 import { brandName, brandTagline, siteUrl } from '@/lib/format';
+import { brandConfig } from '@/config/brand.config';
 import { ArrowRight, Feather, HeartHandshake, Leaf, Truck } from 'lucide-react';
 
 const collectionImageBySlug: Record<string, string> = {
@@ -69,11 +70,54 @@ export default async function Home() {
     <div className="bg-cream">
       <JsonLd data={{
         '@context': 'https://schema.org',
+        '@type': 'WebSite',
+        name: brandName(),
+        url: siteUrl(),
+        potentialAction: {
+          '@type': 'SearchAction',
+          target: { '@type': 'EntryPoint', urlTemplate: `${siteUrl()}/search?q={search_term_string}` },
+          'query-input': 'required name=search_term_string',
+        },
+      }} />
+      <JsonLd data={{
+        '@context': 'https://schema.org',
         '@type': 'Organization',
         name: brandName(),
         description: brandTagline(),
         url: siteUrl(),
+        logo: brandConfig.assets.logo ? `${siteUrl()}${brandConfig.assets.logo}` : undefined,
+        ...(brandConfig.socialLinks.length > 0 ? {
+          sameAs: brandConfig.socialLinks.map((s) => s.href),
+        } : {}),
       }} />
+      {brandConfig.localBusiness && (() => {
+        const lb = brandConfig.localBusiness!;
+        return (
+          <JsonLd data={{
+            '@context': 'https://schema.org',
+            '@type': lb.type,
+            name: brandName(),
+            url: siteUrl(),
+            ...(lb.telephone ? { telephone: lb.telephone } : {}),
+            ...(lb.priceRange ? { priceRange: lb.priceRange } : {}),
+            ...(lb.openingHours ? { openingHours: lb.openingHours } : {}),
+            ...(lb.hasMap ? { hasMap: lb.hasMap } : {}),
+            ...(lb.streetAddress ? {
+              address: {
+                '@type': 'PostalAddress',
+                streetAddress: lb.streetAddress,
+                addressLocality: lb.addressLocality,
+                addressRegion: lb.addressRegion,
+                postalCode: lb.postalCode,
+                addressCountry: lb.addressCountry,
+              },
+            } : {}),
+            ...(lb.latitude != null && lb.longitude != null ? {
+              geo: { '@type': 'GeoCoordinates', latitude: lb.latitude, longitude: lb.longitude },
+            } : {}),
+          }} />
+        );
+      })()}
 
       {/* Hero */}
       <section className="relative isolate overflow-hidden bg-deep text-white" style={{ minHeight: '92svh' }}>
@@ -97,50 +141,52 @@ export default async function Home() {
         {/* Glow orb */}
         <div className="glow-orb hidden lg:block" style={{ width: '34rem', height: '34rem', right: '10%', top: '16%', backgroundColor: '#B85C38' }} aria-hidden="true" />
         {/* Watermark */}
-        <div className="watermark hidden lg:block" style={{ fontSize: '20vw', top: '10%', left: '50%', transform: 'translateX(-50%)' }} aria-hidden="true">
-          TERRA
-        </div>
+        {brandConfig.seo.abbreviation && (
+          <div className="watermark hidden lg:block" style={{ fontSize: '20vw', top: '10%', left: '50%', transform: 'translateX(-50%)' }} aria-hidden="true">
+            {brandConfig.seo.abbreviation}
+          </div>
+        )}
 
         <div className="relative z-10 site-shell flex flex-col justify-center py-28 sm:py-36 lg:py-44" style={{ minHeight: '92svh' }}>
           <div className="max-w-3xl">
             {/* Eyebrow */}
             <div className="animate-fade-up mb-6 flex flex-wrap items-center gap-3">
               <span className="inline-flex items-center rounded-full border border-white/12 bg-white/[0.04] px-4 py-2 text-[10px] font-bold uppercase tracking-[0.28em] text-white/70">
-                Canadian Made
-              </span>
-              <span className="h-px w-8 bg-terracotta/80" />
-              <span className="text-[10px] font-bold uppercase tracking-[0.32em] text-terracotta">
-                Since 2019
+                {brandConfig.trustIndicators[0]?.label ?? brandName()}
               </span>
             </div>
 
             {/* Heading */}
             <h1 className="animate-fade-up font-black leading-[0.88] tracking-[-0.03em]">
-              <span className="block text-[clamp(3rem,8vw,6.5rem)] text-white">Built for the</span>
-              <span
-                className="block text-[clamp(4.5rem,14vw,11rem)] leading-[0.82]"
-                style={{ color: '#B85C38', textShadow: '0 0 120px rgba(184,92,56,0.28)' }}
-              >
-                Long Haul.
-              </span>
+              <span className="block text-[clamp(3rem,8vw,6.5rem)] text-white">{brandName()}</span>
+              {brandTagline() && (
+                <span
+                  className="block text-[clamp(2.5rem,8vw,6rem)] leading-[0.92] mt-2"
+                  style={{ color: 'var(--brand-accent)', textShadow: '0 0 120px rgba(var(--brand-accent-rgb,184,92,56),0.28)' }}
+                >
+                  {brandTagline()}
+                </span>
+              )}
             </h1>
 
             {/* Body copy */}
             <p className="animate-fade-up-delay-1 mt-7 max-w-lg text-base sm:text-lg leading-relaxed text-white/60">
-              Durable, no-nonsense clothing built for people who actually go outside. Ethical supply chain, honest prices, zero fluff.
+              {brandConfig.metadata.description}
             </p>
 
-            {/* Pill tags */}
-            <div className="animate-fade-up-delay-1 mt-6 flex flex-wrap gap-2.5">
-              {['Ethically Sourced', 'Free Shipping $75+', 'Made in Canada'].map((pill) => (
-                <span
-                  key={pill}
-                  className="inline-flex items-center rounded-full border border-white/10 bg-white/[0.04] px-3.5 py-1.5 text-[10px] font-semibold uppercase tracking-[0.14em] text-white/60"
-                >
-                  {pill}
-                </span>
-              ))}
-            </div>
+            {/* Pill tags — brand trust indicators */}
+            {brandConfig.trustIndicators.length > 0 && (
+              <div className="animate-fade-up-delay-1 mt-6 flex flex-wrap gap-2.5">
+                {brandConfig.trustIndicators.map((t) => (
+                  <span
+                    key={t.label}
+                    className="inline-flex items-center rounded-full border border-white/10 bg-white/[0.04] px-3.5 py-1.5 text-[10px] font-semibold uppercase tracking-[0.14em] text-white/60"
+                  >
+                    {t.label}
+                  </span>
+                ))}
+              </div>
+            )}
 
             {/* CTAs */}
             <div className="animate-fade-up-delay-2 mt-10 flex flex-col sm:flex-row gap-4">
@@ -154,19 +200,17 @@ export default async function Home() {
           </div>
 
           {/* Stat strip */}
-          <div className="animate-fade-up-delay-3 mt-16 grid grid-cols-3 gap-3 max-w-sm">
-            {[
-              { value: '60-day', label: 'Free returns' },
-              { value: '$75+', label: 'Free shipping' },
-              { value: '5yr', label: 'Craftsmanship guarantee' },
-            ].map((stat) => (
-              <div key={stat.label} className="stat-card">
-                <span className="block mb-1.5 h-[2px] w-6 bg-terracotta/70 rounded-full" />
-                <span className="block text-xl font-black text-white leading-none">{stat.value}</span>
-                <span className="mt-1.5 block text-[9px] uppercase tracking-[0.18em] text-white/40">{stat.label}</span>
-              </div>
-            ))}
-          </div>
+          {brandConfig.seo.heroStats.length > 0 && (
+            <div className="animate-fade-up-delay-3 mt-16 grid gap-3 max-w-sm" style={{ gridTemplateColumns: `repeat(${brandConfig.seo.heroStats.length}, minmax(0, 1fr))` }}>
+              {brandConfig.seo.heroStats.map((stat) => (
+                <div key={stat.label} className="stat-card">
+                  <span className="block mb-1.5 h-[2px] w-6 bg-terracotta/70 rounded-full" />
+                  <span className="block text-xl font-black text-white leading-none">{stat.value}</span>
+                  <span className="mt-1.5 block text-[9px] uppercase tracking-[0.18em] text-white/40">{stat.label}</span>
+                </div>
+              ))}
+            </div>
+          )}
         </div>
 
         {/* Bottom transition */}
@@ -177,17 +221,12 @@ export default async function Home() {
       <section className="bg-cream border-b border-sand">
         <div className="site-shell py-8">
           <div className="grid grid-cols-2 md:grid-cols-4 gap-6 text-center">
-            {[
-              { icon: Leaf, label: 'Ethically Made' },
-              { icon: Truck, label: 'Free Shipping $75+' },
-              { icon: HeartHandshake, label: '60-Day Returns' },
-              { icon: Feather, label: 'Carbon Offset' },
-            ].map((item) => (
-              <div key={item.label} className="flex flex-col items-center gap-1.5">
+            {[Leaf, Truck, HeartHandshake, Feather].slice(0, brandConfig.trustIndicators.length).map((Icon, i) => (
+              <div key={brandConfig.trustIndicators[i].label} className="flex flex-col items-center gap-1.5">
                 <span className="w-11 h-11 rounded-full bg-warm border border-sand flex items-center justify-center text-terracotta">
-                  <item.icon size={19} strokeWidth={1.8} aria-hidden="true" />
+                  <Icon size={19} strokeWidth={1.8} aria-hidden="true" />
                 </span>
-                <span className="text-sm font-semibold text-earth/80">{item.label}</span>
+                <span className="text-sm font-semibold text-earth/80">{brandConfig.trustIndicators[i].label}</span>
               </div>
             ))}
           </div>
@@ -278,11 +317,10 @@ export default async function Home() {
               <span className="h-px w-10 bg-terracotta/60" />
             </div>
             <h2 className="text-4xl md:text-5xl lg:text-6xl font-black leading-[0.92] tracking-[-0.02em]">
-              Clothing made to<br />
-              <span style={{ color: '#B85C38' }}>outlast</span> the trend cycle.
+              {brandTagline()}
             </h2>
             <p className="mt-8 text-white/55 text-base sm:text-lg leading-relaxed max-w-xl mx-auto">
-              We design pieces you&apos;ll wear for years, not seasons. Ethical factories, traceable materials, and a 5-year craftsmanship guarantee on everything we make.
+              {brandConfig.metadata.description}
             </p>
             <div className="mt-10 flex flex-col sm:flex-row items-center justify-center gap-4">
               <Link href="/about" className="btn-outline-light">

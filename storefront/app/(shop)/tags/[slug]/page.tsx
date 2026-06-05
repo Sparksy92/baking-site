@@ -1,10 +1,23 @@
 import type { Metadata } from 'next';
 import { apiFetch, type ProductListItem } from '@/lib/api';
 import { brandName, siteUrl } from '@/lib/format';
+import { JsonLd } from '@/components/JsonLd';
 import { ProductCard } from '@/components/ProductCard';
 import { Pagination } from '@/components/Pagination';
 import { SortSelect } from '@/components/SortSelect';
 import { Compass, Tag } from 'lucide-react';
+
+export const revalidate = 3600;
+export const dynamicParams = true;
+
+export async function generateStaticParams() {
+  try {
+    const tags = await apiFetch<{ id: number; slug: string }[]>('/api/tags');
+    return tags.map((t) => ({ slug: t.slug }));
+  } catch {
+    return [];
+  }
+}
 
 const PRODUCTS_PER_PAGE = 24;
 
@@ -16,10 +29,11 @@ interface Props {
 export async function generateMetadata({ params }: Props): Promise<Metadata> {
   const { slug } = await params;
   const name = slug.replace(/-/g, ' ').replace(/\b\w/g, (c) => c.toUpperCase());
+  const canonicalBase = `${siteUrl()}/tags/${slug}`;
   return {
     title: `${name} Products`,
     description: `Shop ${name} products at ${brandName()}.`,
-    alternates: { canonical: `${siteUrl()}/tags/${slug}` },
+    alternates: { canonical: canonicalBase },
   };
 }
 
@@ -39,6 +53,14 @@ export default async function TagPage({ params, searchParams }: Props) {
 
   return (
     <div className="min-h-screen bg-cream pb-20">
+      <JsonLd data={{
+        '@context': 'https://schema.org',
+        '@type': 'BreadcrumbList',
+        itemListElement: [
+          { '@type': 'ListItem', position: 1, name: 'Home', item: siteUrl() },
+          { '@type': 'ListItem', position: 2, name: name, item: `${siteUrl()}/tags/${slug}` },
+        ],
+      }} />
       <div className="relative overflow-hidden bg-warm border-b border-sand">
         <div className="absolute -left-24 top-0 h-72 w-72 rounded-full bg-sage/10 blur-3xl" aria-hidden="true" />
         <div className="absolute -right-20 bottom-0 h-80 w-80 rounded-full bg-terracotta/10 blur-3xl" aria-hidden="true" />
@@ -49,7 +71,7 @@ export default async function TagPage({ params, searchParams }: Props) {
           </div>
           <h1 className="text-5xl md:text-7xl font-black text-earth tracking-[-0.03em] leading-[0.9]">{name}</h1>
           <p className="mt-6 text-lg text-muted-earth max-w-2xl leading-relaxed">
-            Browse durable pieces tagged with &ldquo;{name}&rdquo;, selected for practical wear and long-term use.
+            Shop {name} products at {brandName()}.
           </p>
         </div>
       </div>
@@ -62,12 +84,25 @@ export default async function TagPage({ params, searchParams }: Props) {
           <div className="flex items-center gap-3">
             <span className="hidden sm:inline-flex items-center gap-2 rounded-full bg-cream px-4 py-2 text-xs font-black uppercase tracking-[0.16em] text-muted-earth border border-sand">
               <Compass size={13} className="text-terracotta" aria-hidden="true" />
-              Field notes
+              {name}
             </span>
             <SortSelect />
           </div>
         </div>
 
+        {data.products.length > 0 && (
+          <JsonLd data={{
+            '@context': 'https://schema.org',
+            '@type': 'ItemList',
+            name: `${name} Products`,
+            itemListElement: data.products.map((p, i) => ({
+              '@type': 'ListItem',
+              position: i + 1,
+              url: `${siteUrl()}/product/${p.slug}`,
+              name: p.name,
+            })),
+          }} />
+        )}
         {data.products.length === 0 ? (
           <div className="py-20 text-center bg-warm rounded-3xl border border-sand border-dashed px-6">
             <p className="section-kicker mb-3">No matches</p>

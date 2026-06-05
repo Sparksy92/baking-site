@@ -1,4 +1,4 @@
-"""Admin reports — date-range filtered analytics, refunds, repeat customers."""
+"""Admin reports — date-range filtered analytics, refunds, repeat customers, LTV."""
 from __future__ import annotations
 
 from fastapi import APIRouter, Depends, Query
@@ -134,4 +134,79 @@ async def sales_report(
         "daily": daily,
         "top_products": top_products,
         "utm_attribution": utm_breakdown,
+    }
+
+
+@router.get("/ltv")
+async def ltv_report(
+    limit: int = Query(default=50, ge=1, le=500),
+    min_orders: int = Query(default=1, ge=1, description="Only include customers with at least this many orders"),
+    db: aiosqlite.Connection = Depends(get_db),
+    user: dict = Depends(require_admin),
+):
+    """Customer Lifetime Value report.
+
+    Returns each customer ranked by total spend, with order count, AOV,
+    first/last order date. Supports filtering by minimum order count
+    to focus on repeat buyers.
+    """
+    cursor = await db.execute("""
+        SELECT
+            agg.customer_email,
+            COALESCE(c.first_name || ' ' || c.last_name, NULL) AS customer_name,
+            c.id AS customer_id,
+            agg.order_count,
+            agg.total_spent_cents,
+            agg.total_spent_cents / agg.order_count AS avg_order_value_cents,
+            agg.first_order_at,
+            agg.last_order_at
+        FROM (
+            SELECT
+                o.customer_email,
+                MAX(o.customer_id) AS customer_id,
+                COUNT(o.id) AS order_count,
+                COALESCE(SUM(o.total_cents), 0) AS total_spent_cents,
+                MIN(o.created_at) AS first_order_at,
+                MAX(o.created_at) AS last_order_at
+            FROM orders o
+            WHERE o.payment_status = 'confirmed'
+            GROUP BY o.customer_email
+            HAVING COUNT(o.id) >= ?
+        ) agg
+        LEFT JOIN customers c ON c.id = agg.customer_id
+        ORDER BY agg.total_spent_cents DESC
+        LIMIT ?
+    """, (min_orders, limit))
+    rows = [dict(r) for r in await cursor.fetchall()]
+
+    # Summary stats
+    cursor = await db.execute("""
+        SELECT
+            COUNT(DISTINCT customer_email) AS total_customers,
+            COALESCE(SUM(total_cents), 0) AS total_revenue_cents,
+            COALESCE(AVG(total_cents), 0) AS avg_order_value_cents
+        FROM orders
+        WHERE payment_status = 'confirmed'
+    """)
+    summary = dict(await cursor.fetchone())
+
+    cursor = await db.execute("""
+        SELECT COUNT(*) AS repeat_customers FROM (
+            SELECT customer_email
+            FROM orders
+            WHERE payment_status = 'confirmed'
+            GROUP BY customer_email
+            HAVING COUNT(*) > 1
+        )
+    """)
+    repeat_row = dict(await cursor.fetchone())
+
+    return {
+        "summary": {
+            "total_customers": summary["total_customers"],
+            "repeat_customers": repeat_row["repeat_customers"],
+            "total_revenue_cents": summary["total_revenue_cents"],
+            "avg_order_value_cents": round(summary["avg_order_value_cents"]),
+        },
+        "customers": rows,
     }

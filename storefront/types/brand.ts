@@ -176,6 +176,59 @@ export interface BrandNewsletterConfig {
   buttonLabel: string
 }
 
+export interface BrandStat {
+  /** Display value e.g. "60-day" */
+  value: string
+  /** Label e.g. "Free returns" */
+  label: string
+}
+
+export interface BrandSeo {
+  /** Short uppercase abbreviation shown as watermark/accent e.g. "TERRA", "DFL", "CC" */
+  abbreviation: string
+  /** ISO 4217 currency code e.g. "CAD", "USD" */
+  currency: string
+  /** Twitter/X handle without @ */
+  twitterHandle: string
+  /** Google Search Console meta verification token */
+  googleVerification: string
+  /** Relative path to default Open Graph / social share image */
+  defaultOgImage: string
+  /** Name for the blog/articles section e.g. "Field Notes", "Blog", "News" */
+  blogSectionName: string
+  /** Singular label for a blog entry e.g. "Field Note", "Article", "Post" */
+  blogPostLabel: string
+  /** Hero stats strip shown below the headline — brand-specific values */
+  heroStats: BrandStat[]
+}
+
+export interface BrandLocalBusiness {
+  /** Schema.org @type — e.g. 'LocalBusiness', 'ClothingStore', 'SportingGoodsStore', 'AutoRepair' */
+  type: string
+  /** Physical street address */
+  streetAddress?: string
+  /** City / locality */
+  addressLocality?: string
+  /** Province / state */
+  addressRegion?: string
+  /** Postal / ZIP code */
+  postalCode?: string
+  /** ISO 3166-1 alpha-2 country code e.g. 'CA', 'US' */
+  addressCountry?: string
+  /** Phone number in E.164 or local format */
+  telephone?: string
+  /** Opening hours in schema.org format e.g. ['Mo-Fr 09:00-17:00', 'Sa 10:00-15:00'] */
+  openingHours?: string[]
+  /** Google Maps or other map URL */
+  hasMap?: string
+  /** Latitude for geo coordinates */
+  latitude?: number
+  /** Longitude for geo coordinates */
+  longitude?: number
+  /** Price range indicator e.g. '$$' */
+  priceRange?: string
+}
+
 export interface BrandConfig {
   /** Unique brand identifier (matches directory name in sites/) */
   id: string
@@ -195,4 +248,8 @@ export interface BrandConfig {
   socialLinks: BrandSocialLink[]
   /** Newsletter signup configuration */
   newsletter: BrandNewsletterConfig
+  /** SEO defaults and brand-specific content values */
+  seo: BrandSeo
+  /** Optional LocalBusiness structured data — omit for pure e-commerce with no physical location */
+  localBusiness?: BrandLocalBusiness
 }

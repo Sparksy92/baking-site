@@ -1,6 +1,6 @@
 'use client';
 
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import Link from 'next/link';
 import { ShoppingBag, Check, Truck, RefreshCw, Shield, ChevronDown, ChevronUp } from 'lucide-react';
 import type { Product } from '@/lib/api';
@@ -9,6 +9,8 @@ import { formatCents } from '@/lib/format';
 import { addToast } from '@/lib/toast';
 import { SizeGuide } from '@/components/SizeGuide';
 import { SocialProof } from '@/components/SocialProof';
+import { ExpressCheckout } from '@/components/ExpressCheckout';
+import { trackView } from '@/lib/recently-viewed';
 import { ImageGallery } from './ImageGallery';
 import { NotifyMeButton } from '@/components/product/NotifyMeButton';
 
@@ -21,14 +23,46 @@ export function ProductInteractive({ product }: { product: Product }) {
   const [added, setAdded] = useState(false);
   const [descOpen, setDescOpen] = useState(true);
 
+  useEffect(() => {
+    trackView({
+      id: product.id,
+      slug: product.slug,
+      name: product.name,
+      description: product.description ?? null,
+      image_url: product.images[0]?.url ?? null,
+      min_price_cents: product.variants.reduce((min, v) => Math.min(min, v.price_cents), Infinity) || null,
+      max_price_cents: product.variants.reduce((max, v) => Math.max(max, v.price_cents), 0) || null,
+      compare_at_price_cents: product.variants[0]?.compare_at_price_cents ?? null,
+      total_stock: product.variants.reduce((sum, v) => sum + v.stock_quantity, 0),
+      category_id: product.category?.id ?? null,
+      is_active: true,
+      is_featured: false,
+    });
+  }, [product.id]); // eslint-disable-line react-hooks/exhaustive-deps
+
+  const now = new Date();
+
   const selectedVariant = product.variants.find(
     (v) => v.size === selectedSize && v.color === selectedColor
   );
+
+  const variantDropDate = selectedVariant?.available_at ? new Date(selectedVariant.available_at) : null;
+  const productDropDate = product.available_at ? new Date(product.available_at) : null;
+  const dropDate = variantDropDate ?? productDropDate;
+  const isScheduled = dropDate !== null && dropDate > now;
+
   const inStock = selectedVariant ? selectedVariant.stock_quantity > 0 : false;
+  const canPreorder = isScheduled && product.allow_preorder;
+  const isAvailableForCart = inStock && !isScheduled;
+
   const effectivePrice = selectedVariant?.price_cents
     || product.variants.find((v) => v.price_cents > 0)?.price_cents
     || 0;
-  const lowStock = selectedVariant && selectedVariant.stock_quantity > 0 && selectedVariant.stock_quantity <= 3;
+  const lowStock = selectedVariant && selectedVariant.stock_quantity > 0 && selectedVariant.stock_quantity <= 3 && !isScheduled;
+
+  function formatDropDate(d: Date) {
+    return d.toLocaleDateString('en-CA', { month: 'long', day: 'numeric', year: 'numeric' });
+  }
 
   function handleAddToCart() {
     if (!selectedVariant || !inStock) return;
@@ -211,6 +245,16 @@ export function ProductInteractive({ product }: { product: Product }) {
           </div>
         )}
 
+        {/* Drop date badge */}
+        {isScheduled && dropDate && (
+          <div className="mt-4 inline-flex items-center gap-2 px-3 py-2 rounded-2xl bg-earth/8 border border-earth/20">
+            <span className="w-2 h-2 rounded-full bg-terracotta animate-pulse" />
+            <span className="text-xs font-bold text-earth">
+              {canPreorder ? 'Pre-order — drops ' : 'Coming '}{formatDropDate(dropDate)}
+            </span>
+          </div>
+        )}
+
         {/* Stock urgency */}
         {lowStock && (
           <div className="mt-4 flex items-center gap-2">
@@ -223,9 +267,10 @@ export function ProductInteractive({ product }: { product: Product }) {
 
         {/* Add to cart */}
         <div className="mt-6 space-y-3">
-          {inStock ? (
+          {isAvailableForCart || canPreorder ? (
             <button
               onClick={handleAddToCart}
+              disabled={!isAvailableForCart && !canPreorder}
               className={`w-full flex items-center justify-center gap-3 py-4 rounded-2xl font-bold text-base transition-all duration-300 ${
                 added
                   ? 'bg-sage text-white scale-[0.99]'
@@ -237,12 +282,24 @@ export function ProductInteractive({ product }: { product: Product }) {
                   <Check size={20} strokeWidth={2.5} />
                   Added to Cart
                 </>
+              ) : canPreorder ? (
+                <>
+                  <ShoppingBag size={20} />
+                  Pre-order Now
+                </>
               ) : (
                 <>
                   <ShoppingBag size={20} />
                   Add to Cart
                 </>
               )}
+            </button>
+          ) : isScheduled ? (
+            <button
+              disabled
+              className="w-full flex items-center justify-center gap-3 py-4 rounded-2xl font-bold text-base transition-all duration-300 bg-sand text-muted-earth/50 cursor-not-allowed"
+            >
+              Coming Soon
             </button>
           ) : selectedVariant ? (
             <NotifyMeButton variantId={selectedVariant.id} productName={product.name} />
@@ -261,6 +318,18 @@ export function ProductInteractive({ product }: { product: Product }) {
           >
             View Cart
           </Link>
+
+          {inStock && selectedVariant && (
+            <ExpressCheckout
+              mode="buy-now"
+              variantId={selectedVariant.id}
+              productName={product.name}
+              variantSize={selectedVariant.size}
+              variantColor={selectedVariant.color}
+              unitPriceCents={effectivePrice}
+              imageUrl={product.images[0]?.url ?? null}
+            />
+          )}
         </div>
 
         {/* Trust micro-strip */}

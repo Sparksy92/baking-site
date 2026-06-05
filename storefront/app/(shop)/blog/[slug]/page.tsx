@@ -4,8 +4,21 @@ import Link from 'next/link';
 import Image from 'next/image';
 import { apiFetch } from '@/lib/api';
 import { brandName, siteUrl } from '@/lib/format';
+import { brandConfig } from '@/config/brand.config';
 import { JsonLd } from '@/components/JsonLd';
 import { ArrowLeft, BookOpen, Calendar, User } from 'lucide-react';
+
+export const revalidate = 86400; // blog posts change rarely — 24h
+export const dynamicParams = true;
+
+export async function generateStaticParams() {
+  try {
+    const { pages } = await apiFetch<{ pages: { slug: string }[]; total: number }>('/api/pages?page_type=blog_post&limit=500');
+    return pages.map((p) => ({ slug: p.slug }));
+  } catch {
+    return [];
+  }
+}
 
 interface BlogPost {
   id: number;
@@ -14,9 +27,12 @@ interface BlogPost {
   content_html: string;
   meta_title: string | null;
   meta_description: string | null;
+  noindex: boolean;
+  canonical_url: string | null;
   featured_image_url: string | null;
   author: string | null;
   published_at: string | null;
+  updated_at: string | null;
 }
 
 interface Props {
@@ -31,19 +47,21 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
     const description = post.meta_description || `Read "${post.title}" on ${brandName()}`;
     const url = `${siteUrl()}/blog/${slug}`;
 
+    const canonicalUrl = post.canonical_url || url;
     return {
       title,
       description,
       openGraph: {
         title,
         description,
-        url,
+        url: canonicalUrl,
         type: 'article',
         images: post.featured_image_url ? [{ url: post.featured_image_url, alt: post.title }] : [],
         publishedTime: post.published_at || undefined,
         authors: post.author ? [post.author] : undefined,
       },
-      alternates: { canonical: url },
+      alternates: { canonical: canonicalUrl },
+      ...(post.noindex ? { robots: { index: false, follow: true } } : {}),
     };
   } catch {
     return { title: 'Post Not Found' };
@@ -63,11 +81,21 @@ export default async function BlogPostPage({ params }: Props) {
     <article className="min-h-screen bg-cream pb-20">
       <JsonLd data={{
         '@context': 'https://schema.org',
+        '@type': 'BreadcrumbList',
+        itemListElement: [
+          { '@type': 'ListItem', position: 1, name: 'Home', item: siteUrl() },
+          { '@type': 'ListItem', position: 2, name: brandConfig.seo.blogSectionName || 'Blog', item: `${siteUrl()}/blog` },
+          { '@type': 'ListItem', position: 3, name: post.title, item: `${siteUrl()}/blog/${slug}` },
+        ],
+      }} />
+      <JsonLd data={{
+        '@context': 'https://schema.org',
         '@type': 'BlogPosting',
         headline: post.title,
         description: post.meta_description || undefined,
         image: post.featured_image_url || undefined,
         datePublished: post.published_at || undefined,
+        dateModified: post.updated_at || post.published_at || undefined,
         author: post.author ? { '@type': 'Person', name: post.author } : undefined,
         publisher: { '@type': 'Organization', name: brandName() },
         url: `${siteUrl()}/blog/${slug}`,
@@ -91,11 +119,11 @@ export default async function BlogPostPage({ params }: Props) {
 
         <div className="relative site-shell py-16 md:py-24">
           <Link href="/blog" className="inline-flex items-center gap-1.5 text-sm font-bold text-white/60 hover:text-terracotta transition-colors mb-10">
-            <ArrowLeft size={14} /> Back to Field Notes
+            <ArrowLeft size={14} /> Back to {brandConfig.seo.blogSectionName}
           </Link>
 
           <div className="max-w-4xl">
-            <p className="section-kicker mb-5">Field Note</p>
+            <p className="section-kicker mb-5">{brandConfig.seo.blogPostLabel}</p>
             <h1 className="text-4xl md:text-7xl font-black tracking-[-0.035em] leading-[0.92]">
               {post.title}
             </h1>
@@ -114,7 +142,7 @@ export default async function BlogPostPage({ params }: Props) {
               )}
               {!post.author && !post.published_at && (
                 <span className="flex items-center gap-1.5 rounded-full border border-white/10 bg-white/[0.04] px-3 py-1.5">
-                  <BookOpen size={14} /> Terra Supply Co.
+                  <BookOpen size={14} /> {brandName()}
                 </span>
               )}
             </div>

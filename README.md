@@ -65,17 +65,31 @@ POSTGRES_PORT=5432
 
 ### 2. PostgreSQL
 
+**Option A — Docker Compose (recommended):**
 ```bash
-# Option A: Run PostgreSQL via podman/docker
+# Starts Postgres and auto-creates both ecommerce + ecommerce_test DBs
+docker compose up -d db
+```
+
+**Option B — Podman:**
+```bash
 podman run -d --name ecommerce-postgres \
   -e POSTGRES_USER=ecommerce \
   -e POSTGRES_PASSWORD=ecommerce_password \
   -e POSTGRES_DB=ecommerce \
   -p 5432:5432 postgres:16-alpine
 
-# Option B: Use system PostgreSQL and create the database
-createdb ecommerce
+# Then create the test database (required for pytest)
+podman exec ecommerce-postgres createdb -U ecommerce ecommerce_test
 ```
+
+**Option C — System PostgreSQL:**
+```bash
+createdb ecommerce
+createdb ecommerce_test
+```
+
+> **Both `ecommerce` (dev) and `ecommerce_test` (tests) must exist.** Migrations run automatically on API startup and on each pytest run.
 
 ### 3. Backend (API)
 
@@ -207,6 +221,11 @@ See `.env.example` for the full list. Key variables:
 
 ## Testing
 
+### Prerequisites
+
+- **`ecommerce_test` Postgres DB must exist** — see PostgreSQL setup above. Both `ecommerce` and `ecommerce_test` are required.
+- **Dev servers running** for E2E tests: API on `:8100`, storefront on `:3000`.
+
 ### API Tests (pytest)
 
 ```bash
@@ -215,7 +234,7 @@ source .venv/bin/activate
 python -m pytest tests/ -v
 ```
 
-**337 tests** covering: health, auth, products, categories, collections, orders, promos, checkout, shipping, customers, wishlist, reviews, related products, back-in-stock, cart, pages, tags, segments, size guides, gift cards, loyalty, bundles, events, analytics, reports, returns, webhooks, social proof, sitemap, CSV import/export, request ID.
+**338 tests** covering: health, auth, products, categories, collections, orders, promos, checkout, shipping, customers, wishlist, reviews, related products, back-in-stock, cart, pages, tags, segments, size guides, gift cards, loyalty, bundles, events, analytics, reports, returns, webhooks, social proof, sitemap, CSV import/export, request ID, and SEO field round-trips + redirects (`tests/test_seo.py`).
 
 ### Storefront Unit Tests (Vitest)
 
@@ -228,10 +247,15 @@ npm test
 
 ```bash
 cd storefront
+
+# Full suite
 npx playwright test
+
+# SEO tests only — run in isolation to avoid rate-limit collision with security.spec.ts
+npx playwright test e2e/seo.spec.ts
 ```
 
-> Requires the dev servers running (Next.js + API).
+> Requires both dev servers running (Next.js + API).
 
 ---
 
@@ -311,8 +335,17 @@ git push -u origin feature/your-feature
 **Running tests before pushing:**
 
 ```bash
-cd api && source .venv/bin/activate && python -m pytest tests/ -q
-cd ../storefront && npx tsc --noEmit
+# 1. TypeScript — must be clean
+cd storefront && npx tsc --noEmit
+
+# 2. Unit tests
+npm test
+
+# 3. API tests (requires ecommerce_test DB)
+cd ../api && source .venv/bin/activate && python -m pytest tests/ -q
+
+# 4. E2E SEO tests (requires both dev servers running)
+cd ../storefront && npx playwright test e2e/seo.spec.ts
 ```
 
 **Key directories for common tasks:**

@@ -1,6 +1,7 @@
 import type { Metadata } from 'next';
 import Link from 'next/link';
 import { brandName, siteUrl } from '@/lib/format';
+import { JsonLd } from '@/components/JsonLd';
 
 export function generateMetadata(): Metadata {
   return {
@@ -48,6 +49,15 @@ const faqs = [
 export default function FaqPage() {
   return (
     <div className="max-w-3xl mx-auto px-4 py-12">
+      <JsonLd data={{
+        '@context': 'https://schema.org',
+        '@type': 'FAQPage',
+        mainEntity: faqs.map((faq) => ({
+          '@type': 'Question',
+          name: faq.q,
+          acceptedAnswer: { '@type': 'Answer', text: faq.a },
+        })),
+      }} />
       <h1 className="text-3xl font-bold text-gray-900 mb-2">Frequently Asked Questions</h1>
       <p className="text-gray-600 mb-8">Quick answers to common questions.</p>
 
