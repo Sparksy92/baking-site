@@ -2,6 +2,7 @@
 
 Usage:
     python cli.py create-admin
+    python cli.py seed-admin --username EMAIL --password PASS [--display-name NAME] [--role ROLE]
     python cli.py seed
 """
 from __future__ import annotations
@@ -48,7 +49,7 @@ async def create_admin():
     async for db in get_db():
         try:
             await db.execute(
-                "INSERT INTO admin_users (username, password_hash, display_name, role) VALUES (?, ?, ?, ?)",
+                "INSERT INTO admin_users (username, password_hash, display_name, role) VALUES ($1, $2, $3, $4)",
                 (username, pw_hash, display_name, "owner"),
             )
             print(f"\n✓ Admin user '{username}' created with role 'owner'")
@@ -57,6 +58,30 @@ async def create_admin():
                 print(f"Error: username '{username}' already exists")
             else:
                 print(f"Error: {e}")
+        break
+
+
+async def seed_admin(username: str, password: str, display_name: str | None, role: str):
+    """Non-interactive admin user creation for CI/CD and Ansible deployments."""
+    from app.database import init_db, get_db
+    from app.auth import hash_password
+
+    await init_db()
+    pw_hash = hash_password(password)
+
+    async for db in get_db():
+        try:
+            await db.execute(
+                "INSERT INTO admin_users (username, password_hash, display_name, role) VALUES ($1, $2, $3, $4)",
+                (username, pw_hash, display_name, role),
+            )
+            print(f"created: admin user '{username}' with role '{role}'")
+        except Exception as e:
+            if "UNIQUE" in str(e) or "unique constraint" in str(e).lower() or "duplicate key" in str(e).lower():
+                print(f"exists: admin user '{username}' already exists — skipping")
+            else:
+                print(f"error: {e}")
+                sys.exit(1)
         break
 
 
@@ -181,13 +206,27 @@ def main():
     parser = argparse.ArgumentParser(description="Clothing Ecommerce CLI")
     sub = parser.add_subparsers(dest="command")
 
-    sub.add_parser("create-admin", help="Create an admin user")
+    sub.add_parser("create-admin", help="Create an admin user interactively")
+
+    p_seed_admin = sub.add_parser("seed-admin", help="Non-interactive admin user creation (CI/CD)")
+    p_seed_admin.add_argument("--username", required=True, help="Admin username / email")
+    p_seed_admin.add_argument("--password", required=True, help="Admin password")
+    p_seed_admin.add_argument("--display-name", default=None, help="Display name")
+    p_seed_admin.add_argument("--role", default="owner", help="Role (default: owner)")
+
     sub.add_parser("seed", help="Seed sample data for development")
 
     args = parser.parse_args()
 
     if args.command == "create-admin":
         asyncio.run(create_admin())
+    elif args.command == "seed-admin":
+        asyncio.run(seed_admin(
+            username=args.username,
+            password=args.password,
+            display_name=args.display_name,
+            role=args.role,
+        ))
     elif args.command == "seed":
         asyncio.run(seed())
     else:
