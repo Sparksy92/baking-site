@@ -58,7 +58,7 @@ def order_confirmation_template(order_data: dict, items: list[dict], settings: S
         <div style="background-color: #fefce8; border: 2px solid #fef08a; padding: 20px; border-radius: 8px; margin-bottom: 24px; margin-top: 20px;">
             <h3 style="margin-top: 0; color: #854d0e; font-size: 16px;">Action Required: Send your e-Transfer</h3>
             <p style="color: #a16207; line-height: 1.5; margin-bottom: 12px;">Your order has been received, but we need your payment to fulfill it.</p>
-            <p style="color: #4b5563; line-height: 1.5; margin: 0;">1. Send an e-Transfer to: <strong style="color: #111827;">{settings.etransfer_email}</strong></p>
+            <p style="color: #4b5563; line-height: 1.5; margin: 0;">1. Send an e-Transfer to: <strong style="color: #111827;">{order_data.get('etransfer_email') or settings.etransfer_email}</strong></p>
             <p style="color: #4b5563; line-height: 1.5; margin: 0;">2. Include your order number in the message/memo: <strong style="color: #111827;">#{order_data['order_number']}</strong></p>
         </div>
         """
@@ -145,7 +145,7 @@ def order_cancelled_template(order_data: dict, reason: str, settings: Settings) 
     <p style="color: #4b5563; line-height: 1.6;">{reason_text}</p>
     <p style="color: #4b5563; line-height: 1.6;">No charges were made. If you'd like to try again, please visit our store.</p>
     <p style="margin-top: 24px;">
-        <a href="{settings.store_domain}" style="display:inline-block;padding:12px 24px;background:#1A1A1A;color:#fff;text-decoration:none;border-radius:6px;font-weight:bold;">Return to Store</a>
+        <a href="{settings.store_domain}/shop" style="display:inline-block;padding:12px 24px;background:#1A1A1A;color:#fff;text-decoration:none;border-radius:6px;font-weight:bold;">Return to Store</a>
     </p>
     """
     

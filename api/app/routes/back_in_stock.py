@@ -42,12 +42,19 @@ async def subscribe_back_in_stock(
         )
 
     customer_id = int(customer["sub"]) if customer else None
+    # Pre-fill email from logged-in customer session if available
+    email = body.email if body.email else (customer.get("email") if customer else None)
+    if not email:
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail="Email is required",
+        )
 
     try:
         await db.execute(
             """INSERT INTO back_in_stock_subscriptions (email, variant_id, customer_id)
                VALUES (?, ?, ?)""",
-            (body.email, body.variant_id, customer_id),
+            (email, body.variant_id, customer_id),
         )
         await db.commit()
     except aiosqlite.IntegrityError:

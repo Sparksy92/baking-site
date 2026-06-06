@@ -25,12 +25,12 @@ interface OrderDetail {
   payment_method: string;
   customer_name: string;
   customer_email: string;
-  shipping_line1: string;
-  shipping_line2: string | null;
-  shipping_city: string;
-  shipping_province: string;
-  shipping_postal_code: string;
-  shipping_country: string;
+  shipping_address_line1: string;
+  shipping_address_line2: string | null;
+  shipping_address_city: string;
+  shipping_address_province: string;
+  shipping_address_postal: string;
+  shipping_address_country: string;
   subtotal_cents: number;
   discount_cents: number;
   shipping_cents: number;
@@ -40,6 +40,7 @@ interface OrderDetail {
   tracking_carrier: string | null;
   tracking_number: string | null;
   admin_notes: string | null;
+  customer_notes: string | null;
   stripe_session_id: string | null;
   stripe_payment_intent_id: string | null;
   refund_amount_cents: number | null;
@@ -231,11 +232,17 @@ export default function AdminOrderDetail() {
             </div>
             <h3 className="font-medium text-gray-900 mt-4 mb-1 text-sm">Shipping Address</h3>
             <div className="text-sm text-gray-600 space-y-0.5">
-              <p>{order.shipping_line1}</p>
-              {order.shipping_line2 && <p>{order.shipping_line2}</p>}
-              <p>{order.shipping_city}, {order.shipping_province} {order.shipping_postal_code}</p>
-              <p>{order.shipping_country}</p>
+              <p>{order.shipping_address_line1}</p>
+              {order.shipping_address_line2 && <p>{order.shipping_address_line2}</p>}
+              <p>{order.shipping_address_city}, {order.shipping_address_province} {order.shipping_address_postal}</p>
+              <p>{order.shipping_address_country}</p>
             </div>
+            {order.customer_notes && (
+              <div className="mt-4 bg-amber-50 border border-amber-200 rounded-lg p-3">
+                <h3 className="font-medium text-amber-900 mb-1 text-sm">Customer Notes</h3>
+                <p className="text-sm text-amber-800">{order.customer_notes}</p>
+              </div>
+            )}
           </section>
 
           {/* Stripe Info */}
