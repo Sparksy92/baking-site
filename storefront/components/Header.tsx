@@ -2,7 +2,7 @@
 
 import { useState, useEffect } from 'react';
 import Link from 'next/link';
-import { usePathname } from 'next/navigation';
+import { usePathname, useSearchParams } from 'next/navigation';
 import { ShoppingBag, Search, Menu, X, User, ArrowRight } from 'lucide-react';
 import { useCart } from '@/lib/cart';
 import { useCustomer } from '@/lib/customer';
@@ -14,6 +14,8 @@ export function Header() {
   const { count, subtotal } = useCart();
   const { customer } = useCustomer();
   const pathname = usePathname();
+  const searchParams = useSearchParams();
+  const fullPath = searchParams.toString() ? `${pathname}?${searchParams.toString()}` : pathname;
   const isCheckout = ['/cart', '/checkout'].includes(pathname);
   const [mobileOpen, setMobileOpen] = useState(false);
   const [announcement, setAnnouncement] = useState('');
@@ -67,13 +69,13 @@ export function Header() {
                 key={link.href}
                 href={link.href}
                 className={`relative px-4 py-2 text-sm font-semibold rounded-full transition-all duration-200 ${
-                  pathname === link.href
+                  fullPath === link.href
                     ? 'text-terracotta bg-terracotta/8'
                     : 'text-earth/65 hover:text-earth hover:bg-sand/60'
                 }`}
               >
                 {link.label}
-                {pathname === link.href && (
+                {fullPath === link.href && (
                   <span className="absolute bottom-1 left-1/2 -translate-x-1/2 w-1 h-1 rounded-full bg-terracotta" />
                 )}
               </Link>
@@ -136,13 +138,13 @@ export function Header() {
                 key={link.href}
                 href={link.href}
                 className={`flex items-center justify-between py-3 px-4 text-sm font-semibold rounded-2xl transition-all duration-200 ${
-                  pathname === link.href
+                  fullPath === link.href
                     ? 'bg-sand text-terracotta'
                     : 'text-earth/75 hover:bg-sand/60 hover:text-earth'
                 }`}
               >
                 {link.label}
-                {pathname === link.href && <span className="w-1.5 h-1.5 rounded-full bg-terracotta" />}
+                {fullPath === link.href && <span className="w-1.5 h-1.5 rounded-full bg-terracotta" />}
               </Link>
             ))}
             <div className="pt-3 border-t border-sand/60 mt-3">
