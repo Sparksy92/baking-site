@@ -1,22 +1,25 @@
 'use client';
 
-import { useEffect, useState } from 'react';
+import { useEffect, useState, Suspense } from 'react';
+import { useSearchParams } from 'next/navigation';
 import { Loader2 } from 'lucide-react';
 import { api, type ProductListItem } from '@/lib/api';
 import { ProductCard } from '@/components/ProductCard';
 
-export default function ShopPage() {
+function ShopContent() {
   const [products, setProducts] = useState<ProductListItem[]>([]);
   const [total, setTotal] = useState(0);
   const [sort, setSort] = useState('');
   const [loading, setLoading] = useState(true);
   const [category, setCategory] = useState<string | null>(null);
+  const searchParams = useSearchParams();
 
   useEffect(() => {
-    const params = new URLSearchParams(window.location.search);
-    setCategory(params.get('category'));
-    fetchProducts(params.get('category'), sort);
-  }, []);
+    const cat = searchParams.get('category');
+    setCategory(cat);
+    setSort('');
+    fetchProducts(cat, '');
+  }, [searchParams]);
 
   async function fetchProducts(cat: string | null, sortBy: string) {
     setLoading(true);
@@ -135,5 +138,13 @@ export default function ShopPage() {
         </div>
       </div>
     </div>
+  );
+}
+
+export default function ShopPage() {
+  return (
+    <Suspense>
+      <ShopContent />
+    </Suspense>
   );
 }
