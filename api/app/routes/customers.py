@@ -474,6 +474,7 @@ async def get_order_detail(
         "order_number": order["order_number"],
         "status": order["status"],
         "payment_status": order["payment_status"],
+        "payment_method": order["payment_method"],
         "items": [
             {
                 "product_name": item["product_name"],

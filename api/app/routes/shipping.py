@@ -7,11 +7,13 @@ from __future__ import annotations
 
 import logging
 
-from fastapi import APIRouter, Query
+from fastapi import APIRouter, Depends, Query
 from pydantic import BaseModel
 
 from app.config import get_settings
+from app.database import get_db
 from app.services.canadapost_service import get_shipping_rates, is_configured
+import aiosqlite
 
 logger = logging.getLogger(__name__)
 
@@ -34,6 +36,7 @@ class ShippingRatesResponse(BaseModel):
 async def estimate_shipping(
     postal_code: str = Query(..., min_length=3, max_length=10, description="Destination postal code"),
     subtotal_cents: int = Query(default=0, ge=0, description="Cart subtotal to check free shipping threshold"),
+    db: aiosqlite.Connection = Depends(get_db),
 ):
     """Estimate shipping cost for a destination postal code.
 
@@ -43,8 +46,15 @@ async def estimate_shipping(
     """
     settings = get_settings()
 
+    # Read live values from DB settings table (admin-editable), fall back to env config
+    cursor = await db.execute("SELECT key, value FROM settings WHERE key IN ('shipping_free_threshold_cents', 'shipping_flat_rate_cents')")
+    rows = await cursor.fetchall()
+    db_settings = {r["key"]: r["value"] for r in rows}
+    free_threshold = int(db_settings.get("shipping_free_threshold_cents") or settings.shipping_free_threshold_cents)
+    flat_rate = int(db_settings.get("shipping_flat_rate_cents") or settings.shipping_flat_rate_cents)
+
     # Check free shipping threshold
-    if subtotal_cents >= settings.shipping_free_threshold_cents:
+    if subtotal_cents >= free_threshold:
         return ShippingRatesResponse(
             rates=[ShippingOption(
                 service_code="FREE",
@@ -76,7 +86,7 @@ async def estimate_shipping(
         rates=[ShippingOption(
             service_code="FLAT",
             service_name=settings.shipping_description,
-            price_cents=settings.shipping_flat_rate_cents,
+            price_cents=flat_rate,
             expected_transit_days=None,
         )],
         source="flat_rate",

@@ -85,13 +85,22 @@ async def validate_checkout(db: aiosqlite.Connection, body: CheckoutRequest, cus
             total_weight_g += item_weight_g * oi["quantity"]
     order_weight_kg = (total_weight_g / 1000.0) if total_weight_g > 0 else None
 
-    # Shipping — use Canada Post real rates if configured, else flat rate
-    if subtotal_cents >= settings.shipping_free_threshold_cents:
+    # Shipping — read live values from DB (admin-editable), fall back to env config
+    cursor = await db.execute(
+        "SELECT key, value FROM settings WHERE key IN ('shipping_free_threshold_cents', 'shipping_flat_rate_cents', 'tax_rate')"
+    )
+    rows = await cursor.fetchall()
+    db_ship = {r["key"]: r["value"] for r in rows}
+    free_threshold = int(db_ship.get("shipping_free_threshold_cents") or settings.shipping_free_threshold_cents)
+    flat_rate = int(db_ship.get("shipping_flat_rate_cents") or settings.shipping_flat_rate_cents)
+    tax_rate = float(db_ship.get("tax_rate") or settings.tax_rate)
+
+    if subtotal_cents >= free_threshold:
         shipping_cents = 0
     else:
         from app.services.canadapost_service import get_cheapest_rate
         cp_rate = await get_cheapest_rate(body.shipping_address.postal_code, weight_kg=order_weight_kg)
-        shipping_cents = cp_rate if cp_rate is not None else settings.shipping_flat_rate_cents
+        shipping_cents = cp_rate if cp_rate is not None else flat_rate
 
     # Store credit redemption (applied after promo, before tax)
     store_credit_applied = 0
@@ -107,7 +116,7 @@ async def validate_checkout(db: aiosqlite.Connection, body: CheckoutRequest, cus
 
     # Tax (on subtotal after discount)
     taxable = subtotal_cents - discount_cents
-    tax_cents = int(taxable * settings.tax_rate)
+    tax_cents = int(taxable * tax_rate)
 
     total_cents = max(0, subtotal_cents - discount_cents + shipping_cents + tax_cents)
 

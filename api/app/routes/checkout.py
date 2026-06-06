@@ -110,6 +110,9 @@ async def checkout(
 
     # Send order confirmation email (order received, payment still pending)
     try:
+        _cur = await db.execute("SELECT value FROM settings WHERE key='etransfer_email'")
+        _row = await _cur.fetchone()
+        etransfer_email = (_row["value"] if _row and _row["value"] else None) or settings.etransfer_email
         await send_order_confirmation(
             {
                 "order_number": order_number,
@@ -120,12 +123,15 @@ async def checkout(
                 "shipping_cents": validated["shipping_cents"],
                 "tax_cents": validated["tax_cents"],
                 "total_cents": validated["total_cents"],
+                "discount_cents": validated["discount_cents"],
+                "promo_code": body.promo_code,
                 "shipping_address_line1": body.shipping_address.line1,
                 "shipping_address_line2": body.shipping_address.line2,
                 "shipping_address_city": body.shipping_address.city,
                 "shipping_address_province": body.shipping_address.province,
                 "shipping_address_postal": body.shipping_address.postal_code,
                 "shipping_address_country": body.shipping_address.country,
+                "etransfer_email": etransfer_email,
             },
             validated["order_items"],
         )

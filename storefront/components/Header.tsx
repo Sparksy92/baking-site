@@ -147,7 +147,7 @@ export function Header() {
             ))}
             <div className="pt-3 border-t border-sand/60 mt-3">
               <Link
-                href="/search"
+                href="/shop"
                 className="flex items-center gap-2 py-3 px-4 text-sm font-bold text-terracotta rounded-2xl hover:bg-terracotta/8 transition-colors duration-200"
               >
                 Shop All Products <ArrowRight size={14} />
