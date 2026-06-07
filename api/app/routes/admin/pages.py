@@ -78,19 +78,6 @@ async def list_pages(
     return {"pages": [dict(r) for r in rows], "total": total, "page": page}
 
 
-@router.get("/{page_id}")
-async def get_page(
-    page_id: int,
-    db: aiosqlite.Connection = Depends(get_db),
-    user: dict = Depends(require_admin),
-):
-    cursor = await db.execute("SELECT * FROM pages WHERE id = ?", (page_id,))
-    row = await cursor.fetchone()
-    if not row:
-        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Page not found")
-    return dict(row)
-
-
 @router.post("", status_code=status.HTTP_201_CREATED)
 async def create_page(
     body: PageCreate,
@@ -116,6 +103,33 @@ async def create_page(
         raise HTTPException(status_code=status.HTTP_409_CONFLICT, detail="Slug already exists")
 
     return {"id": new_id, "slug": body.slug}
+
+
+@router.post("/generate-ai")
+async def generate_ai_post(
+    body: GenerateAIPrompt,
+    user: dict = Depends(require_admin),
+):
+    try:
+        content = await generate_blog_post(body.prompt)
+        return {"content": content}
+    except ValueError as e:
+        raise HTTPException(status_code=400, detail=str(e))
+    except Exception as e:
+        logger.error(f"AI Generation failed: {e}")
+        raise HTTPException(status_code=500, detail="Failed to generate AI content.")
+
+
+@router.post("/sync-social")
+async def sync_social(
+    user: dict = Depends(require_admin),
+):
+    try:
+        await run_social_sync()
+        return {"success": True}
+    except Exception as e:
+        logger.error(f"Social sync failed: {e}")
+        raise HTTPException(status_code=500, detail="Failed to sync social media posts.")
 
 
 @router.get("/{page_id}")
@@ -185,29 +199,3 @@ async def delete_page(
     await db.execute("DELETE FROM pages WHERE id = ?", (page_id,))
     await db.commit()
     return {"deleted": True}
-
-
-@router.post("/generate-ai")
-async def generate_ai_post(
-    body: GenerateAIPrompt,
-    user: dict = Depends(require_admin),
-):
-    try:
-        content = await generate_blog_post(body.prompt)
-        return {"content": content}
-    except ValueError as e:
-        raise HTTPException(status_code=400, detail=str(e))
-    except Exception as e:
-        logger.error(f"AI Generation failed: {e}")
-        raise HTTPException(status_code=500, detail="Failed to generate AI content.")
-
-@router.post("/sync-social")
-async def sync_social(
-    user: dict = Depends(require_admin),
-):
-    try:
-        await run_social_sync()
-        return {"success": True}
-    except Exception as e:
-        logger.error(f"Social sync failed: {e}")
-        raise HTTPException(status_code=500, detail="Failed to sync social media posts.")

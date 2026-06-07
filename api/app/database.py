@@ -2,6 +2,7 @@ from __future__ import annotations
 
 import logging
 import re
+from contextlib import asynccontextmanager
 from pathlib import Path
 from typing import AsyncGenerator
 
@@ -157,12 +158,29 @@ class PostgresConnection:
 
 
 async def get_db() -> AsyncGenerator[PostgresConnection, None]:
-    """Yield a wrapped PostgresConnection."""
+    """Yield a wrapped PostgresConnection. For use with FastAPI Depends."""
     global _pool
     if not _pool:
         settings = get_settings()
         _pool = await asyncpg.create_pool(settings.database_url)
-    
+
+    async with _pool.acquire() as conn:
+        yield PostgresConnection(conn)
+
+
+@asynccontextmanager
+async def db_connection() -> AsyncGenerator[PostgresConnection, None]:
+    """Async context manager for acquiring a DB connection outside of FastAPI request scope.
+
+    Usage:
+        async with db_connection() as db:
+            await db.execute(...)
+    """
+    global _pool
+    if not _pool:
+        settings = get_settings()
+        _pool = await asyncpg.create_pool(settings.database_url)
+
     async with _pool.acquire() as conn:
         yield PostgresConnection(conn)
 

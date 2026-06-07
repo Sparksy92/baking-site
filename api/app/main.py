@@ -1,5 +1,6 @@
 from __future__ import annotations
 
+import asyncio
 import logging
 from contextlib import asynccontextmanager
 
@@ -69,17 +70,6 @@ async def lifespan(app: FastAPI):
             "Generate a real secret: openssl rand -base64 32"
         )
     
-    import asyncio, sys, os
-    async def _background_seed():
-        try:
-            if "pytest" not in sys.modules:
-                sys.path.insert(0, os.path.dirname(os.path.dirname(__file__)))
-                from cli import seed
-                await seed()
-                logger.info("Database seeded successfully")
-        except Exception as e:
-            logger.error(f"Error seeding database: {e}", exc_info=True)
-
     async def _background_social_sync():
         while True:
             try:
@@ -89,7 +79,6 @@ async def lifespan(app: FastAPI):
                 logger.error(f"Background social sync error: {e}", exc_info=True)
             await asyncio.sleep(3600)
 
-    asyncio.ensure_future(_background_seed())
     sync_task = asyncio.ensure_future(_background_social_sync())
 
     await init_db()

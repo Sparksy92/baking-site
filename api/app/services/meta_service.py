@@ -1,3 +1,4 @@
+import html
 import logging
 import asyncio
 import httpx
@@ -7,7 +8,7 @@ import aiofiles
 from pathlib import Path
 
 from app.config import get_settings
-from app.database import get_db
+from app.database import db_connection
 
 logger = logging.getLogger(__name__)
 
@@ -35,7 +36,7 @@ async def download_image(url: str, filename: str) -> str | None:
 
 async def _process_meta_posts(posts: list, platform: str):
     """Process posts and insert them into the database."""
-    async for db in get_db():
+    async with db_connection() as db:
         for post in posts:
             post_id = post.get('id')
             caption = post.get('caption') or post.get('message')
@@ -69,7 +70,13 @@ async def _process_meta_posts(posts: list, platform: str):
                 title = title[:47] + "..."
                 
             slug = f"post-{external_id}"
-            
+
+            content_html = "".join(
+                f"<p>{html.escape(para.strip())}</p>"
+                for para in caption.split("\n")
+                if para.strip()
+            )
+
             # Insert into database
             try:
                 await db.execute(
@@ -80,7 +87,7 @@ async def _process_meta_posts(posts: list, platform: str):
                     (
                         title,
                         slug,
-                        caption, # We use plain text as the HTML content
+                        content_html,
                         local_image_url,
                         'blog_post',
                         'published',
