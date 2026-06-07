@@ -2000,6 +2000,65 @@ async def suggest_hashtags_endpoint(
     return {"suggestions": suggestions}
 
 
+# ── Gary Vee Posting Strategy ─────────────────────────────────────────────────────
+
+@router.get("/strategy")
+async def get_posting_strategy_endpoint(
+    user: dict = Depends(require_admin),
+):
+    """Get current posting strategy configuration (posts per day by platform)."""
+    from app.services.posting_strategy_service import get_posting_strategy
+    strategy = await get_posting_strategy()
+    return strategy
+
+
+@router.put("/strategy")
+async def update_posting_strategy_endpoint(
+    strategy: dict,  # Platform-specific posting config
+    user: dict = Depends(require_admin),
+):
+    """Update posting strategy - control how much content AI creates per day.
+    
+    Example: {"instagram": {"posts_per_day": 5, "best_times": ["08:00", "12:00", "18:00"]}}
+    """
+    from app.services.posting_strategy_service import update_posting_strategy
+    updated = await update_posting_strategy(strategy)
+    return updated
+
+
+@router.get("/strategy/daily-plan")
+async def get_daily_posting_plan_endpoint(
+    date: str | None = None,  # YYYY-MM-DD
+    user: dict = Depends(require_admin),
+):
+    """Get AI-generated daily posting plan based on strategy."""
+    from app.services.posting_strategy_service import get_daily_posting_plan
+    plan = await get_daily_posting_plan(date)
+    return plan
+
+
+@router.get("/strategy/content-types/{platform}")
+async def get_content_types_endpoint(
+    platform: str,
+    user: dict = Depends(require_admin),
+):
+    """Get recommended content mix for platform (educational, entertaining, promotional)."""
+    from app.services.posting_strategy_service import get_recommended_content_types
+    types = await get_recommended_content_types(platform)
+    return {"platform": platform, "content_types": types}
+
+
+@router.get("/strategy/gary-vee-score")
+async def get_gary_vee_metrics_endpoint(
+    days: int = 30,
+    user: dict = Depends(require_admin),
+):
+    """Get Gary Vee-style metrics: volume, engagement, reply rate, grade."""
+    from app.services.posting_strategy_service import get_gary_vee_metrics
+    metrics = await get_gary_vee_metrics(days)
+    return metrics
+
+
 # ── Dashboard Reporting ─────────────────────────────────────────────────────────
 
 @router.get("/dashboard")
