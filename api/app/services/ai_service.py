@@ -1,8 +1,8 @@
 import logging
-import httpx
 from app.config import get_settings
 from app.database import db_connection
 from app.services.seo_service import research_trending_topics
+from app.services.ai_router import AITaskType, get_model_config, generate_with_config
 
 logger = logging.getLogger(__name__)
 
@@ -74,10 +74,9 @@ Platform: {platform.upper()}
 
 
 async def generate_blog_post(prompt: str) -> str:
-    """Generate a blog post from a prompt using the configured AI provider.
+    """Generate a blog post — uses BLOG_POST task type (best available model).
 
-    Automatically researches trending topics related to the prompt and injects
-    them into the AI context to help the content rank in search results.
+    Researches trending topics first and injects SEO context.
     """
     settings = get_settings()
     persona = await _get_active_persona()
@@ -92,17 +91,18 @@ async def generate_blog_post(prompt: str) -> str:
         )
 
     system_prompt = _build_system_prompt(settings.brand_name, settings.brand_tagline, persona, "blog")
-
-    if settings.openai_api_key:
-        return await _generate_with_openai(enriched_prompt, settings.openai_api_key, system_prompt)
-    elif settings.gemini_api_key:
-        return await _generate_with_gemini(enriched_prompt, settings.gemini_api_key, system_prompt)
-    else:
-        raise ValueError("No AI provider configured. Please set OPENAI_API_KEY or GEMINI_API_KEY in your environment.")
+    config = await get_model_config(AITaskType.BLOG_POST)
+    return await generate_with_config(enriched_prompt, system_prompt, config)
 
 
-async def generate_social_post(prompt: str, platform: str) -> str:
-    """Generate a platform-native social post from a blog post prompt/content."""
+async def generate_social_post(prompt: str, platform: str, task_type: AITaskType = AITaskType.SOCIAL_CAPTION) -> str:
+    """Generate a platform-native social post.
+
+    task_type controls model selection:
+      - SOCIAL_CAPTION  (default) — fast, cheap, mini model
+      - PRODUCT_SOCIAL  — product drop captions
+      - SOCIAL_REPLY    — reply to comments (best model, tone-critical)
+    """
     settings = get_settings()
     persona = await _get_active_persona()
 
@@ -121,12 +121,8 @@ async def generate_social_post(prompt: str, platform: str) -> str:
     else:
         system_prompt = _build_system_prompt(settings.brand_name, settings.brand_tagline, persona, platform)
 
-    if settings.openai_api_key:
-        return await _generate_with_openai(prompt, settings.openai_api_key, system_prompt)
-    elif settings.gemini_api_key:
-        return await _generate_with_gemini(prompt, settings.gemini_api_key, system_prompt)
-    else:
-        raise ValueError("No AI provider configured. Please set OPENAI_API_KEY or GEMINI_API_KEY in your environment.")
+    config = await get_model_config(task_type)
+    return await generate_with_config(prompt, system_prompt, config)
 
 async def generate_social_drafts_for_page(page_id: int, title: str, content: str, image_url: str | None) -> int:
     """Generate social post drafts for all enabled platforms when a blog post is published.
@@ -184,50 +180,3 @@ async def generate_social_drafts_for_page(page_id: int, title: str, content: str
     return created
 
 
-async def _generate_with_openai(prompt: str, api_key: str, system_prompt: str) -> str:
-    url = "https://api.openai.com/v1/chat/completions"
-    headers = {
-        "Authorization": f"Bearer {api_key}",
-        "Content-Type": "application/json"
-    }
-    payload = {
-        "model": "gpt-4o",
-        "messages": [
-            {"role": "system", "content": system_prompt},
-            {"role": "user", "content": prompt}
-        ],
-        "temperature": 0.7,
-        "max_tokens": 500
-    }
-
-    async with httpx.AsyncClient() as client:
-        response = await client.post(url, headers=headers, json=payload, timeout=30.0)
-        response.raise_for_status()
-        data = response.json()
-        return data["choices"][0]["message"]["content"].strip()
-
-
-async def _generate_with_gemini(prompt: str, api_key: str, system_prompt: str) -> str:
-    url = f"https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:generateContent?key={api_key}"
-    headers = {
-        "Content-Type": "application/json"
-    }
-    payload = {
-        "contents": [
-            {
-                "parts": [
-                    {"text": system_prompt + "\n\nUser Prompt: " + prompt}
-                ]
-            }
-        ],
-        "generationConfig": {
-            "temperature": 0.7,
-            "maxOutputTokens": 500
-        }
-    }
-
-    async with httpx.AsyncClient() as client:
-        response = await client.post(url, headers=headers, json=payload, timeout=30.0)
-        response.raise_for_status()
-        data = response.json()
-        return data["candidates"][0]["content"]["parts"][0]["text"].strip()

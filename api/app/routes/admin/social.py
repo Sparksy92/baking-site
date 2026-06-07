@@ -422,7 +422,8 @@ async def generate_social_from_product(
 
     for platform in platform_list:
         try:
-            content = await generate_social_post(source_prompt, platform)
+            from app.services.ai_router import AITaskType
+            content = await generate_social_post(source_prompt, platform, task_type=AITaskType.PRODUCT_SOCIAL)
             cursor = await db.execute(
                 """INSERT INTO social_posts
                    (product_id, platform, content, image_url, status)
@@ -540,3 +541,106 @@ async def list_media(
     )
     rows = await cursor.fetchall()
     return {"items": [dict(r) for r in rows], "total": total, "page": page}
+
+
+# ── AI model config admin endpoints ──────────────────────────────────────────
+
+class AIModelConfigUpdate(BaseModel):
+    provider: str | None = None      # 'openai' | 'gemini' | 'auto'
+    model: str | None = None         # e.g. 'gpt-4o-mini' — empty string = use default
+    temperature: float | None = None
+    max_tokens: int | None = None
+    enabled: bool | None = None
+    notes: str | None = None
+
+
+@router.get("/ai-models")
+async def list_ai_model_configs(
+    db: aiosqlite.Connection = Depends(get_db),
+    user: dict = Depends(require_admin),
+):
+    """List all AI task type model configurations with their current resolved model."""
+    from app.services.ai_router import AITaskType, get_model_config
+
+    cursor = await db.execute(
+        "SELECT * FROM ai_model_configs ORDER BY task_type ASC"
+    )
+    rows = await cursor.fetchall()
+    configs = [dict(r) for r in rows]
+
+    resolved = []
+    for cfg in configs:
+        try:
+            task = AITaskType(cfg["task_type"])
+            live = await get_model_config(task)
+            cfg["resolved_provider"] = live.provider
+            cfg["resolved_model"] = live.model
+            cfg["resolved_temperature"] = live.temperature
+            cfg["resolved_max_tokens"] = live.max_tokens
+        except Exception:
+            cfg["resolved_provider"] = "unknown"
+            cfg["resolved_model"] = "unknown"
+        resolved.append(cfg)
+
+    return {"configs": resolved}
+
+
+@router.patch("/ai-models/{task_type}")
+async def update_ai_model_config(
+    task_type: str,
+    body: AIModelConfigUpdate,
+    db: aiosqlite.Connection = Depends(get_db),
+    user: dict = Depends(require_admin),
+):
+    """Override the model config for a specific task type.
+
+    Set model='' to revert to the baked-in default for that task.
+    Set provider='auto' to let the system pick based on available API keys.
+    """
+    cursor = await db.execute(
+        "SELECT id FROM ai_model_configs WHERE task_type = ?", (task_type,)
+    )
+    row = await cursor.fetchone()
+    if not row:
+        raise HTTPException(status_code=404, detail=f"Task type '{task_type}' not found")
+
+    updates: dict = {}
+    if body.provider is not None:
+        updates["provider"] = body.provider
+    if body.model is not None:
+        updates["model"] = body.model
+    if body.temperature is not None:
+        if not 0.0 <= body.temperature <= 2.0:
+            raise HTTPException(status_code=400, detail="temperature must be between 0.0 and 2.0")
+        updates["temperature"] = body.temperature
+    if body.max_tokens is not None:
+        if body.max_tokens < 1:
+            raise HTTPException(status_code=400, detail="max_tokens must be >= 1")
+        updates["max_tokens"] = body.max_tokens
+    if body.enabled is not None:
+        updates["enabled"] = body.enabled
+    if body.notes is not None:
+        updates["notes"] = body.notes
+
+    if not updates:
+        raise HTTPException(status_code=400, detail="No fields to update")
+
+    updates["updated_at"] = "CURRENT_TIMESTAMP"
+    set_clause = ", ".join(
+        f"{k} = CURRENT_TIMESTAMP" if v == "CURRENT_TIMESTAMP" else f"{k} = ?"
+        for k, v in updates.items()
+    )
+    values = [v for v in updates.values() if v != "CURRENT_TIMESTAMP"]
+    values.append(task_type)
+
+    await db.execute(
+        f"UPDATE ai_model_configs SET {set_clause} WHERE task_type = ?",
+        values,
+    )
+    await db.commit()
+
+    cursor = await db.execute(
+        "SELECT * FROM ai_model_configs WHERE task_type = ?", (task_type,)
+    )
+    updated = await cursor.fetchone()
+    return dict(updated)
