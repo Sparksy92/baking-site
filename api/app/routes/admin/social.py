@@ -1265,3 +1265,249 @@ async def get_revenue_attribution(
     top_posts = [dict(r) for r in await cursor.fetchall()]
 
     return {"summary": summary, "top_posts": top_posts}
+
+
+# ── Sprint 7: Best-Time-to-Post ───────────────────────────────────────────────
+
+@router.post("/optimal-times/calculate")
+async def calculate_optimal_times_endpoint(
+    platform: str | None = None,
+    user: dict = Depends(require_admin),
+):
+    """Calculate optimal posting times from last 90 days of historical data."""
+    from app.services.best_time_service import calculate_optimal_times
+    result = await calculate_optimal_times(platform)
+    return result
+
+
+@router.get("/optimal-times/{platform}")
+async def get_optimal_times(
+    platform: str,
+    limit: int = 5,
+    min_confidence: float = 0.6,
+    user: dict = Depends(require_admin),
+):
+    """Get recommended posting times for a platform."""
+    from app.services.best_time_service import get_recommended_times
+    slots = await get_recommended_times(platform, limit, min_confidence)
+    return {"platform": platform, "recommended_slots": slots}
+
+
+@router.get("/optimal-times/{platform}/suggest")
+async def suggest_next_post_time_endpoint(
+    platform: str,
+    min_hours_ahead: int = 2,
+    user: dict = Depends(require_admin),
+):
+    """Suggest the next optimal time to post on this platform."""
+    from app.services.best_time_service import suggest_next_post_time
+    suggestion = await suggest_next_post_time(platform, min_hours_ahead)
+    return suggestion
+
+
+# ── Sprint 7: A/B Testing ─────────────────────────────────────────────────────
+
+class ABVariantCreate(BaseModel):
+    variant_name: str
+    content: str
+    image_url: str | None = None
+
+
+class ABTestCreate(BaseModel):
+    name: str
+    platform: str
+    test_type: str = "headline"  # 'headline' | 'image' | 'cta' | 'time'
+    variants: list[ABVariantCreate]
+    metric_criteria: str = "engagement"  # 'engagement' | 'reach' | 'clicks' | 'revenue'
+    duration_hours: int = 48
+
+
+@router.post("/ab-tests")
+async def create_ab_test_endpoint(
+    body: ABTestCreate,
+    db: aiosqlite.Connection = Depends(get_db),
+    user: dict = Depends(require_admin),
+):
+    """Create an A/B test with variants. Variants get auto-scheduled at optimal times."""
+    from app.services.ab_test_service import create_ab_test
+
+    variants_data = [v.dict() for v in body.variants]
+    result = await create_ab_test(
+        name=body.name,
+        platform=body.platform,
+        test_type=body.test_type,
+        variants=variants_data,
+        metric_criteria=body.metric_criteria,
+        duration_hours=body.duration_hours,
+        created_by=user.get("email", "admin"),
+    )
+    return result
+
+
+@router.post("/ab-tests/{test_id}/start")
+async def start_ab_test_endpoint(
+    test_id: int,
+    user: dict = Depends(require_admin),
+):
+    """Start an A/B test (mark as running)."""
+    from app.services.ab_test_service import start_ab_test
+    result = await start_ab_test(test_id)
+    return result
+
+
+@router.get("/ab-tests/{test_id}")
+async def get_ab_test_results(
+    test_id: int,
+    user: dict = Depends(require_admin),
+):
+    """Get A/B test results."""
+    from app.services.ab_test_service import get_ab_test_results
+    result = await get_ab_test_results(test_id)
+    return result
+
+
+@router.post("/ab-tests/{test_id}/refresh-metrics")
+async def refresh_ab_test_metrics(
+    test_id: int,
+    user: dict = Depends(require_admin),
+):
+    """Pull latest metrics and recalculate scores."""
+    from app.services.ab_test_service import update_variant_metrics
+    result = await update_variant_metrics(test_id)
+    return result
+
+
+@router.post("/ab-tests/{test_id}/complete")
+async def complete_ab_test_endpoint(
+    test_id: int,
+    user: dict = Depends(require_admin),
+):
+    """Complete an A/B test and declare winner."""
+    from app.services.ab_test_service import complete_ab_test
+    result = await complete_ab_test(test_id)
+    return result
+
+
+@router.get("/ab-tests")
+async def list_ab_tests(
+    status: str | None = None,
+    limit: int = 50,
+    db: aiosqlite.Connection = Depends(get_db),
+    user: dict = Depends(require_admin),
+):
+    """List A/B tests."""
+    if status:
+        cursor = await db.execute(
+            "SELECT * FROM ab_tests WHERE status = ? ORDER BY created_at DESC LIMIT ?",
+            (status, limit),
+        )
+    else:
+        cursor = await db.execute(
+            "SELECT * FROM ab_tests ORDER BY created_at DESC LIMIT ?",
+            (limit,),
+        )
+    rows = await cursor.fetchall()
+    return {"tests": [dict(r) for r in rows]}
+
+
+# ── Sprint 7: Competitor Tracking ─────────────────────────────────────────────
+
+class CompetitorCreate(BaseModel):
+    name: str
+    platform: str
+    platform_handle: str
+    profile_url: str | None = None
+    notes: str = ""
+
+
+class CompetitorPostCreate(BaseModel):
+    platform_post_id: str
+    content: str
+    posted_at: str
+    likes: int = 0
+    comments: int = 0
+    shares: int = 0
+    follower_count: int | None = None
+
+
+@router.post("/competitors")
+async def add_competitor_endpoint(
+    body: CompetitorCreate,
+    user: dict = Depends(require_admin),
+):
+    """Add a competitor to track."""
+    from app.services.competitor_service import add_competitor
+    result = await add_competitor(
+        name=body.name,
+        platform=body.platform,
+        platform_handle=body.platform_handle,
+        profile_url=body.profile_url,
+        notes=body.notes,
+    )
+    return result
+
+
+@router.get("/competitors")
+async def list_competitors_endpoint(
+    platform: str | None = None,
+    user: dict = Depends(require_admin),
+):
+    """List tracked competitors."""
+    from app.services.competitor_service import list_competitors
+    competitors = await list_competitors(platform)
+    return {"competitors": competitors}
+
+
+@router.get("/competitors/{competitor_id}/report")
+async def get_competitor_report(
+    competitor_id: int,
+    days: int = 30,
+    user: dict = Depends(require_admin),
+):
+    """Get competitive intelligence report for a competitor."""
+    from app.services.competitor_service import get_competitor_report
+    report = await get_competitor_report(competitor_id, days)
+    return report
+
+
+@router.post("/competitors/{competitor_id}/posts")
+async def record_competitor_post_endpoint(
+    competitor_id: int,
+    body: CompetitorPostCreate,
+    user: dict = Depends(require_admin),
+):
+    """Record a competitor's post for analysis."""
+    from app.services.competitor_service import record_competitor_post
+    result = await record_competitor_post(
+        competitor_id=competitor_id,
+        platform_post_id=body.platform_post_id,
+        content=body.content,
+        posted_at=body.posted_at,
+        likes=body.likes,
+        comments=body.comments,
+        shares=body.shares,
+        follower_count=body.follower_count,
+    )
+    return result
+
+
+@router.post("/competitors/posts/{post_id}/analyze")
+async def analyze_competitor_post_endpoint(
+    post_id: int,
+    user: dict = Depends(require_admin),
+):
+    """Use AI to analyze a competitor post and extract insights."""
+    from app.services.competitor_service import analyze_competitor_post
+    analysis = await analyze_competitor_post(post_id)
+    return analysis
+
+
+@router.get("/competitors/landscape/{platform}")
+async def get_competitive_landscape(
+    platform: str,
+    user: dict = Depends(require_admin),
+):
+    """Get competitive landscape analysis for a platform."""
+    from app.services.competitor_service import get_competitive_landscape
+    landscape = await get_competitive_landscape(platform)
+    return landscape
