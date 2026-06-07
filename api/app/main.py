@@ -52,6 +52,7 @@ from app.routes.admin import (
     store_credit as admin_store_credit,
     social as admin_social,
 )
+from app.routes import agent_api
 
 logger = logging.getLogger(__name__)
 
@@ -237,6 +238,9 @@ def create_app() -> FastAPI:
     app.include_router(admin_webhooks.router, prefix="/api")
     app.include_router(admin_store_credit.router, prefix="/api")
     app.include_router(admin_social.router, prefix="/api")
+
+    # ── Agent API (AI integration boundary) ─────────────────────
+    app.include_router(agent_api.router)
 
     # ── Static files (uploaded images) ─────────────────────────
     uploads_dir = app_settings.uploads_dir

@@ -894,3 +894,191 @@ async def generate_from_template(
         "template_name": template["name"],
         "prompt_used": prompt,
     }
+
+
+# ── AI Agent Management ───────────────────────────────────────────────────────
+
+class AgentKeyCreate(BaseModel):
+    name: str
+    scopes: list[str]  # e.g. ["read:engagement", "write:replies"]
+    stores: list[str] | None = None  # empty = all stores
+    rate_limit_rpm: int = 60
+
+
+@router.post("/agents/keys")
+async def create_agent_key_endpoint(
+    body: AgentKeyCreate,
+    db: aiosqlite.Connection = Depends(get_db),
+    user: dict = Depends(require_admin),
+):
+    """Create a new agent API key. Returns the plain key — store it securely."""
+    from app.auth_agent import create_agent_key
+
+    valid_scopes = {
+        "read:engagement", "write:replies", "read:metrics",
+        "read:products", "read:persona", "write:drafts", "read:outbox",
+    }
+    invalid = set(body.scopes) - valid_scopes
+    if invalid:
+        raise HTTPException(status_code=400, detail=f"Invalid scopes: {invalid}")
+
+    plain_key, key_id = await create_agent_key(
+        name=body.name,
+        scopes=body.scopes,
+        stores=body.stores or [],
+        rate_limit_rpm=body.rate_limit_rpm,
+        created_by=user.get("email", "admin"),
+    )
+
+    return {
+        "key_id": key_id,
+        "api_key": plain_key,  # ONLY returned once
+        "name": body.name,
+        "scopes": body.scopes,
+        "warning": "Store this key securely — it will not be shown again",
+    }
+
+
+@router.get("/agents/keys")
+async def list_agent_keys(
+    db: aiosqlite.Connection = Depends(get_db),
+    user: dict = Depends(require_admin),
+):
+    """List all agent API keys (hashes hidden, scopes visible)."""
+    cursor = await db.execute(
+        """SELECT id, name, scopes, stores, is_active, rate_limit_rpm,
+                  last_used_at, created_by, created_at
+           FROM agent_api_keys
+           ORDER BY created_at DESC"""
+    )
+    rows = await cursor.fetchall()
+    return {"keys": [dict(r) for r in rows]}
+
+
+@router.post("/agents/keys/{key_id}/revoke")
+async def revoke_agent_key_endpoint(
+    key_id: int,
+    db: aiosqlite.Connection = Depends(get_db),
+    user: dict = Depends(require_admin),
+):
+    """Revoke an agent API key."""
+    from app.auth_agent import revoke_agent_key
+
+    success = await revoke_agent_key(key_id)
+    if not success:
+        raise HTTPException(status_code=404, detail="Key not found")
+    return {"revoked": True, "key_id": key_id}
+
+
+@router.get("/agents/submissions")
+async def list_agent_submissions(
+    status: str | None = "pending",
+    db: aiosqlite.Connection = Depends(get_db),
+    user: dict = Depends(require_admin),
+):
+    """List agent content submissions for review."""
+    if status:
+        cursor = await db.execute(
+            """SELECT s.*, a.name as agent_name
+               FROM agent_content_submissions s
+               JOIN agent_api_keys a ON s.agent_key_id = a.id
+               WHERE s.status = ?
+               ORDER BY s.created_at DESC""",
+            (status,),
+        )
+    else:
+        cursor = await db.execute(
+            """SELECT s.*, a.name as agent_name
+               FROM agent_content_submissions s
+               JOIN agent_api_keys a ON s.agent_key_id = a.id
+               ORDER BY s.created_at DESC"""
+        )
+    rows = await cursor.fetchall()
+    return {"submissions": [dict(r) for r in rows]}
+
+
+class SubmissionReview(BaseModel):
+    decision: str  # 'approved' | 'rejected'
+    notes: str = ""
+
+
+@router.post("/agents/submissions/{submission_id}/review")
+async def review_agent_submission(
+    submission_id: int,
+    body: SubmissionReview,
+    db: aiosqlite.Connection = Depends(get_db),
+    user: dict = Depends(require_admin),
+):
+    """Approve or reject an agent content submission.
+
+    If approved and it's a reply_draft: also need to send via Meta API (Sprint 5.5)
+    If approved and it's a social_post_draft: create social_posts row
+    """
+    from datetime import datetime, timezone
+
+    cursor = await db.execute(
+        "SELECT * FROM agent_content_submissions WHERE id = ?",
+        (submission_id,),
+    )
+    row = await cursor.fetchone()
+    if not row:
+        raise HTTPException(status_code=404, detail="Submission not found")
+
+    submission = dict(row)
+
+    await db.execute(
+        """UPDATE agent_content_submissions
+           SET status = ?, reviewed_by = ?, reviewed_at = ?, notes = ?
+           WHERE id = ?""",
+        (body.decision, user.get("email"), datetime.now(timezone.utc).isoformat(), body.notes, submission_id),
+    )
+    await db.commit()
+
+    # If approved social draft, create actual social post
+    created_post_id = None
+    if body.decision == "approved" and submission["submission_type"] == "social_post_draft":
+        cursor = await db.execute(
+            """INSERT INTO social_posts (platform, content, status)
+                VALUES (?, ?, 'draft')""",
+            (submission.get("platform", "facebook"), submission["content"]),
+        )
+        await db.commit()
+        created_post_id = cursor.lastrowid
+
+    return {
+        "reviewed": True,
+        "decision": body.decision,
+        "submission_id": submission_id,
+        "created_post_id": created_post_id,
+    }
+
+
+@router.get("/agents/audit-log")
+async def agent_audit_log(
+    agent_id: int | None = None,
+    limit: int = 100,
+    db: aiosqlite.Connection = Depends(get_db),
+    user: dict = Depends(require_admin),
+):
+    """View audit log of all agent actions."""
+    if agent_id:
+        cursor = await db.execute(
+            """SELECT l.*, a.name as agent_name
+               FROM agent_audit_log l
+               JOIN agent_api_keys a ON l.agent_key_id = a.id
+               WHERE l.agent_key_id = ?
+               ORDER BY l.created_at DESC
+               LIMIT ?""",
+            (agent_id, limit),
+        )
+    else:
+        cursor = await db.execute(
+            """SELECT l.*, a.name as agent_name
+               FROM agent_audit_log l
+               JOIN agent_api_keys a ON l.agent_key_id = a.id
+               ORDER BY l.created_at DESC
+               LIMIT ?""",
+            (limit,),
+        )
+    rows = await cursor.fetchall()
+    return {"actions": [dict(r) for r in rows]}
