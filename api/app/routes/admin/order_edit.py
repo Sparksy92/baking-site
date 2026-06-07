@@ -5,7 +5,7 @@ import logging
 
 from fastapi import APIRouter, Depends, HTTPException, status
 from pydantic import BaseModel, Field
-import aiosqlite
+from app.database import PostgresConnection
 
 from app.auth import require_admin
 from app.database import get_db
@@ -29,7 +29,7 @@ async def edit_order_item(
     order_id: int,
     item_id: int,
     body: OrderItemUpdate,
-    db: aiosqlite.Connection = Depends(get_db),
+    db: PostgresConnection = Depends(get_db),
     user: dict = Depends(require_admin),
 ):
     """Edit quantity of an order item. Set to 0 to remove.
@@ -98,7 +98,7 @@ async def edit_order_item(
 async def add_order_item(
     order_id: int,
     body: OrderItemAdd,
-    db: aiosqlite.Connection = Depends(get_db),
+    db: PostgresConnection = Depends(get_db),
     user: dict = Depends(require_admin),
 ):
     """Add a new item to an existing order (before fulfillment)."""

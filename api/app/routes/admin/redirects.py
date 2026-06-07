@@ -1,7 +1,7 @@
 from __future__ import annotations
 
 from fastapi import APIRouter, Depends, HTTPException, status
-import aiosqlite
+from app.database import PostgresConnection
 from pydantic import BaseModel, Field
 
 from app.auth import require_admin
@@ -24,7 +24,7 @@ class RedirectUpdate(BaseModel):
 
 @router.get("")
 async def list_redirects(
-    db: aiosqlite.Connection = Depends(get_db),
+    db: PostgresConnection = Depends(get_db),
     user: dict = Depends(require_admin),
 ):
     cursor = await db.execute(
@@ -37,7 +37,7 @@ async def list_redirects(
 @router.post("", status_code=status.HTTP_201_CREATED)
 async def create_redirect(
     body: RedirectCreate,
-    db: aiosqlite.Connection = Depends(get_db),
+    db: PostgresConnection = Depends(get_db),
     user: dict = Depends(require_admin),
 ):
     if body.status_code not in (301, 302, 307, 308):
@@ -52,13 +52,13 @@ async def create_redirect(
         row_cur = await db.execute("SELECT * FROM redirects WHERE id = ?", (new_id,))
         row = await row_cur.fetchone()
         return dict(row)
-    except aiosqlite.IntegrityError:
+    except Exception:
         raise HTTPException(status_code=409, detail="A redirect from this path already exists")
 
 
 @router.get("/export")
 async def export_redirects_alias(
-    db: aiosqlite.Connection = Depends(get_db),
+    db: PostgresConnection = Depends(get_db),
 ):
     """Export all active redirects — alias kept for backwards compat."""
     cursor = await db.execute(
@@ -71,7 +71,7 @@ async def export_redirects_alias(
 @router.get("/{redirect_id}")
 async def get_redirect(
     redirect_id: int,
-    db: aiosqlite.Connection = Depends(get_db),
+    db: PostgresConnection = Depends(get_db),
     user: dict = Depends(require_admin),
 ):
     cursor = await db.execute("SELECT * FROM redirects WHERE id = ?", (redirect_id,))
@@ -85,7 +85,7 @@ async def get_redirect(
 async def update_redirect(
     redirect_id: int,
     body: RedirectUpdate,
-    db: aiosqlite.Connection = Depends(get_db),
+    db: PostgresConnection = Depends(get_db),
     user: dict = Depends(require_admin),
 ):
     updates = body.model_dump(exclude_unset=True)
@@ -104,7 +104,7 @@ async def update_redirect(
 @router.delete("/{redirect_id}")
 async def delete_redirect(
     redirect_id: int,
-    db: aiosqlite.Connection = Depends(get_db),
+    db: PostgresConnection = Depends(get_db),
     user: dict = Depends(require_admin),
 ):
     result = await db.execute("DELETE FROM redirects WHERE id = ?", (redirect_id,))

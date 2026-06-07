@@ -5,7 +5,7 @@ import logging
 
 from fastapi import APIRouter, Depends, HTTPException, status
 from pydantic import BaseModel, Field
-import aiosqlite
+from app.database import PostgresConnection
 
 from app.auth import require_admin
 from app.database import get_db
@@ -27,7 +27,7 @@ class StoreCreditAdjust(BaseModel):
 
 
 async def _apply_credit(
-    db: aiosqlite.Connection,
+    db: PostgresConnection,
     customer_id: int,
     amount_cents: int,
     reason: str,
@@ -69,7 +69,7 @@ async def _apply_credit(
 @router.post("", status_code=status.HTTP_201_CREATED)
 async def issue_store_credit(
     body: StoreCreditIssue,
-    db: aiosqlite.Connection = Depends(get_db),
+    db: PostgresConnection = Depends(get_db),
     user: dict = Depends(require_admin),
 ):
     """Manually issue store credit to a customer."""
@@ -95,7 +95,7 @@ async def issue_store_credit(
 async def adjust_store_credit(
     customer_id: int,
     body: StoreCreditAdjust,
-    db: aiosqlite.Connection = Depends(get_db),
+    db: PostgresConnection = Depends(get_db),
     user: dict = Depends(require_admin),
 ):
     """Adjust (positive or negative) a customer's store credit balance."""
@@ -116,7 +116,7 @@ async def adjust_store_credit(
 @router.get("/{customer_id}")
 async def get_customer_store_credit(
     customer_id: int,
-    db: aiosqlite.Connection = Depends(get_db),
+    db: PostgresConnection = Depends(get_db),
     user: dict = Depends(require_admin),
 ):
     """Get a customer's store credit balance and transaction history."""

@@ -5,7 +5,7 @@ import logging
 
 from fastapi import APIRouter, Depends, HTTPException, status
 from pydantic import BaseModel, Field
-import aiosqlite
+from app.database import PostgresConnection
 
 from app.auth import require_admin
 from app.database import get_db
@@ -38,7 +38,7 @@ class FulfillmentUpdate(BaseModel):
 @router.get("/{order_id}/fulfillments")
 async def list_fulfillments(
     order_id: int,
-    db: aiosqlite.Connection = Depends(get_db),
+    db: PostgresConnection = Depends(get_db),
     user: dict = Depends(require_admin),
 ):
     """List all fulfillments for an order with their items."""
@@ -84,7 +84,7 @@ async def list_fulfillments(
 async def create_fulfillment(
     order_id: int,
     body: FulfillmentCreate,
-    db: aiosqlite.Connection = Depends(get_db),
+    db: PostgresConnection = Depends(get_db),
     user: dict = Depends(require_admin),
 ):
     """Create a new fulfillment (partial shipment) for an order."""
@@ -170,7 +170,7 @@ async def update_fulfillment(
     order_id: int,
     fulfillment_id: int,
     body: FulfillmentUpdate,
-    db: aiosqlite.Connection = Depends(get_db),
+    db: PostgresConnection = Depends(get_db),
     user: dict = Depends(require_admin),
 ):
     """Update a fulfillment (add tracking, mark delivered, etc)."""

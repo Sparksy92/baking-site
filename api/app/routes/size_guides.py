@@ -4,7 +4,7 @@ from __future__ import annotations
 import json
 
 from fastapi import APIRouter, Depends, HTTPException, status
-import aiosqlite
+from app.database import PostgresConnection
 
 from app.database import get_db
 
@@ -14,7 +14,7 @@ router = APIRouter(prefix="/size-guides", tags=["size-guides"])
 @router.get("/product/{product_id}")
 async def get_size_guide_for_product(
     product_id: int,
-    db: aiosqlite.Connection = Depends(get_db),
+    db: PostgresConnection = Depends(get_db),
 ):
     """Get the size guide for a specific product.
 

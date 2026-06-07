@@ -2,7 +2,7 @@ from __future__ import annotations
 
 from fastapi import APIRouter, Depends, Query
 from fastapi.responses import StreamingResponse
-import aiosqlite
+from app.database import PostgresConnection
 import csv
 import io
 
@@ -17,7 +17,7 @@ async def list_subscribers(
     active_only: bool = True,
     page: int = Query(default=1, ge=1),
     limit: int = Query(default=50, ge=1, le=200),
-    db: aiosqlite.Connection = Depends(get_db),
+    db: PostgresConnection = Depends(get_db),
     user: dict = Depends(require_admin),
 ):
     """List newsletter subscribers with pagination."""
@@ -44,7 +44,7 @@ async def list_subscribers(
 
 @router.get("/subscribers/export")
 async def export_subscribers(
-    db: aiosqlite.Connection = Depends(get_db),
+    db: PostgresConnection = Depends(get_db),
     user: dict = Depends(require_admin),
 ):
     """Export active newsletter subscribers as CSV."""

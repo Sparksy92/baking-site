@@ -2,7 +2,7 @@
 from __future__ import annotations
 
 from fastapi import APIRouter, Depends, HTTPException, status
-import aiosqlite
+from app.database import PostgresConnection
 
 from app.database import get_db
 
@@ -10,7 +10,7 @@ router = APIRouter(prefix="/bundles", tags=["bundles"])
 
 
 @router.get("")
-async def list_bundles(db: aiosqlite.Connection = Depends(get_db)):
+async def list_bundles(db: PostgresConnection = Depends(get_db)):
     """List active bundles."""
     cursor = await db.execute(
         "SELECT id, name, slug, description, discount_type, discount_value FROM bundles WHERE is_active = 1 ORDER BY name"
@@ -41,7 +41,7 @@ async def list_bundles(db: aiosqlite.Connection = Depends(get_db)):
 
 
 @router.get("/{slug}")
-async def get_bundle(slug: str, db: aiosqlite.Connection = Depends(get_db)):
+async def get_bundle(slug: str, db: PostgresConnection = Depends(get_db)):
     """Get a single bundle by slug."""
     cursor = await db.execute(
         "SELECT * FROM bundles WHERE slug = ? AND is_active = 1", (slug,)

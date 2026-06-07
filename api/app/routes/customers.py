@@ -4,7 +4,7 @@ import logging
 from datetime import datetime, timedelta, timezone
 
 from fastapi import APIRouter, Depends, HTTPException, Response, status
-import aiosqlite
+from app.database import PostgresConnection
 
 from app.config import get_settings
 from app.customer_auth import (
@@ -40,7 +40,7 @@ router = APIRouter(prefix="/customers", tags=["customers"])
 async def register(
     body: CustomerRegister,
     response: Response,
-    db: aiosqlite.Connection = Depends(get_db),
+    db: PostgresConnection = Depends(get_db),
 ):
     """Register a new customer account."""
     # Check for existing email
@@ -88,7 +88,7 @@ async def register(
 async def login(
     body: CustomerLogin,
     response: Response,
-    db: aiosqlite.Connection = Depends(get_db),
+    db: PostgresConnection = Depends(get_db),
 ):
     """Authenticate a customer."""
     cursor = await db.execute(
@@ -141,7 +141,7 @@ async def logout(response: Response):
 
 @router.get("/me", response_model=CustomerResponse)
 async def me(
-    db: aiosqlite.Connection = Depends(get_db),
+    db: PostgresConnection = Depends(get_db),
     customer: dict = Depends(get_current_customer),
 ):
     """Get current customer profile."""
@@ -161,7 +161,7 @@ async def me(
 @router.patch("/me", response_model=CustomerResponse)
 async def update_profile(
     body: CustomerUpdate,
-    db: aiosqlite.Connection = Depends(get_db),
+    db: PostgresConnection = Depends(get_db),
     customer: dict = Depends(get_current_customer),
 ):
     """Update customer profile fields."""
@@ -192,7 +192,7 @@ async def update_profile(
 @router.post("/me/change-password")
 async def change_password(
     body: CustomerPasswordChange,
-    db: aiosqlite.Connection = Depends(get_db),
+    db: PostgresConnection = Depends(get_db),
     customer: dict = Depends(get_current_customer),
 ):
     """Change password for logged-in customer."""
@@ -214,7 +214,7 @@ async def change_password(
 @router.post("/forgot-password")
 async def forgot_password(
     body: CustomerPasswordResetRequest,
-    db: aiosqlite.Connection = Depends(get_db),
+    db: PostgresConnection = Depends(get_db),
 ):
     """Request a password reset email."""
     cursor = await db.execute(
@@ -253,7 +253,7 @@ async def forgot_password(
 @router.post("/reset-password")
 async def reset_password(
     body: CustomerPasswordReset,
-    db: aiosqlite.Connection = Depends(get_db),
+    db: PostgresConnection = Depends(get_db),
 ):
     """Reset password using a token from the forgot-password email."""
     cursor = await db.execute(
@@ -284,7 +284,7 @@ async def reset_password(
 
 @router.get("/me/addresses", response_model=list[AddressResponse])
 async def list_addresses(
-    db: aiosqlite.Connection = Depends(get_db),
+    db: PostgresConnection = Depends(get_db),
     customer: dict = Depends(get_current_customer),
 ):
     customer_id = int(customer["sub"])
@@ -299,7 +299,7 @@ async def list_addresses(
 @router.post("/me/addresses", response_model=AddressResponse, status_code=status.HTTP_201_CREATED)
 async def create_address(
     body: AddressCreate,
-    db: aiosqlite.Connection = Depends(get_db),
+    db: PostgresConnection = Depends(get_db),
     customer: dict = Depends(get_current_customer),
 ):
     customer_id = int(customer["sub"])
@@ -339,7 +339,7 @@ async def create_address(
 async def update_address(
     address_id: int,
     body: AddressUpdate,
-    db: aiosqlite.Connection = Depends(get_db),
+    db: PostgresConnection = Depends(get_db),
     customer: dict = Depends(get_current_customer),
 ):
     customer_id = int(customer["sub"])
@@ -377,7 +377,7 @@ async def update_address(
 @router.delete("/me/addresses/{address_id}")
 async def delete_address(
     address_id: int,
-    db: aiosqlite.Connection = Depends(get_db),
+    db: PostgresConnection = Depends(get_db),
     customer: dict = Depends(get_current_customer),
 ):
     customer_id = int(customer["sub"])
@@ -407,7 +407,7 @@ async def delete_address(
 
 @router.get("/me/orders")
 async def list_orders(
-    db: aiosqlite.Connection = Depends(get_db),
+    db: PostgresConnection = Depends(get_db),
     customer: dict = Depends(get_current_customer),
 ):
     """List all orders for the logged-in customer."""
@@ -446,7 +446,7 @@ async def list_orders(
 @router.get("/me/orders/{order_number}")
 async def get_order_detail(
     order_number: str,
-    db: aiosqlite.Connection = Depends(get_db),
+    db: PostgresConnection = Depends(get_db),
     customer: dict = Depends(get_current_customer),
 ):
     """Get full order details for the logged-in customer. No email required."""

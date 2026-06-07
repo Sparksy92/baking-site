@@ -8,7 +8,7 @@ import logging
 from datetime import datetime, timezone
 
 import httpx
-import aiosqlite
+from app.database import PostgresConnection
 
 from app.database import get_db
 
@@ -39,7 +39,7 @@ async def dispatch_event(event_type: str, payload: dict) -> None:
         logger.exception("Failed to dispatch webhook event: %s", event_type)
 
 
-async def _deliver(db: aiosqlite.Connection, hook: dict, event_type: str, payload: dict) -> None:
+async def _deliver(db: PostgresConnection, hook: dict, event_type: str, payload: dict) -> None:
     """Attempt to deliver a single webhook."""
     body = json.dumps({
         "event": event_type,

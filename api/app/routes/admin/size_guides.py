@@ -5,7 +5,7 @@ import json
 
 from fastapi import APIRouter, Depends, HTTPException, status
 from pydantic import BaseModel, Field
-import aiosqlite
+from app.database import PostgresConnection
 
 from app.auth import require_admin
 from app.database import get_db
@@ -31,7 +31,7 @@ class SizeGuideUpdate(BaseModel):
 
 @router.get("")
 async def list_size_guides(
-    db: aiosqlite.Connection = Depends(get_db),
+    db: PostgresConnection = Depends(get_db),
     user: dict = Depends(require_admin),
 ):
     cursor = await db.execute("SELECT * FROM size_guides ORDER BY name")
@@ -41,7 +41,7 @@ async def list_size_guides(
 @router.post("", status_code=status.HTTP_201_CREATED)
 async def create_size_guide(
     body: SizeGuideCreate,
-    db: aiosqlite.Connection = Depends(get_db),
+    db: PostgresConnection = Depends(get_db),
     user: dict = Depends(require_admin),
 ):
     try:
@@ -66,7 +66,7 @@ async def create_size_guide(
 async def update_size_guide(
     guide_id: int,
     body: SizeGuideUpdate,
-    db: aiosqlite.Connection = Depends(get_db),
+    db: PostgresConnection = Depends(get_db),
     user: dict = Depends(require_admin),
 ):
     cursor = await db.execute("SELECT id FROM size_guides WHERE id = ?", (guide_id,))
@@ -102,7 +102,7 @@ async def update_size_guide(
 @router.delete("/{guide_id}")
 async def delete_size_guide(
     guide_id: int,
-    db: aiosqlite.Connection = Depends(get_db),
+    db: PostgresConnection = Depends(get_db),
     user: dict = Depends(require_admin),
 ):
     cursor = await db.execute("SELECT id FROM size_guides WHERE id = ?", (guide_id,))

@@ -2,7 +2,7 @@ from __future__ import annotations
 
 from fastapi import APIRouter, Depends, HTTPException, status
 from pydantic import BaseModel
-import aiosqlite
+from app.database import PostgresConnection
 
 from app.auth import require_admin
 from app.database import get_db
@@ -17,7 +17,7 @@ class SettingUpdate(BaseModel):
 
 @router.get("")
 async def get_all_settings(
-    db: aiosqlite.Connection = Depends(get_db),
+    db: PostgresConnection = Depends(get_db),
     user: dict = Depends(require_admin),
 ):
     cursor = await db.execute("SELECT * FROM settings ORDER BY key")
@@ -28,7 +28,7 @@ async def get_all_settings(
 @router.put("")
 async def update_settings(
     updates: list[SettingUpdate],
-    db: aiosqlite.Connection = Depends(get_db),
+    db: PostgresConnection = Depends(get_db),
     user: dict = Depends(require_admin),
 ):
     for item in updates:

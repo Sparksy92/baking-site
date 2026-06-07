@@ -1,7 +1,7 @@
 from __future__ import annotations
 
 from fastapi import APIRouter, Depends
-import aiosqlite
+from app.database import PostgresConnection
 
 from app.config import get_settings
 from app.database import get_db
@@ -11,7 +11,7 @@ router = APIRouter(tags=["settings"])
 
 
 @router.get("/settings/public", response_model=PublicSettingsResponse)
-async def get_public_settings(db: aiosqlite.Connection = Depends(get_db)):
+async def get_public_settings(db: PostgresConnection = Depends(get_db)):
     settings = get_settings()
 
     cursor = await db.execute("SELECT key, value FROM settings")

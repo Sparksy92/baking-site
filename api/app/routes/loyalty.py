@@ -3,7 +3,7 @@ from __future__ import annotations
 
 from fastapi import APIRouter, Depends, HTTPException, status
 from pydantic import BaseModel
-import aiosqlite
+from app.database import PostgresConnection
 
 from app.customer_auth import get_current_customer
 from app.database import get_db
@@ -13,7 +13,7 @@ router = APIRouter(prefix="/loyalty", tags=["loyalty"])
 
 @router.get("/balance")
 async def get_loyalty_balance(
-    db: aiosqlite.Connection = Depends(get_db),
+    db: PostgresConnection = Depends(get_db),
     customer: dict = Depends(get_current_customer),
 ):
     """Get current loyalty points balance."""
@@ -43,7 +43,7 @@ async def get_loyalty_balance(
 
 @router.get("/history")
 async def get_loyalty_history(
-    db: aiosqlite.Connection = Depends(get_db),
+    db: PostgresConnection = Depends(get_db),
     customer: dict = Depends(get_current_customer),
 ):
     """Get loyalty points transaction history."""

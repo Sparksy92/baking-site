@@ -4,7 +4,7 @@ import logging
 from datetime import datetime, timezone
 
 from fastapi import APIRouter, Depends, HTTPException, Request, Response, status
-import aiosqlite
+from app.database import PostgresConnection
 
 from app.auth import (
     AUTH_COOKIE_NAME,
@@ -27,7 +27,7 @@ async def login(
     body: LoginRequest,
     response: Response,
     request: Request,
-    db: aiosqlite.Connection = Depends(get_db),
+    db: PostgresConnection = Depends(get_db),
 ):
     cursor = await db.execute(
         "SELECT * FROM admin_users WHERE username = ? AND is_active = 1",

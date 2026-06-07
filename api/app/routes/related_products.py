@@ -2,7 +2,7 @@
 from __future__ import annotations
 
 from fastapi import APIRouter, Depends, Query
-import aiosqlite
+from app.database import PostgresConnection
 
 from app.database import get_db
 
@@ -13,7 +13,7 @@ router = APIRouter(tags=["products"])
 async def get_related_products(
     product_id: int,
     limit: int = Query(default=4, ge=1, le=12),
-    db: aiosqlite.Connection = Depends(get_db),
+    db: PostgresConnection = Depends(get_db),
 ):
     """Get related products for a given product.
 

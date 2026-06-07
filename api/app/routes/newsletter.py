@@ -4,7 +4,7 @@ import logging
 
 from fastapi import APIRouter, Depends, HTTPException, status
 from pydantic import BaseModel, EmailStr
-import aiosqlite
+from app.database import PostgresConnection
 
 from app.database import get_db
 
@@ -24,7 +24,7 @@ class NewsletterSubscribeResponse(BaseModel):
 @router.post("/newsletter/subscribe", response_model=NewsletterSubscribeResponse)
 async def subscribe(
     body: NewsletterSubscribeRequest,
-    db: aiosqlite.Connection = Depends(get_db),
+    db: PostgresConnection = Depends(get_db),
 ):
     """Subscribe an email to the newsletter."""
     try:
@@ -48,7 +48,7 @@ async def subscribe(
 @router.post("/newsletter/unsubscribe", response_model=NewsletterSubscribeResponse)
 async def unsubscribe(
     body: NewsletterSubscribeRequest,
-    db: aiosqlite.Connection = Depends(get_db),
+    db: PostgresConnection = Depends(get_db),
 ):
     """Unsubscribe an email from the newsletter."""
     result = await db.execute(

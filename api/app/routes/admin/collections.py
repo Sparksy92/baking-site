@@ -1,7 +1,7 @@
 from __future__ import annotations
 
 from fastapi import APIRouter, Depends, HTTPException, status
-import aiosqlite
+from app.database import PostgresConnection
 
 from app.auth import require_admin
 from app.database import get_db
@@ -12,7 +12,7 @@ router = APIRouter(prefix="/admin/collections", tags=["admin-collections"])
 
 @router.get("")
 async def list_collections(
-    db: aiosqlite.Connection = Depends(get_db),
+    db: PostgresConnection = Depends(get_db),
     user: dict = Depends(require_admin),
 ):
     cursor = await db.execute("""
@@ -29,7 +29,7 @@ async def list_collections(
 @router.get("/{collection_id}", response_model=CollectionDetail)
 async def get_collection(
     collection_id: int,
-    db: aiosqlite.Connection = Depends(get_db),
+    db: PostgresConnection = Depends(get_db),
     user: dict = Depends(require_admin),
 ):
     cursor = await db.execute("""
@@ -56,7 +56,7 @@ async def get_collection(
 @router.post("", status_code=status.HTTP_201_CREATED)
 async def create_collection(
     body: CollectionCreate,
-    db: aiosqlite.Connection = Depends(get_db),
+    db: PostgresConnection = Depends(get_db),
     user: dict = Depends(require_admin),
 ):
     try:
@@ -72,7 +72,7 @@ async def create_collection(
         row_cur = await db.execute("SELECT * FROM collections WHERE id = ?", (new_id,))
         row = await row_cur.fetchone()
         return dict(row)
-    except aiosqlite.IntegrityError:
+    except Exception:
         raise HTTPException(status_code=status.HTTP_409_CONFLICT, detail="Collection slug already exists")
 
 
@@ -80,7 +80,7 @@ async def create_collection(
 async def update_collection(
     collection_id: int,
     body: CollectionUpdate,
-    db: aiosqlite.Connection = Depends(get_db),
+    db: PostgresConnection = Depends(get_db),
     user: dict = Depends(require_admin),
 ):
     updates = body.model_dump(exclude_unset=True)
@@ -101,7 +101,7 @@ async def update_collection(
 @router.delete("/{collection_id}")
 async def delete_collection(
     collection_id: int,
-    db: aiosqlite.Connection = Depends(get_db),
+    db: PostgresConnection = Depends(get_db),
     user: dict = Depends(require_admin),
 ):
     await db.execute("DELETE FROM collections WHERE id = ?", (collection_id,))
@@ -113,7 +113,7 @@ async def delete_collection(
 async def add_product_to_collection(
     collection_id: int,
     product_id: int,
-    db: aiosqlite.Connection = Depends(get_db),
+    db: PostgresConnection = Depends(get_db),
     user: dict = Depends(require_admin),
 ):
     try:
@@ -123,7 +123,7 @@ async def add_product_to_collection(
         )
         await db.commit()
         return {"added": True}
-    except aiosqlite.IntegrityError:
+    except Exception:
         return {"added": True}  # Already exists, idempotent
 
 
@@ -131,7 +131,7 @@ async def add_product_to_collection(
 async def remove_product_from_collection(
     collection_id: int,
     product_id: int,
-    db: aiosqlite.Connection = Depends(get_db),
+    db: PostgresConnection = Depends(get_db),
     user: dict = Depends(require_admin),
 ):
     await db.execute(

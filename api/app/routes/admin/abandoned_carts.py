@@ -2,7 +2,7 @@
 from __future__ import annotations
 
 from fastapi import APIRouter, Depends, Query
-import aiosqlite
+from app.database import PostgresConnection
 
 from app.auth import require_admin
 from app.database import get_db
@@ -16,7 +16,7 @@ async def list_abandoned_carts(
     status_filter: str = Query(default="abandoned", alias="status"),
     page: int = Query(default=1, ge=1),
     limit: int = Query(default=50, ge=1, le=200),
-    db: aiosqlite.Connection = Depends(get_db),
+    db: PostgresConnection = Depends(get_db),
     user: dict = Depends(require_admin),
 ):
     """List carts by status with item counts and totals."""
@@ -42,7 +42,7 @@ async def list_abandoned_carts(
 
 @router.post("/process-abandoned")
 async def trigger_abandoned_cart_processing(
-    db: aiosqlite.Connection = Depends(get_db),
+    db: PostgresConnection = Depends(get_db),
     user: dict = Depends(require_admin),
 ):
     """Manually trigger abandoned cart email processing.
@@ -55,7 +55,7 @@ async def trigger_abandoned_cart_processing(
 
 @router.get("/stats")
 async def abandoned_cart_stats(
-    db: aiosqlite.Connection = Depends(get_db),
+    db: PostgresConnection = Depends(get_db),
     user: dict = Depends(require_admin),
 ):
     """Get abandoned cart recovery statistics."""

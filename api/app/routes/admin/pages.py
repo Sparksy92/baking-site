@@ -5,7 +5,7 @@ import logging
 
 from fastapi import APIRouter, Depends, HTTPException, Query, status
 from pydantic import BaseModel, Field
-import aiosqlite
+from app.database import PostgresConnection
 
 from app.auth import require_admin
 from app.database import get_db
@@ -53,7 +53,7 @@ async def list_pages(
     page_type: str | None = Query(None),
     page: int = Query(1, ge=1),
     limit: int = Query(50, ge=1, le=200),
-    db: aiosqlite.Connection = Depends(get_db),
+    db: PostgresConnection = Depends(get_db),
     user: dict = Depends(require_admin),
 ):
     """List all pages (including drafts) for admin."""
@@ -81,7 +81,7 @@ async def list_pages(
 @router.get("/{page_id}")
 async def get_page(
     page_id: int,
-    db: aiosqlite.Connection = Depends(get_db),
+    db: PostgresConnection = Depends(get_db),
     user: dict = Depends(require_admin),
 ):
     cursor = await db.execute("SELECT * FROM pages WHERE id = ?", (page_id,))
@@ -94,7 +94,7 @@ async def get_page(
 @router.post("", status_code=status.HTTP_201_CREATED)
 async def create_page(
     body: PageCreate,
-    db: aiosqlite.Connection = Depends(get_db),
+    db: PostgresConnection = Depends(get_db),
     user: dict = Depends(require_admin),
 ):
     published_at = "CURRENT_TIMESTAMP" if body.status == "published" else None
@@ -112,7 +112,7 @@ async def create_page(
         )
         new_id = cursor.lastrowid
         await db.commit()
-    except aiosqlite.IntegrityError:
+    except Exception:
         raise HTTPException(status_code=status.HTTP_409_CONFLICT, detail="Slug already exists")
 
     return {"id": new_id, "slug": body.slug}
@@ -121,7 +121,7 @@ async def create_page(
 @router.get("/{page_id}")
 async def get_page(
     page_id: int,
-    db: aiosqlite.Connection = Depends(get_db),
+    db: PostgresConnection = Depends(get_db),
     user: dict = Depends(require_admin),
 ):
     cursor = await db.execute("SELECT * FROM pages WHERE id = ?", (page_id,))
@@ -135,7 +135,7 @@ async def get_page(
 async def update_page(
     page_id: int,
     body: PageUpdate,
-    db: aiosqlite.Connection = Depends(get_db),
+    db: PostgresConnection = Depends(get_db),
     user: dict = Depends(require_admin),
 ):
     cursor = await db.execute("SELECT * FROM pages WHERE id = ?", (page_id,))
@@ -175,7 +175,7 @@ async def update_page(
 @router.delete("/{page_id}")
 async def delete_page(
     page_id: int,
-    db: aiosqlite.Connection = Depends(get_db),
+    db: PostgresConnection = Depends(get_db),
     user: dict = Depends(require_admin),
 ):
     cursor = await db.execute("SELECT id FROM pages WHERE id = ?", (page_id,))
