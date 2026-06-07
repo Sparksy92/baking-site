@@ -84,6 +84,8 @@ class Settings(BaseSettings):
     meta_page_access_token: str = ""
     meta_facebook_page_id: str = ""
     meta_instagram_account_id: str = ""
+    meta_app_secret: str = ""         # Used to verify webhook signatures (Meta App Secret from developer portal)
+    meta_webhook_verify_token: str = "rez-hub-webhook-verify"  # Arbitrary string — must match what you set in Meta dashboard
 
     # ── Integrations — AI ────────────────────────────────────────
     openai_api_key: str = ""

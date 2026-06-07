@@ -12,6 +12,7 @@ import logging
 import httpx
 
 from app.config import get_settings
+from app.services.utm_service import tag_content_links
 
 logger = logging.getLogger(__name__)
 
@@ -35,8 +36,9 @@ async def publish_to_facebook(content: str, image_url: str | None) -> str:
         raise PublishError("Facebook not configured. Set META_PAGE_ACCESS_TOKEN and META_FACEBOOK_PAGE_ID.")
 
     url = f"{GRAPH_BASE}/{settings.meta_facebook_page_id}/feed"
+    tagged_content = tag_content_links(content, "facebook", "social-post")
     payload: dict = {
-        "message": content,
+        "message": tagged_content,
         "access_token": settings.meta_page_access_token,
     }
 

@@ -10,6 +10,7 @@ import aiosqlite
 from app.auth import require_admin
 from app.database import get_db
 from app.services.social_publish_service import publish_post, PublishError
+from app.services.token_refresh_service import refresh_expiring_tokens
 
 logger = logging.getLogger(__name__)
 
@@ -334,3 +335,18 @@ async def publish_outbox_post(
 
     logger.info(f"Published social post {post_id} to {post['platform']}: platform_post_id={platform_post_id}")
     return {"published": True, "platform_post_id": platform_post_id}
+
+
+# ── Token management ─────────────────────────────────────────────────────────
+
+@router.post("/refresh-tokens")
+async def manual_token_refresh(
+    user: dict = Depends(require_admin),
+):
+    """Manually trigger Meta access token refresh check.
+
+    Normally runs automatically on startup. Use this if a platform shows
+    'error' status after a token expiry.
+    """
+    summary = await refresh_expiring_tokens()
+    return summary

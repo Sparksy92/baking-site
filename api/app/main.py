@@ -11,6 +11,7 @@ from fastapi.staticfiles import StaticFiles
 from app.config import get_settings
 from app.database import init_db
 from app.services.meta_service import run_social_sync
+from app.services.token_refresh_service import refresh_expiring_tokens
 from app.middleware.logging import setup_logging
 from app.middleware.rate_limit import RateLimitMiddleware
 from app.middleware.request_id import RequestIdMiddleware
@@ -80,12 +81,26 @@ async def lifespan(app: FastAPI):
                 logger.error(f"Background social sync error: {e}", exc_info=True)
             await asyncio.sleep(3600)
 
+    async def _background_token_refresh():
+        """Check and refresh expiring Meta tokens once at startup then every 24 hours."""
+        await asyncio.sleep(30)
+        while True:
+            try:
+                summary = await refresh_expiring_tokens()
+                if summary["refreshed"] or summary["failed"]:
+                    logger.info(f"Token refresh run: {summary}")
+            except Exception as e:
+                logger.error(f"Background token refresh error: {e}", exc_info=True)
+            await asyncio.sleep(86400)
+
     sync_task = asyncio.ensure_future(_background_social_sync())
+    token_task = asyncio.ensure_future(_background_token_refresh())
 
     await init_db()
     logger.info("Database initialized")
     yield
     sync_task.cancel()
+    token_task.cancel()
     logger.info("Shutting down")
 
 
