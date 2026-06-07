@@ -6,7 +6,7 @@ import logging
 
 from fastapi import APIRouter, Depends, HTTPException, Request, Response, status
 from pydantic import BaseModel, EmailStr, Field
-import aiosqlite
+from app.database import PostgresConnection
 
 from app.customer_auth import get_optional_customer
 from app.database import get_db
@@ -35,7 +35,7 @@ class CartEmailCapture(BaseModel):
 async def _get_or_create_cart(
     request: Request,
     response: Response,
-    db: aiosqlite.Connection,
+    db: PostgresConnection,
     customer: dict | None,
 ) -> dict:
     """Get existing cart or create new one. Returns cart row."""
@@ -75,7 +75,7 @@ async def _get_or_create_cart(
 async def get_cart(
     request: Request,
     response: Response,
-    db: aiosqlite.Connection = Depends(get_db),
+    db: PostgresConnection = Depends(get_db),
     customer: dict | None = Depends(get_optional_customer),
 ):
     """Get current cart contents with product details."""
@@ -109,7 +109,7 @@ async def add_to_cart(
     body: CartItemAdd,
     request: Request,
     response: Response,
-    db: aiosqlite.Connection = Depends(get_db),
+    db: PostgresConnection = Depends(get_db),
     customer: dict | None = Depends(get_optional_customer),
 ):
     """Add item to cart (or update quantity if already present)."""
@@ -168,7 +168,7 @@ async def update_cart_item(
     body: CartItemUpdate,
     request: Request,
     response: Response,
-    db: aiosqlite.Connection = Depends(get_db),
+    db: PostgresConnection = Depends(get_db),
     customer: dict | None = Depends(get_optional_customer),
 ):
     """Update quantity (0 = remove) of a cart item."""
@@ -205,7 +205,7 @@ async def capture_cart_email(
     body: CartEmailCapture,
     request: Request,
     response: Response,
-    db: aiosqlite.Connection = Depends(get_db),
+    db: PostgresConnection = Depends(get_db),
     customer: dict | None = Depends(get_optional_customer),
 ):
     """Capture customer email early in checkout flow for abandoned cart recovery."""
@@ -223,7 +223,7 @@ async def capture_cart_email(
 @router.post("/convert")
 async def mark_cart_converted(
     request: Request,
-    db: aiosqlite.Connection = Depends(get_db),
+    db: PostgresConnection = Depends(get_db),
 ):
     """Mark cart as converted after successful checkout."""
     cart_token = request.cookies.get(CART_COOKIE_NAME)

@@ -8,7 +8,7 @@ import logging
 from fastapi import APIRouter, Depends, HTTPException, status
 from fastapi.responses import StreamingResponse
 from pydantic import BaseModel, Field
-import aiosqlite
+from app.database import PostgresConnection
 
 from app.auth import require_admin
 from app.database import get_db
@@ -26,7 +26,7 @@ class BulkStatusUpdate(BaseModel):
 @router.post("/bulk/update-status")
 async def bulk_update_status(
     body: BulkStatusUpdate,
-    db: aiosqlite.Connection = Depends(get_db),
+    db: PostgresConnection = Depends(get_db),
     user: dict = Depends(require_admin),
 ):
     """Update status for multiple orders at once."""
@@ -49,7 +49,7 @@ class BulkExportFilter(BaseModel):
 @router.post("/bulk/export")
 async def bulk_export_orders(
     body: BulkExportFilter,
-    db: aiosqlite.Connection = Depends(get_db),
+    db: PostgresConnection = Depends(get_db),
     user: dict = Depends(require_admin),
 ):
     """Export orders to CSV."""

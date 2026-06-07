@@ -6,7 +6,7 @@ import logging
 
 from fastapi import APIRouter, Depends, HTTPException, status
 from pydantic import BaseModel, Field
-import aiosqlite
+from app.database import PostgresConnection
 
 from app.auth import require_admin
 from app.database import get_db
@@ -33,7 +33,7 @@ class SegmentUpdate(BaseModel):
 
 @router.get("")
 async def list_segments(
-    db: aiosqlite.Connection = Depends(get_db),
+    db: PostgresConnection = Depends(get_db),
     user: dict = Depends(require_admin),
 ):
     cursor = await db.execute("""
@@ -49,7 +49,7 @@ async def list_segments(
 @router.get("/{segment_id}")
 async def get_segment(
     segment_id: int,
-    db: aiosqlite.Connection = Depends(get_db),
+    db: PostgresConnection = Depends(get_db),
     user: dict = Depends(require_admin),
 ):
     cursor = await db.execute("SELECT * FROM customer_segments WHERE id = ?", (segment_id,))
@@ -74,7 +74,7 @@ async def get_segment(
 @router.post("", status_code=status.HTTP_201_CREATED)
 async def create_segment(
     body: SegmentCreate,
-    db: aiosqlite.Connection = Depends(get_db),
+    db: PostgresConnection = Depends(get_db),
     user: dict = Depends(require_admin),
 ):
     # Validate JSON rules if provided
@@ -91,7 +91,7 @@ async def create_segment(
             (body.name, body.slug, body.description, body.rules_json, int(body.is_auto)),
         )
         await db.commit()
-    except aiosqlite.IntegrityError:
+    except Exception:
         raise HTTPException(status_code=status.HTTP_409_CONFLICT, detail="Slug already exists")
 
     return {"id": cursor.lastrowid, "name": body.name}
@@ -101,7 +101,7 @@ async def create_segment(
 async def update_segment(
     segment_id: int,
     body: SegmentUpdate,
-    db: aiosqlite.Connection = Depends(get_db),
+    db: PostgresConnection = Depends(get_db),
     user: dict = Depends(require_admin),
 ):
     cursor = await db.execute("SELECT id FROM customer_segments WHERE id = ?", (segment_id,))
@@ -128,7 +128,7 @@ async def update_segment(
 @router.delete("/{segment_id}")
 async def delete_segment(
     segment_id: int,
-    db: aiosqlite.Connection = Depends(get_db),
+    db: PostgresConnection = Depends(get_db),
     user: dict = Depends(require_admin),
 ):
     cursor = await db.execute("SELECT id FROM customer_segments WHERE id = ?", (segment_id,))
@@ -144,7 +144,7 @@ async def delete_segment(
 async def add_member(
     segment_id: int,
     customer_id: int,
-    db: aiosqlite.Connection = Depends(get_db),
+    db: PostgresConnection = Depends(get_db),
     user: dict = Depends(require_admin),
 ):
     try:
@@ -153,7 +153,7 @@ async def add_member(
             (segment_id, customer_id),
         )
         await db.commit()
-    except aiosqlite.IntegrityError:
+    except Exception:
         raise HTTPException(status_code=status.HTTP_409_CONFLICT, detail="Already a member")
     return {"added": True}
 
@@ -162,7 +162,7 @@ async def add_member(
 async def remove_member(
     segment_id: int,
     customer_id: int,
-    db: aiosqlite.Connection = Depends(get_db),
+    db: PostgresConnection = Depends(get_db),
     user: dict = Depends(require_admin),
 ):
     result = await db.execute(

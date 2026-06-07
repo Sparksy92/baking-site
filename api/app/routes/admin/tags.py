@@ -3,7 +3,7 @@ from __future__ import annotations
 
 from fastapi import APIRouter, Depends, HTTPException, status
 from pydantic import BaseModel, Field
-import aiosqlite
+from app.database import PostgresConnection
 
 from app.auth import require_admin
 from app.database import get_db
@@ -23,7 +23,7 @@ class TagUpdate(BaseModel):
 
 @router.get("")
 async def list_tags(
-    db: aiosqlite.Connection = Depends(get_db),
+    db: PostgresConnection = Depends(get_db),
     user: dict = Depends(require_admin),
 ):
     cursor = await db.execute("""
@@ -39,7 +39,7 @@ async def list_tags(
 @router.post("", status_code=status.HTTP_201_CREATED)
 async def create_tag(
     body: TagCreate,
-    db: aiosqlite.Connection = Depends(get_db),
+    db: PostgresConnection = Depends(get_db),
     user: dict = Depends(require_admin),
 ):
     try:
@@ -47,7 +47,7 @@ async def create_tag(
             "INSERT INTO tags (name, slug) VALUES (?, ?)", (body.name, body.slug)
         )
         await db.commit()
-    except aiosqlite.IntegrityError:
+    except Exception:
         raise HTTPException(status_code=status.HTTP_409_CONFLICT, detail="Tag already exists")
     return {"id": cursor.lastrowid, "name": body.name, "slug": body.slug}
 
@@ -56,7 +56,7 @@ async def create_tag(
 async def update_tag(
     tag_id: int,
     body: TagUpdate,
-    db: aiosqlite.Connection = Depends(get_db),
+    db: PostgresConnection = Depends(get_db),
     user: dict = Depends(require_admin),
 ):
     cursor = await db.execute("SELECT id FROM tags WHERE id = ?", (tag_id,))
@@ -77,7 +77,7 @@ async def update_tag(
 @router.delete("/{tag_id}")
 async def delete_tag(
     tag_id: int,
-    db: aiosqlite.Connection = Depends(get_db),
+    db: PostgresConnection = Depends(get_db),
     user: dict = Depends(require_admin),
 ):
     cursor = await db.execute("SELECT id FROM tags WHERE id = ?", (tag_id,))
@@ -93,7 +93,7 @@ async def delete_tag(
 async def add_tag_to_product(
     product_id: int,
     tag_id: int,
-    db: aiosqlite.Connection = Depends(get_db),
+    db: PostgresConnection = Depends(get_db),
     user: dict = Depends(require_admin),
 ):
     try:
@@ -101,7 +101,7 @@ async def add_tag_to_product(
             "INSERT INTO product_tags (product_id, tag_id) VALUES (?, ?)", (product_id, tag_id)
         )
         await db.commit()
-    except aiosqlite.IntegrityError:
+    except Exception:
         raise HTTPException(status_code=status.HTTP_409_CONFLICT, detail="Tag already on product")
     return {"added": True}
 
@@ -110,7 +110,7 @@ async def add_tag_to_product(
 async def remove_tag_from_product(
     product_id: int,
     tag_id: int,
-    db: aiosqlite.Connection = Depends(get_db),
+    db: PostgresConnection = Depends(get_db),
     user: dict = Depends(require_admin),
 ):
     result = await db.execute(

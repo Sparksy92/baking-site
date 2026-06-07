@@ -7,7 +7,7 @@ from __future__ import annotations
 
 import logging
 
-import aiosqlite
+from app.database import PostgresConnection
 import resend
 
 from app.config import get_settings
@@ -16,7 +16,7 @@ from app.services.email_service import _init_resend
 logger = logging.getLogger(__name__)
 
 
-async def process_abandoned_carts(db: aiosqlite.Connection) -> dict:
+async def process_abandoned_carts(db: PostgresConnection) -> dict:
     """Process all abandoned carts and send recovery emails.
 
     Intervals:
@@ -75,7 +75,7 @@ async def process_abandoned_carts(db: aiosqlite.Connection) -> dict:
 
 
 async def _send_reminders(
-    db: aiosqlite.Connection,
+    db: PostgresConnection,
     settings,
     time_condition: str,
     flag_column: str,

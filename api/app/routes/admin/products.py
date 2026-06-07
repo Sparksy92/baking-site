@@ -3,7 +3,7 @@ from __future__ import annotations
 import logging
 
 from fastapi import APIRouter, Depends, HTTPException, UploadFile, File, status
-import aiosqlite
+from app.database import PostgresConnection
 
 from app.auth import require_admin
 from app.config import get_settings
@@ -20,7 +20,7 @@ router = APIRouter(prefix="/admin/products", tags=["admin-products"])
 
 @router.get("")
 async def list_all_products(
-    db: aiosqlite.Connection = Depends(get_db),
+    db: PostgresConnection = Depends(get_db),
     user: dict = Depends(require_admin),
 ):
     """List all products (including inactive) for admin."""
@@ -39,7 +39,7 @@ async def list_all_products(
 @router.post("", status_code=status.HTTP_201_CREATED)
 async def create_product(
     body: ProductCreate,
-    db: aiosqlite.Connection = Depends(get_db),
+    db: PostgresConnection = Depends(get_db),
     user: dict = Depends(require_admin),
 ):
     """Create a new product."""
@@ -58,14 +58,14 @@ async def create_product(
         row_cursor = await db.execute("SELECT * FROM products WHERE id = ?", (new_id,))
         row = await row_cursor.fetchone()
         return dict(row)
-    except aiosqlite.IntegrityError:
+    except Exception:
         raise HTTPException(status_code=status.HTTP_409_CONFLICT, detail="Product slug already exists")
 
 
 @router.get("/{product_id}")
 async def get_product(
     product_id: int,
-    db: aiosqlite.Connection = Depends(get_db),
+    db: PostgresConnection = Depends(get_db),
     user: dict = Depends(require_admin),
 ):
     """Get a single product with its variants and images."""
@@ -113,7 +113,7 @@ async def get_product(
 async def update_product(
     product_id: int,
     body: ProductUpdate,
-    db: aiosqlite.Connection = Depends(get_db),
+    db: PostgresConnection = Depends(get_db),
     user: dict = Depends(require_admin),
 ):
     """Update product fields."""
@@ -135,7 +135,7 @@ async def update_product(
 @router.delete("/{product_id}")
 async def delete_product(
     product_id: int,
-    db: aiosqlite.Connection = Depends(get_db),
+    db: PostgresConnection = Depends(get_db),
     user: dict = Depends(require_admin),
 ):
     """Soft-delete a product (deactivate). Hard-delete only if no orders reference it."""
@@ -163,7 +163,7 @@ async def delete_product(
 async def create_variant(
     product_id: int,
     body: VariantCreate,
-    db: aiosqlite.Connection = Depends(get_db),
+    db: PostgresConnection = Depends(get_db),
     user: dict = Depends(require_admin),
 ):
     """Add a variant to a product."""
@@ -187,7 +187,7 @@ async def update_variant(
     product_id: int,
     variant_id: int,
     body: VariantUpdate,
-    db: aiosqlite.Connection = Depends(get_db),
+    db: PostgresConnection = Depends(get_db),
     user: dict = Depends(require_admin),
 ):
     """Update a variant."""
@@ -231,7 +231,7 @@ async def update_variant(
 async def delete_variant(
     product_id: int,
     variant_id: int,
-    db: aiosqlite.Connection = Depends(get_db),
+    db: PostgresConnection = Depends(get_db),
     user: dict = Depends(require_admin),
 ):
     await db.execute("DELETE FROM product_variants WHERE id = ? AND product_id = ?", (variant_id, product_id))
@@ -244,7 +244,7 @@ async def delete_variant(
 @router.get("/{product_id}/images")
 async def list_images(
     product_id: int,
-    db: aiosqlite.Connection = Depends(get_db),
+    db: PostgresConnection = Depends(get_db),
     user: dict = Depends(require_admin),
 ):
     """List all images for a product, ordered by sort_order."""
@@ -260,7 +260,7 @@ async def list_images(
 async def upload_image(
     product_id: int,
     file: UploadFile = File(...),
-    db: aiosqlite.Connection = Depends(get_db),
+    db: PostgresConnection = Depends(get_db),
     user: dict = Depends(require_admin),
 ):
     """Upload a product image."""
@@ -314,7 +314,7 @@ async def upload_image(
 async def set_primary_image(
     product_id: int,
     image_id: int,
-    db: aiosqlite.Connection = Depends(get_db),
+    db: PostgresConnection = Depends(get_db),
     user: dict = Depends(require_admin),
 ):
     """Set an image as the primary image for a product."""
@@ -341,7 +341,7 @@ async def set_primary_image(
 async def reorder_images(
     product_id: int,
     body: dict,
-    db: aiosqlite.Connection = Depends(get_db),
+    db: PostgresConnection = Depends(get_db),
     user: dict = Depends(require_admin),
 ):
     """Reorder product images. Body: {"image_ids": [3, 1, 2]}"""
@@ -363,7 +363,7 @@ async def update_image(
     product_id: int,
     image_id: int,
     body: dict,
-    db: aiosqlite.Connection = Depends(get_db),
+    db: PostgresConnection = Depends(get_db),
     user: dict = Depends(require_admin),
 ):
     """Update image metadata (variant_id, alt_text)."""
@@ -386,7 +386,7 @@ async def update_image(
 async def delete_image(
     product_id: int,
     image_id: int,
-    db: aiosqlite.Connection = Depends(get_db),
+    db: PostgresConnection = Depends(get_db),
     user: dict = Depends(require_admin),
 ):
     from pathlib import Path

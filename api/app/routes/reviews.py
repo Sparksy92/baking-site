@@ -3,7 +3,7 @@ from __future__ import annotations
 
 from fastapi import APIRouter, Depends, HTTPException, Query, status
 from pydantic import BaseModel, Field
-import aiosqlite
+from app.database import IntegrityError, PostgresConnection
 
 from app.customer_auth import get_current_customer
 from app.database import get_db
@@ -37,7 +37,7 @@ async def list_product_reviews(
     product_id: int,
     page: int = Query(default=1, ge=1),
     limit: int = Query(default=10, ge=1, le=50),
-    db: aiosqlite.Connection = Depends(get_db),
+    db: PostgresConnection = Depends(get_db),
 ):
     """List approved reviews for a product (public)."""
     offset = (page - 1) * limit
@@ -87,7 +87,7 @@ async def list_product_reviews(
 async def create_review(
     product_id: int,
     body: ReviewCreate,
-    db: aiosqlite.Connection = Depends(get_db),
+    db: PostgresConnection = Depends(get_db),
     customer: dict = Depends(get_current_customer),
 ):
     """Submit a review for a product (requires customer login, one review per product)."""
@@ -105,7 +105,7 @@ async def create_review(
         )
         await db.commit()
         return {"id": cursor.lastrowid, "status": "pending"}
-    except aiosqlite.IntegrityError:
+    except IntegrityError:
         raise HTTPException(
             status_code=status.HTTP_409_CONFLICT,
             detail="You've already reviewed this product",

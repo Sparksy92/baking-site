@@ -7,14 +7,14 @@ from __future__ import annotations
 
 import logging
 
-import aiosqlite
+from app.database import PostgresConnection
 
 from app.services.email_service import send_back_in_stock_notification
 
 logger = logging.getLogger(__name__)
 
 
-async def notify_back_in_stock(db: aiosqlite.Connection, variant_id: int) -> int:
+async def notify_back_in_stock(db: PostgresConnection, variant_id: int) -> int:
     """Send back-in-stock emails for a variant that was restocked.
 
     Returns the number of notifications sent.

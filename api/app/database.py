@@ -7,9 +7,12 @@ from pathlib import Path
 from typing import AsyncGenerator
 
 import asyncpg
-import aiosqlite
 
 from app.config import get_settings
+
+
+class IntegrityError(Exception):
+    """Raised when a database integrity constraint is violated."""
 
 logger = logging.getLogger(__name__)
 
@@ -26,7 +29,7 @@ def _convert_qmarks(query: str) -> str:
     return out
 
 class PostgresRow:
-    """Wrapper around asyncpg.Record to simulate dict and tuple access like aiosqlite.Row."""
+    """Wrapper around asyncpg.Record to simulate dict and tuple access."""
     def __init__(self, record: asyncpg.Record):
         self._record = record
 
@@ -37,7 +40,7 @@ class PostgresRow:
         return self._record.keys()
 
 class PostgresCursor:
-    """Wrapper simulating an aiosqlite cursor using asyncpg."""
+    """Cursor wrapper using asyncpg."""
     def __init__(self, conn: asyncpg.Connection):
         self.conn = conn
         self._rows = []
@@ -117,7 +120,7 @@ class PostgresCursor:
                 self._rows = [PostgresRow(r) for r in records]
                 self.rowcount = len(records)
         except asyncpg.exceptions.IntegrityConstraintViolationError as e:
-            raise aiosqlite.IntegrityError(str(e))
+            raise IntegrityError(str(e))
         except Exception as e:
             logger.error(f"Error executing query: {pg_query} with args {args}")
             raise e
@@ -134,7 +137,7 @@ class PostgresCursor:
         return res
 
 class PostgresConnection:
-    """Wrapper simulating aiosqlite.Connection."""
+    """PostgreSQL connection wrapper."""
     def __init__(self, conn: asyncpg.Connection):
         self.conn = conn
         self.row_factory = None # Ignored

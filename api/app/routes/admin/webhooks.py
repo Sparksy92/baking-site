@@ -5,7 +5,7 @@ import logging
 
 from fastapi import APIRouter, Depends, HTTPException, Query, status
 from pydantic import BaseModel, Field
-import aiosqlite
+from app.database import PostgresConnection
 
 from app.auth import require_admin
 from app.database import get_db
@@ -36,7 +36,7 @@ class WebhookUpdate(BaseModel):
 
 @router.get("")
 async def list_webhooks(
-    db: aiosqlite.Connection = Depends(get_db),
+    db: PostgresConnection = Depends(get_db),
     user: dict = Depends(require_admin),
 ):
     cursor = await db.execute("SELECT * FROM webhooks ORDER BY created_at DESC")
@@ -46,7 +46,7 @@ async def list_webhooks(
 @router.post("", status_code=status.HTTP_201_CREATED)
 async def create_webhook(
     body: WebhookCreate,
-    db: aiosqlite.Connection = Depends(get_db),
+    db: PostgresConnection = Depends(get_db),
     user: dict = Depends(require_admin),
 ):
     # Validate events
@@ -70,7 +70,7 @@ async def create_webhook(
 async def update_webhook(
     webhook_id: int,
     body: WebhookUpdate,
-    db: aiosqlite.Connection = Depends(get_db),
+    db: PostgresConnection = Depends(get_db),
     user: dict = Depends(require_admin),
 ):
     cursor = await db.execute("SELECT id FROM webhooks WHERE id = ?", (webhook_id,))
@@ -104,7 +104,7 @@ async def update_webhook(
 @router.delete("/{webhook_id}")
 async def delete_webhook(
     webhook_id: int,
-    db: aiosqlite.Connection = Depends(get_db),
+    db: PostgresConnection = Depends(get_db),
     user: dict = Depends(require_admin),
 ):
     cursor = await db.execute("SELECT id FROM webhooks WHERE id = ?", (webhook_id,))
@@ -120,7 +120,7 @@ async def delete_webhook(
 async def list_deliveries(
     webhook_id: int,
     limit: int = Query(50, ge=1, le=200),
-    db: aiosqlite.Connection = Depends(get_db),
+    db: PostgresConnection = Depends(get_db),
     user: dict = Depends(require_admin),
 ):
     """List recent delivery attempts for a webhook."""

@@ -3,7 +3,7 @@ from __future__ import annotations
 
 from fastapi import APIRouter, Depends
 from fastapi.responses import Response
-import aiosqlite
+from app.database import PostgresConnection
 
 from app.config import get_settings
 from app.database import get_db
@@ -12,7 +12,7 @@ router = APIRouter(tags=["sitemap"])
 
 
 @router.get("/sitemap.xml", response_class=Response)
-async def sitemap(db: aiosqlite.Connection = Depends(get_db)):
+async def sitemap(db: PostgresConnection = Depends(get_db)):
     """Generate sitemap.xml with all public URLs."""
     settings = get_settings()
     domain = settings.store_domain.rstrip("/")

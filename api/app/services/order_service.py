@@ -5,7 +5,7 @@ import random
 import string
 from datetime import datetime, timezone
 
-import aiosqlite
+from app.database import PostgresConnection
 
 from app.config import get_settings
 from app.models.schemas import CheckoutRequest
@@ -19,7 +19,7 @@ class CheckoutError(Exception):
         self.status_code = status_code
 
 
-async def validate_checkout(db: aiosqlite.Connection, body: CheckoutRequest, customer_id: int | None = None) -> dict:
+async def validate_checkout(db: PostgresConnection, body: CheckoutRequest, customer_id: int | None = None) -> dict:
     """Validate checkout items and calculate totals.
 
     Returns dict with: order_items, subtotal_cents, shipping_cents, tax_cents, total_cents
@@ -133,7 +133,7 @@ async def validate_checkout(db: aiosqlite.Connection, body: CheckoutRequest, cus
 
 
 async def create_order(
-    db: aiosqlite.Connection,
+    db: PostgresConnection,
     body: CheckoutRequest,
     validated: dict,
     payment_method: str = "stripe",
@@ -238,7 +238,7 @@ async def create_order(
     return order_number
 
 
-async def cancel_order(db: aiosqlite.Connection, order_id: int, reason: str = "expired") -> None:
+async def cancel_order(db: PostgresConnection, order_id: int, reason: str = "expired") -> None:
     """Cancel an order and restore stock for its items.
 
     Used when a Stripe session expires or payment fails.

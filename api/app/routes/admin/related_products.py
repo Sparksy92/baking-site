@@ -3,7 +3,7 @@ from __future__ import annotations
 
 from fastapi import APIRouter, Depends, HTTPException, status
 from pydantic import BaseModel, Field
-import aiosqlite
+from app.database import PostgresConnection
 
 from app.auth import require_admin
 from app.database import get_db
@@ -18,7 +18,7 @@ class RelatedProductSet(BaseModel):
 @router.get("/{product_id}/related")
 async def list_related(
     product_id: int,
-    db: aiosqlite.Connection = Depends(get_db),
+    db: PostgresConnection = Depends(get_db),
     user: dict = Depends(require_admin),
 ):
     """List manually-set related products for admin editing."""
@@ -38,7 +38,7 @@ async def list_related(
 async def set_related(
     product_id: int,
     body: RelatedProductSet,
-    db: aiosqlite.Connection = Depends(get_db),
+    db: PostgresConnection = Depends(get_db),
     user: dict = Depends(require_admin),
 ):
     """Replace all manual related products for a product."""
@@ -68,7 +68,7 @@ async def set_related(
                 "INSERT OR IGNORE INTO related_products (product_id, related_product_id, relation_type, score) VALUES (?, ?, 'manual', ?)",
                 (related_id, product_id, score),
             )
-        except aiosqlite.IntegrityError:
+        except Exception:
             pass  # Skip invalid product IDs
 
     await db.commit()
@@ -77,7 +77,7 @@ async def set_related(
 
 @router.post("/rebuild-recommendations")
 async def rebuild_co_purchase_recommendations(
-    db: aiosqlite.Connection = Depends(get_db),
+    db: PostgresConnection = Depends(get_db),
     user: dict = Depends(require_admin),
 ):
     """Rebuild co-purchase recommendations from order history.

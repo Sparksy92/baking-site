@@ -13,7 +13,7 @@ from pydantic import BaseModel
 from app.config import get_settings
 from app.database import get_db
 from app.services.canadapost_service import get_shipping_rates, is_configured
-import aiosqlite
+from app.database import PostgresConnection
 
 logger = logging.getLogger(__name__)
 
@@ -36,7 +36,7 @@ class ShippingRatesResponse(BaseModel):
 async def estimate_shipping(
     postal_code: str = Query(..., min_length=3, max_length=10, description="Destination postal code"),
     subtotal_cents: int = Query(default=0, ge=0, description="Cart subtotal to check free shipping threshold"),
-    db: aiosqlite.Connection = Depends(get_db),
+    db: PostgresConnection = Depends(get_db),
 ):
     """Estimate shipping cost for a destination postal code.
 

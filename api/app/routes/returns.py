@@ -5,7 +5,7 @@ import logging
 
 from fastapi import APIRouter, Depends, HTTPException, status
 from pydantic import BaseModel, Field
-import aiosqlite
+from app.database import PostgresConnection
 
 from app.customer_auth import get_current_customer
 from app.database import get_db
@@ -32,7 +32,7 @@ class ReturnRequestCreate(BaseModel):
 @router.post("", status_code=status.HTTP_201_CREATED)
 async def create_return_request(
     body: ReturnRequestCreate,
-    db: aiosqlite.Connection = Depends(get_db),
+    db: PostgresConnection = Depends(get_db),
     customer: dict = Depends(get_current_customer),
 ):
     """Customer submits a return request."""
@@ -92,7 +92,7 @@ async def create_return_request(
 
 @router.get("")
 async def list_my_returns(
-    db: aiosqlite.Connection = Depends(get_db),
+    db: PostgresConnection = Depends(get_db),
     customer: dict = Depends(get_current_customer),
 ):
     """List customer's return requests."""

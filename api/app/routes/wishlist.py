@@ -2,7 +2,7 @@
 from __future__ import annotations
 
 from fastapi import APIRouter, Depends, HTTPException, status
-import aiosqlite
+from app.database import IntegrityError, PostgresConnection
 
 from app.customer_auth import get_current_customer
 from app.database import get_db
@@ -12,7 +12,7 @@ router = APIRouter(prefix="/customers/me/wishlist", tags=["wishlist"])
 
 @router.get("")
 async def list_wishlist(
-    db: aiosqlite.Connection = Depends(get_db),
+    db: PostgresConnection = Depends(get_db),
     customer: dict = Depends(get_current_customer),
 ):
     """Get customer's wishlist with product details."""
@@ -34,7 +34,7 @@ async def list_wishlist(
 @router.post("/{product_id}", status_code=status.HTTP_201_CREATED)
 async def add_to_wishlist(
     product_id: int,
-    db: aiosqlite.Connection = Depends(get_db),
+    db: PostgresConnection = Depends(get_db),
     customer: dict = Depends(get_current_customer),
 ):
     """Add a product to the customer's wishlist."""
@@ -51,7 +51,7 @@ async def add_to_wishlist(
             (customer_id, product_id),
         )
         await db.commit()
-    except aiosqlite.IntegrityError:
+    except IntegrityError:
         pass  # Already in wishlist, idempotent
 
     return {"added": True}
@@ -60,7 +60,7 @@ async def add_to_wishlist(
 @router.delete("/{product_id}")
 async def remove_from_wishlist(
     product_id: int,
-    db: aiosqlite.Connection = Depends(get_db),
+    db: PostgresConnection = Depends(get_db),
     customer: dict = Depends(get_current_customer),
 ):
     """Remove a product from the customer's wishlist."""

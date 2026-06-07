@@ -1,7 +1,7 @@
 from __future__ import annotations
 
 from fastapi import APIRouter, Depends, HTTPException, status
-import aiosqlite
+from app.database import PostgresConnection
 
 from app.auth import require_admin
 from app.database import get_db
@@ -12,7 +12,7 @@ router = APIRouter(prefix="/admin/promos", tags=["admin-promos"])
 
 @router.get("")
 async def list_promos(
-    db: aiosqlite.Connection = Depends(get_db),
+    db: PostgresConnection = Depends(get_db),
     user: dict = Depends(require_admin),
 ):
     """List all promo codes."""
@@ -24,7 +24,7 @@ async def list_promos(
 @router.post("", status_code=status.HTTP_201_CREATED)
 async def create_promo(
     body: PromoCodeCreate,
-    db: aiosqlite.Connection = Depends(get_db),
+    db: PostgresConnection = Depends(get_db),
     user: dict = Depends(require_admin),
 ):
     """Create a new promo code."""
@@ -42,7 +42,7 @@ async def create_promo(
         )
         await db.commit()
         return {"id": cursor.lastrowid, "code": body.code.upper().strip()}
-    except aiosqlite.IntegrityError:
+    except Exception:
         raise HTTPException(
             status_code=status.HTTP_409_CONFLICT,
             detail=f"Promo code '{body.code}' already exists",
@@ -53,7 +53,7 @@ async def create_promo(
 async def update_promo(
     promo_id: int,
     body: PromoCodeUpdate,
-    db: aiosqlite.Connection = Depends(get_db),
+    db: PostgresConnection = Depends(get_db),
     user: dict = Depends(require_admin),
 ):
     """Update a promo code."""
@@ -78,7 +78,7 @@ async def update_promo(
 @router.delete("/{promo_id}")
 async def delete_promo(
     promo_id: int,
-    db: aiosqlite.Connection = Depends(get_db),
+    db: PostgresConnection = Depends(get_db),
     user: dict = Depends(require_admin),
 ):
     """Delete a promo code."""

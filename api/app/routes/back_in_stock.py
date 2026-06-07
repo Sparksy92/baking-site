@@ -3,7 +3,7 @@ from __future__ import annotations
 
 from fastapi import APIRouter, Depends, HTTPException, status
 from pydantic import BaseModel, EmailStr
-import aiosqlite
+from app.database import PostgresConnection
 
 from app.customer_auth import get_optional_customer
 from app.database import get_db
@@ -19,7 +19,7 @@ class BackInStockRequest(BaseModel):
 @router.post("/notifications/back-in-stock", status_code=status.HTTP_201_CREATED)
 async def subscribe_back_in_stock(
     body: BackInStockRequest,
-    db: aiosqlite.Connection = Depends(get_db),
+    db: PostgresConnection = Depends(get_db),
     customer: dict | None = Depends(get_optional_customer),
 ):
     """Subscribe to back-in-stock notification for a variant.
@@ -57,7 +57,7 @@ async def subscribe_back_in_stock(
             (email, body.variant_id, customer_id),
         )
         await db.commit()
-    except aiosqlite.IntegrityError:
+    except Exception:
         pass  # Already subscribed — idempotent
 
     return {"subscribed": True, "variant_id": body.variant_id}
@@ -67,7 +67,7 @@ async def subscribe_back_in_stock(
 async def check_subscription(
     variant_id: int,
     email: str,
-    db: aiosqlite.Connection = Depends(get_db),
+    db: PostgresConnection = Depends(get_db),
 ):
     """Check if an email is subscribed to back-in-stock for a variant."""
     cursor = await db.execute(

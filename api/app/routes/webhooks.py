@@ -4,9 +4,8 @@ import hashlib
 import hmac
 import logging
 
-from fastapi import APIRouter, Depends, HTTPException, Query, Request, status
-from fastapi.responses import PlainTextResponse
-import aiosqlite
+from fastapi import APIRouter, Depends, HTTPException, Request, status
+from app.database import PostgresConnection
 
 from app.config import get_settings
 from app.database import get_db
@@ -22,7 +21,7 @@ router = APIRouter(prefix="/webhooks", tags=["webhooks"])
 @router.post("/stripe")
 async def stripe_webhook(
     request: Request,
-    db: aiosqlite.Connection = Depends(get_db),
+    db: PostgresConnection = Depends(get_db),
 ):
     """Handle Stripe webhook events.
 
@@ -57,7 +56,7 @@ async def stripe_webhook(
     return {"received": True}
 
 
-async def _handle_checkout_completed(db: aiosqlite.Connection, session: dict, event_id: str) -> None:
+async def _handle_checkout_completed(db: PostgresConnection, session: dict, event_id: str) -> None:
     """Process checkout.session.completed — confirm payment on the order."""
     session_id = session.get("id")
     payment_intent = session.get("payment_intent")
@@ -100,7 +99,7 @@ async def _handle_checkout_completed(db: aiosqlite.Connection, session: dict, ev
         logger.exception("Failed to send payment confirmation email for %s", order["order_number"])
 
 
-async def _handle_checkout_expired(db: aiosqlite.Connection, session: dict, event_id: str) -> None:
+async def _handle_checkout_expired(db: PostgresConnection, session: dict, event_id: str) -> None:
     """Process checkout.session.expired — cancel order and restore stock."""
     session_id = session.get("id")
 

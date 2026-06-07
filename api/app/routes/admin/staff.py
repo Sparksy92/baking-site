@@ -5,7 +5,7 @@ import logging
 
 from fastapi import APIRouter, Depends, HTTPException, status
 from pydantic import BaseModel, Field
-import aiosqlite
+from app.database import PostgresConnection
 
 from app.auth import require_admin, hash_password, create_access_token
 from app.database import get_db
@@ -39,7 +39,7 @@ def _validate_permissions(perms: str) -> bool:
 
 @router.get("")
 async def list_staff(
-    db: aiosqlite.Connection = Depends(get_db),
+    db: PostgresConnection = Depends(get_db),
     user: dict = Depends(require_admin),
 ):
     """List all staff members."""
@@ -53,7 +53,7 @@ async def list_staff(
 @router.post("", status_code=status.HTTP_201_CREATED)
 async def invite_staff(
     body: StaffInvite,
-    db: aiosqlite.Connection = Depends(get_db),
+    db: PostgresConnection = Depends(get_db),
     user: dict = Depends(require_admin),
 ):
     """Create a new staff member with specific permissions.
@@ -80,7 +80,7 @@ async def invite_staff(
             (body.username, hashed, body.display_name or body.username, body.permissions),
         )
         await db.commit()
-    except aiosqlite.IntegrityError:
+    except Exception:
         raise HTTPException(
             status_code=status.HTTP_409_CONFLICT,
             detail="Username already exists",
@@ -93,7 +93,7 @@ async def invite_staff(
 async def update_staff(
     staff_id: int,
     body: StaffUpdate,
-    db: aiosqlite.Connection = Depends(get_db),
+    db: PostgresConnection = Depends(get_db),
     user: dict = Depends(require_admin),
 ):
     """Update a staff member's permissions or status."""
@@ -129,7 +129,7 @@ async def update_staff(
 @router.delete("/{staff_id}")
 async def remove_staff(
     staff_id: int,
-    db: aiosqlite.Connection = Depends(get_db),
+    db: PostgresConnection = Depends(get_db),
     user: dict = Depends(require_admin),
 ):
     """Remove a staff member. Cannot remove yourself."""

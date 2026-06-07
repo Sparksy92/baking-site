@@ -2,7 +2,7 @@
 from __future__ import annotations
 
 from fastapi import APIRouter, Depends, Query
-import aiosqlite
+from app.database import PostgresConnection
 
 from app.auth import require_admin
 from app.database import get_db
@@ -13,7 +13,7 @@ router = APIRouter(prefix="/admin/analytics", tags=["admin-analytics"])
 @router.get("/funnel")
 async def conversion_funnel(
     days: int = Query(default=30, ge=1, le=365),
-    db: aiosqlite.Connection = Depends(get_db),
+    db: PostgresConnection = Depends(get_db),
     user: dict = Depends(require_admin),
 ):
     """Conversion funnel: views → add_to_cart → checkout_started → checkout_completed."""
@@ -49,7 +49,7 @@ async def list_events(
     event_type: str | None = None,
     days: int = Query(default=7, ge=1, le=365),
     limit: int = Query(default=100, ge=1, le=500),
-    db: aiosqlite.Connection = Depends(get_db),
+    db: PostgresConnection = Depends(get_db),
     user: dict = Depends(require_admin),
 ):
     """List recent events with optional type filter."""
@@ -71,7 +71,7 @@ async def list_events(
 async def top_viewed_products(
     days: int = Query(default=30, ge=1, le=365),
     limit: int = Query(default=10, ge=1, le=50),
-    db: aiosqlite.Connection = Depends(get_db),
+    db: PostgresConnection = Depends(get_db),
     user: dict = Depends(require_admin),
 ):
     """Most viewed products by event count."""

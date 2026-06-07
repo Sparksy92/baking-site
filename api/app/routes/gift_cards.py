@@ -3,7 +3,7 @@ from __future__ import annotations
 
 from fastapi import APIRouter, Depends, HTTPException, status
 from pydantic import BaseModel
-import aiosqlite
+from app.database import PostgresConnection
 
 from app.database import get_db
 
@@ -17,7 +17,7 @@ class GiftCardCheck(BaseModel):
 @router.post("/check")
 async def check_gift_card(
     body: GiftCardCheck,
-    db: aiosqlite.Connection = Depends(get_db),
+    db: PostgresConnection = Depends(get_db),
 ):
     """Check balance of a gift card."""
     cursor = await db.execute(
