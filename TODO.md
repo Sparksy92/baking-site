@@ -129,6 +129,65 @@
 
 ---
 
+## Social Media Content Platform — Sprint Plan
+
+> Branch: `fix/blog-ai-social-improvements` → future: `feature/social-platform`
+> Goal: Blog-to-social pipeline. Write once, publish everywhere. Brand voice stays consistent.
+> Architecture: Persona → Per-platform prompt → Blog publish triggers draft generation → Outbox → Approve → Publish
+
+### Sprint 1 — Foundation: Persona + Platform Config (current)
+- [ ] **Migration 031** — `brand_persona`, `social_platform_configs`, `social_posts` tables
+- [ ] **Persona API** — CRUD `GET/POST/PATCH /api/admin/persona` (single active persona)
+- [ ] **Persona admin UI** — Settings-style page: voice, audience, values, words to use/avoid
+- [ ] **Platform config API** — `GET/PATCH /api/admin/social/platforms` — enable/disable, prompt, hashtags, auto-publish toggle
+- [ ] **Platform admin UI** — Card per platform showing: status badge (active/pending/not configured), enable toggle, setup instructions, prompt editor, hashtag bank
+- [ ] **Inject persona into all AI calls** — `ai_service.py` prepends active persona to every prompt
+- [ ] **Per-platform prompt templates** — replace single generic prompt with platform-specific templates stored in DB
+- [ ] **Tests** — `test_persona.py` (8 tests), `test_social_platforms.py` (6 tests), update `test_pages.py` for route order fixes
+
+### Sprint 2 — Blog → Social Pipeline
+- [ ] **Blog publish hook** — on `POST /api/admin/pages` or status → published, trigger social draft generation for all enabled platforms
+- [ ] **AI generates platform-native drafts** — persona + platform prompt + blog content → one draft per enabled platform in `social_posts`
+- [ ] **Inbound sync → draft** — fix `meta_service.py` so synced posts land as `status='draft'` not `'published'`
+- [ ] **`meta_description` auto-fill** — when blank, populate from first sentence of AI output
+- [ ] **Outbox API** — `GET /api/admin/social/outbox`, `PATCH /api/admin/social/outbox/{id}` (approve/reject/edit), `POST /api/admin/social/outbox/{id}/publish`
+- [ ] **Outbox admin UI** — List of pending drafts per platform, preview, edit content, approve/reject, publish button
+- [ ] **Auto-publish toggle** — if `auto_publish=true` for a platform, skip draft → publish immediately on blog post publish
+- [ ] **Tests** — `test_outbox.py` (10 tests), `test_social_publish_pipeline.py` (8 tests)
+
+### Sprint 3 — Outbound Publishing: Facebook + Instagram
+- [ ] **Facebook outbound** — `POST /api/admin/social/outbox/{id}/publish` → Graph API `/{page_id}/feed`
+- [ ] **Instagram outbound** — 2-step: create container → publish (Graph API requirement)
+- [ ] **Image attach** — use blog `featured_image_url` for outbound posts, allow admin override
+- [ ] **Publish result tracking** — store `platform_post_id`, update `status='published'`, log errors to `error_message`
+- [ ] **Retry on failure** — mark as `failed`, surface in outbox UI with error message, allow manual retry
+- [ ] **Tests** — `test_social_publish.py` (10 tests, all API calls mocked)
+
+### Sprint 4 — Platform Expansion
+- [ ] **LinkedIn integration** — OAuth app setup guide in admin, posting via LinkedIn API
+- [ ] **TikTok integration** — pending app review; admin shows setup instructions + review status
+- [ ] **X / Twitter** — optional, gated behind `X_API_KEY` env var; admin shows cost warning
+- [ ] **Scheduling** — `scheduled_at` field on outbox, background worker publishes at correct time
+- [ ] **Platform-native preview** — character counter, hashtag count, truncation warnings per platform
+- [ ] **Hashtag bank** — per-platform, admin-managed, auto-appended to generated content
+- [ ] **Tests** — `test_scheduling.py` (5 tests), `test_linkedin.py`, `test_tiktok.py`
+
+### Sprint 5 — Intelligence Layer
+- [ ] **Image prompt generation** — AI generates DALL-E prompt alongside blog content; admin can generate + attach image
+- [ ] **Engagement pull from Meta** — likes, reach, comments stored against `social_posts`
+- [ ] **Content calendar view** — admin UI calendar showing scheduled + published across all platforms
+- [ ] **YouTube (Phase 3)** — video-only; requires AI video generation (Synthesia/HeyGen); deferred
+
+### Platform Setup Checklist (per platform)
+- [ ] **Facebook** — `META_PAGE_ACCESS_TOKEN` + `META_FACEBOOK_PAGE_ID` in env → enable in admin
+- [ ] **Instagram** — `META_PAGE_ACCESS_TOKEN` + `META_INSTAGRAM_ACCOUNT_ID` in env → enable in admin
+- [ ] **X / Twitter** — `X_API_KEY` + `X_API_SECRET` in env (requires $100/mo Basic plan at developer.twitter.com)
+- [ ] **LinkedIn** — Register free app at developer.linkedin.com (needs Company Page, 1–2 week review) → `LINKEDIN_CLIENT_ID` + `LINKEDIN_CLIENT_SECRET`
+- [ ] **TikTok** — Register at developers.tiktok.com, request Content Posting API (1–4 week review, submit now) → `TIKTOK_CLIENT_KEY` + `TIKTOK_CLIENT_SECRET`
+- [ ] **YouTube** — Phase 3 only. YouTube Data API v3 (free) but video-only.
+
+---
+
 ## Deploy Checklist (per brand fork)
 
 When forking the baseline for a new brand, configure these per environment.
