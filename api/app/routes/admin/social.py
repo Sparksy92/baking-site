@@ -9,6 +9,7 @@ import aiosqlite
 
 from app.auth import require_admin
 from app.database import get_db
+from app.services.social_publish_service import publish_post, PublishError
 
 logger = logging.getLogger(__name__)
 
@@ -282,8 +283,10 @@ async def publish_outbox_post(
     db: aiosqlite.Connection = Depends(get_db),
     user: dict = Depends(require_admin),
 ):
-    """Publish a social post to its platform. Sprint 3 wires up the actual API calls.
-    For now, marks the post as published immediately (manual confirmation flow).
+    """Publish a social post to its platform via the platform's API.
+
+    Facebook and Instagram are live. LinkedIn/TikTok/X return a clear
+    'not yet implemented' error with no status change.
     """
     cursor = await db.execute("SELECT * FROM social_posts WHERE id = ?", (post_id,))
     row = await cursor.fetchone()
@@ -291,25 +294,43 @@ async def publish_outbox_post(
         raise HTTPException(status_code=404, detail="Post not found")
 
     post = dict(row)
-    if post["status"] not in ("draft", "approved"):
+    if post["status"] not in ("draft", "approved", "failed"):
         raise HTTPException(
             status_code=400,
             detail=f"Cannot publish a post with status '{post['status']}'"
         )
 
     cursor = await db.execute(
-        "SELECT enabled, setup_status FROM social_platform_configs WHERE platform = ?",
+        "SELECT enabled FROM social_platform_configs WHERE platform = ?",
         (post["platform"],),
     )
     platform_cfg = await cursor.fetchone()
     if not platform_cfg or not platform_cfg["enabled"]:
         raise HTTPException(status_code=400, detail=f"Platform '{post['platform']}' is not enabled")
 
+    try:
+        platform_post_id = await publish_post(
+            platform=post["platform"],
+            content=post["content"],
+            image_url=post["image_url"],
+        )
+    except PublishError as e:
+        await db.execute(
+            "UPDATE social_posts SET status = 'failed', error_message = ?, updated_at = CURRENT_TIMESTAMP WHERE id = ?",
+            (str(e), post_id),
+        )
+        await db.commit()
+        raise HTTPException(status_code=502, detail=str(e))
+
     await db.execute(
-        "UPDATE social_posts SET status = 'published', published_at = CURRENT_TIMESTAMP, updated_at = CURRENT_TIMESTAMP WHERE id = ?",
-        (post_id,),
+        """UPDATE social_posts
+           SET status = 'published', platform_post_id = ?,
+               published_at = CURRENT_TIMESTAMP, error_message = NULL,
+               updated_at = CURRENT_TIMESTAMP
+           WHERE id = ?""",
+        (platform_post_id, post_id),
     )
     await db.commit()
 
-    logger.info(f"Social post {post_id} marked published (platform={post['platform']}) — outbound API call wired in Sprint 3")
-    return {"published": True, "note": "Outbound API publishing added in Sprint 3"}
+    logger.info(f"Published social post {post_id} to {post['platform']}: platform_post_id={platform_post_id}")
+    return {"published": True, "platform_post_id": platform_post_id}
