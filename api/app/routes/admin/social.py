@@ -1511,3 +1511,490 @@ async def get_competitive_landscape(
     from app.services.competitor_service import get_competitive_landscape
     landscape = await get_competitive_landscape(platform)
     return landscape
+
+
+# ── Sprint 5.5: Meta Reply Publishing ───────────────────────────────────────────
+
+@router.post("/engagement/{event_id}/send-reply-live")
+async def send_reply_to_platform_endpoint(
+    event_id: int,
+    reply_content: str | None = None,  # if null, uses stored draft
+    db: aiosqlite.Connection = Depends(get_db),
+    user: dict = Depends(require_admin),
+):
+    """Actually publish a reply to Facebook/Instagram via API.
+
+    This requires proper Meta permissions (pages_messaging for Facebook,
+    instagram_basic for Instagram replies).
+    """
+    from app.services.meta_reply_service import send_reply_to_platform, PublishReplyError
+
+    # Get stored draft if no content provided
+    if not reply_content:
+        cursor = await db.execute(
+            "SELECT reply_content FROM social_engagement_events WHERE id = ?",
+            (event_id,),
+        )
+        row = await cursor.fetchone()
+        if not row or not row["reply_content"]:
+            raise HTTPException(status_code=400, detail="No reply content provided or stored")
+        reply_content = row["reply_content"]
+
+    try:
+        result = await send_reply_to_platform(event_id, reply_content)
+        return result
+    except PublishReplyError as e:
+        raise HTTPException(status_code=502, detail=str(e))
+
+
+# ── Sprint 8: Brand Safety ──────────────────────────────────────────────────────
+
+@router.post("/brand-safety/scan")
+async def scan_content_safety(
+    content_type: str,  # 'social_post' | 'blog_post' | 'influencer_submission'
+    content_id: int,
+    content_text: str,
+    user: dict = Depends(require_admin),
+):
+    """Run AI brand safety scan on content."""
+    from app.services.brand_safety_service import scan_content
+    result = await scan_content(content_type, content_id, content_text)
+    return result
+
+
+@router.post("/brand-safety/scan/{scan_id}/override")
+async def override_safety_scan(
+    scan_id: int,
+    mark_as_safe: bool,
+    user: dict = Depends(require_admin),
+):
+    """Human override of AI safety scan."""
+    from app.services.brand_safety_service import override_safety_scan
+    result = await override_safety_scan(scan_id, user.get("email"), mark_as_safe)
+    return result
+
+
+@router.get("/brand-safety/status/{content_type}/{content_id}")
+async def get_content_safety(
+    content_type: str,
+    content_id: int,
+    user: dict = Depends(require_admin),
+):
+    """Get safety status for content."""
+    from app.services.brand_safety_service import get_content_safety_status
+    status = await get_content_safety_status(content_type, content_id)
+    if not status:
+        raise HTTPException(status_code=404, detail="No safety scan found")
+    return status
+
+
+# ── Sprint 8: Auto-Moderation ──────────────────────────────────────────────────
+
+class ModerationRuleCreate(BaseModel):
+    name: str
+    rule_type: str  # 'keyword' | 'spam' | 'user_block' | 'sentiment'
+    condition: str  # 'contains' | 'regex' | 'user_in_list'
+    pattern: str
+    action: str  # 'hide' | 'delete' | 'flag_for_review' | 'auto_reply'
+    auto_reply_text: str = ""
+
+
+@router.post("/moderation/rules")
+async def create_moderation_rule_endpoint(
+    body: ModerationRuleCreate,
+    user: dict = Depends(require_admin),
+):
+    """Create a new auto-moderation rule."""
+    from app.services.moderation_service import create_moderation_rule
+    result = await create_moderation_rule(
+        name=body.name,
+        rule_type=body.rule_type,
+        condition=body.condition,
+        pattern=body.pattern,
+        action=body.action,
+        auto_reply_text=body.auto_reply_text,
+        created_by=user.get("email", "admin"),
+    )
+    return result
+
+
+@router.get("/moderation/rules")
+async def list_moderation_rules_endpoint(
+    is_active: bool | None = None,
+    user: dict = Depends(require_admin),
+):
+    """List moderation rules."""
+    from app.services.moderation_service import list_moderation_rules
+    rules = await list_moderation_rules(is_active)
+    return {"rules": rules}
+
+
+@router.post("/moderation/rules/{rule_id}/toggle")
+async def toggle_moderation_rule_endpoint(
+    rule_id: int,
+    is_active: bool,
+    user: dict = Depends(require_admin),
+):
+    """Enable or disable a moderation rule."""
+    from app.services.moderation_service import toggle_moderation_rule
+    result = await toggle_moderation_rule(rule_id, is_active)
+    return result
+
+
+# ── Sprint 8: Influencer Management ─────────────────────────────────────────────
+
+class InfluencerCreate(BaseModel):
+    name: str
+    platform: str
+    handle: str
+    follower_count: int | None = None
+    engagement_rate: float | None = None
+    niche: str = ""
+    location: str = ""
+    email: str = ""
+    notes: str = ""
+
+
+class CollaborationCreate(BaseModel):
+    influencer_id: int
+    campaign_name: str
+    deliverables: dict  # {"posts": 2, "stories": 3}
+    compensation_cents: int
+    product_value_cents: int = 0
+    start_date: str | None = None
+    end_date: str | None = None
+    content_requirements: str = ""
+    approval_required: bool = True
+
+
+class InfluencerSubmissionCreate(BaseModel):
+    collaboration_id: int
+    content_type: str  # 'post' | 'story' | 'reel'
+    caption: str
+    media_urls: list[str]
+
+
+class SubmissionReviewInfluencer(BaseModel):
+    decision: str  # 'approved' | 'rejected' | 'revision_requested'
+    feedback: str = ""
+
+
+@router.post("/influencers")
+async def add_influencer_endpoint(
+    body: InfluencerCreate,
+    user: dict = Depends(require_admin),
+):
+    """Add a new influencer to track."""
+    from app.services.influencer_service import add_influencer
+    result = await add_influencer(
+        name=body.name,
+        platform=body.platform,
+        handle=body.handle,
+        follower_count=body.follower_count,
+        engagement_rate=body.engagement_rate,
+        niche=body.niche,
+        location=body.location,
+        email=body.email,
+        notes=body.notes,
+    )
+    return result
+
+
+@router.get("/influencers")
+async def list_influencers_endpoint(
+    platform: str | None = None,
+    niche: str | None = None,
+    min_followers: int | None = None,
+    user: dict = Depends(require_admin),
+):
+    """List influencers with filters."""
+    from app.services.influencer_service import list_influencers
+    influencers = await list_influencers(platform, niche, min_followers)
+    return {"influencers": influencers}
+
+
+@router.get("/influencers/{influencer_id}/report")
+async def get_influencer_report_endpoint(
+    influencer_id: int,
+    user: dict = Depends(require_admin),
+):
+    """Get full report on an influencer."""
+    from app.services.influencer_service import get_influencer_report
+    report = await get_influencer_report(influencer_id)
+    return report
+
+
+@router.post("/influencers/collaborations")
+async def create_collaboration_endpoint(
+    body: CollaborationCreate,
+    user: dict = Depends(require_admin),
+):
+    """Create a new influencer collaboration."""
+    from app.services.influencer_service import create_collaboration
+    result = await create_collaboration(
+        influencer_id=body.influencer_id,
+        campaign_name=body.campaign_name,
+        deliverables=body.deliverables,
+        compensation_cents=body.compensation_cents,
+        product_value_cents=body.product_value_cents,
+        start_date=body.start_date,
+        end_date=body.end_date,
+        content_requirements=body.content_requirements,
+        approval_required=body.approval_required,
+        created_by=user.get("email", "admin"),
+    )
+    return result
+
+
+@router.get("/influencers/collaborations")
+async def list_collaborations(
+    status: str | None = None,
+    influencer_id: int | None = None,
+    db: aiosqlite.Connection = Depends(get_db),
+    user: dict = Depends(require_admin),
+):
+    """List influencer collaborations."""
+    if status:
+        cursor = await db.execute(
+            """SELECT c.*, i.name as influencer_name, i.handle
+                FROM influencer_collaborations c
+                JOIN influencers i ON c.influencer_id = i.id
+                WHERE c.status = ?
+                ORDER BY c.created_at DESC""",
+            (status,),
+        )
+    elif influencer_id:
+        cursor = await db.execute(
+            """SELECT c.*, i.name as influencer_name, i.handle
+                FROM influencer_collaborations c
+                JOIN influencers i ON c.influencer_id = i.id
+                WHERE c.influencer_id = ?
+                ORDER BY c.created_at DESC""",
+            (influencer_id,),
+        )
+    else:
+        cursor = await db.execute(
+            """SELECT c.*, i.name as influencer_name, i.handle
+                FROM influencer_collaborations c
+                JOIN influencers i ON c.influencer_id = i.id
+                ORDER BY c.created_at DESC"""
+        )
+    rows = await cursor.fetchall()
+    return {"collaborations": [dict(r) for r in rows]}
+
+
+@router.post("/influencers/submissions")
+async def submit_influencer_content_endpoint(
+    body: InfluencerSubmissionCreate,
+    user: dict = Depends(require_admin),
+):
+    """Influencer submits content for approval."""
+    from app.services.influencer_service import submit_influencer_content
+    result = await submit_influencer_content(
+        collaboration_id=body.collaboration_id,
+        content_type=body.content_type,
+        caption=body.caption,
+        media_urls=body.media_urls,
+    )
+    return result
+
+
+@router.post("/influencers/submissions/{submission_id}/review")
+async def review_influencer_submission_endpoint(
+    submission_id: int,
+    body: SubmissionReviewInfluencer,
+    user: dict = Depends(require_admin),
+):
+    """Review influencer content submission."""
+    from app.services.influencer_service import review_influencer_submission
+    result = await review_influencer_submission(
+        submission_id=submission_id,
+        decision=body.decision,
+        reviewed_by=user.get("email"),
+        feedback=body.feedback,
+    )
+    return result
+
+
+@router.get("/influencers/submissions")
+async def list_influencer_submissions(
+    status: str | None = "pending",
+    db: aiosqlite.Connection = Depends(get_db),
+    user: dict = Depends(require_admin),
+):
+    """List influencer submissions for review."""
+    if status:
+        cursor = await db.execute(
+            """SELECT s.*, i.name as influencer_name, c.campaign_name
+                FROM influencer_submissions s
+                JOIN influencer_collaborations c ON s.collaboration_id = c.id
+                JOIN influencers i ON c.influencer_id = i.id
+                WHERE s.status = ?
+                ORDER BY s.submitted_at DESC""",
+            (status,),
+        )
+    else:
+        cursor = await db.execute(
+            """SELECT s.*, i.name as influencer_name, c.campaign_name
+                FROM influencer_submissions s
+                JOIN influencer_collaborations c ON s.collaboration_id = c.id
+                JOIN influencers i ON c.influencer_id = i.id
+                ORDER BY s.submitted_at DESC"""
+        )
+    rows = await cursor.fetchall()
+    return {"submissions": [dict(r) for r in rows]}
+
+
+@router.post("/influencers/collaborations/{collab_id}/update-performance")
+async def update_collaboration_performance_endpoint(
+    collab_id: int,
+    user: dict = Depends(require_admin),
+):
+    """Update ROI for a collaboration."""
+    from app.services.influencer_service import update_collaboration_performance
+    result = await update_collaboration_performance(collab_id)
+    return result
+
+
+# ── Sprint 9: Content Performance Prediction ────────────────────────────────────
+
+@router.post("/predictions/predict")
+async def predict_performance(
+    content_type: str,
+    content_id: int,
+    content_text: str,
+    platform: str,
+    image_url: str | None = None,
+    user: dict = Depends(require_admin),
+):
+    """Predict performance of content before publishing."""
+    from app.services.prediction_service import predict_content_performance
+    prediction = await predict_content_performance(
+        content_type=content_type,
+        content_id=content_id,
+        content_text=content_text,
+        platform=platform,
+        image_url=image_url,
+    )
+    return prediction
+
+
+@router.post("/predictions/{content_type}/{content_id}/resolve")
+async def resolve_prediction_endpoint(
+    content_type: str,
+    content_id: int,
+    actual_reach: int,
+    actual_engagement: int,
+    actual_ctr: float,
+    user: dict = Depends(require_admin),
+):
+    """Record actual performance and calculate prediction accuracy."""
+    from app.services.prediction_service import resolve_prediction
+    result = await resolve_prediction(
+        content_type=content_type,
+        content_id=content_id,
+        actual_reach=actual_reach,
+        actual_engagement=actual_engagement,
+        actual_ctr=actual_ctr,
+    )
+    return result
+
+
+@router.get("/predictions/accuracy")
+async def get_prediction_accuracy_endpoint(
+    days: int = 30,
+    user: dict = Depends(require_admin),
+):
+    """Get overall prediction accuracy statistics."""
+    from app.services.prediction_service import get_prediction_accuracy
+    stats = await get_prediction_accuracy(days)
+    return stats
+
+
+# ── Sprint 9: Weekly Reports ───────────────────────────────────────────────────
+
+@router.post("/reports/subscribe")
+async def subscribe_to_reports_endpoint(
+    email: str,
+    report_type: str = "weekly_social",
+    day_of_week: int = 0,  # Sunday
+    user: dict = Depends(require_admin),
+):
+    """Subscribe to weekly email reports."""
+    from app.services.weekly_reports_service import subscribe_to_reports
+    result = await subscribe_to_reports(email, report_type, day_of_week)
+    return result
+
+
+@router.post("/reports/generate-weekly")
+async def generate_weekly_report_endpoint(
+    user: dict = Depends(require_admin),
+):
+    """Generate the weekly report (for testing or manual send)."""
+    from app.services.weekly_reports_service import generate_weekly_report, format_report_email
+    report = await generate_weekly_report()
+    subject, html = await format_report_email(report)
+    return {
+        "report": report,
+        "email_subject": subject,
+        "email_preview": html[:500] + "...",
+    }
+
+
+@router.get("/reports/subscriptions")
+async def list_report_subscriptions(
+    report_type: str | None = None,
+    db: aiosqlite.Connection = Depends(get_db),
+    user: dict = Depends(require_admin),
+):
+    """List report subscriptions."""
+    if report_type:
+        cursor = await db.execute(
+            "SELECT * FROM report_subscriptions WHERE report_type = ? AND is_active = TRUE",
+            (report_type,),
+        )
+    else:
+        cursor = await db.execute(
+            "SELECT * FROM report_subscriptions WHERE is_active = TRUE"
+        )
+    rows = await cursor.fetchall()
+    return {"subscriptions": [dict(r) for r in rows]}
+
+
+# ── Sprint 9: Hashtag Analytics ────────────────────────────────────────────────
+
+@router.post("/hashtags/calculate-performance")
+async def calculate_hashtag_performance_endpoint(
+    days: int = 30,
+    user: dict = Depends(require_admin),
+):
+    """Calculate performance metrics for all hashtags used recently."""
+    from app.services.hashtag_service import calculate_hashtag_performance
+    result = await calculate_hashtag_performance(days)
+    return result
+
+
+@router.get("/hashtags/top")
+async def get_top_hashtags_endpoint(
+    platform: str | None = None,
+    limit: int = 20,
+    min_posts: int = 3,
+    user: dict = Depends(require_admin),
+):
+    """Get top performing hashtags."""
+    from app.services.hashtag_service import get_top_hashtags
+    hashtags = await get_top_hashtags(platform, limit, min_posts)
+    return {"hashtags": hashtags}
+
+
+@router.post("/hashtags/suggest")
+async def suggest_hashtags_endpoint(
+    content: str,
+    platform: str,
+    limit: int = 5,
+    user: dict = Depends(require_admin),
+):
+    """Suggest hashtags based on content and top performers."""
+    from app.services.hashtag_service import suggest_hashtags
+    suggestions = await suggest_hashtags(content, platform, limit)
+    return {"suggestions": suggestions}
