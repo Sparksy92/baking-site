@@ -16,6 +16,15 @@ from app.services.social_publish_service import publish_post, PublishError
 from app.services.token_refresh_service import refresh_expiring_tokens
 from app.services.engagement_service import sync_all_engagement_metrics
 from app.services.reply_service import generate_reply_draft, store_reply_draft, mark_reply_sent
+from app.services.admin_audit import (
+    log_post_published,
+    log_draft_approved,
+    log_persona_updated,
+    log_agent_key_created,
+    log_submission_reviewed,
+    get_audit_log,
+)
+from app.services.sentiment_service import analyze_engagement_sentiment, batch_analyze_unprocessed, get_sentiment_trends
 
 logger = logging.getLogger(__name__)
 
@@ -342,6 +351,15 @@ async def publish_outbox_post(
     await db.commit()
 
     logger.info(f"Published social post {post_id} to {post['platform']}: platform_post_id={platform_post_id}")
+
+    # Audit log the publish action
+    await log_post_published(
+        admin_email=user.get("email", "unknown"),
+        post_id=post_id,
+        platform=post["platform"],
+        content_preview=post["content"],
+    )
+
     return {"published": True, "platform_post_id": platform_post_id}
 
 
@@ -1082,3 +1100,168 @@ async def agent_audit_log(
         )
     rows = await cursor.fetchall()
     return {"actions": [dict(r) for r in rows]}
+
+
+# ── Admin Audit Log ──────────────────────────────────────────────────────────
+
+@router.get("/audit-log")
+async def admin_audit_log(
+    admin_email: str | None = None,
+    resource_type: str | None = None,
+    action: str | None = None,
+    since: str | None = None,
+    limit: int = 100,
+    user: dict = Depends(require_admin),
+):
+    """View admin audit log (who did what, when)."""
+    logs = await get_audit_log(
+        admin_email=admin_email,
+        resource_type=resource_type,
+        action=action,
+        since=since,
+        limit=limit,
+    )
+    return {"actions": logs}
+
+
+# ── Crisis Management ──────────────────────────────────────────────────────────
+
+@router.get("/crisis-alerts")
+async def list_crisis_alerts(
+    resolved: bool = False,
+    severity: str | None = None,
+    limit: int = 50,
+    db: aiosqlite.Connection = Depends(get_db),
+    user: dict = Depends(require_admin),
+):
+    """List crisis alerts (viral negative content, spam attacks, etc.)."""
+    conditions = ["is_resolved = ?"]
+    params: list = [resolved]
+
+    if severity:
+        conditions.append("severity = ?")
+        params.append(severity)
+
+    where = "WHERE " + " AND ".join(conditions)
+
+    cursor = await db.execute(
+        f"""SELECT * FROM crisis_alerts
+            {where}
+            ORDER BY created_at DESC
+            LIMIT ?""",
+        params + [limit],
+    )
+    rows = await cursor.fetchall()
+    return {"alerts": [dict(r) for r in rows], "count": len(rows)}
+
+
+@router.post("/crisis-alerts/{alert_id}/resolve")
+async def resolve_crisis_alert(
+    alert_id: int,
+    notes: str = "",
+    db: aiosqlite.Connection = Depends(get_db),
+    user: dict = Depends(require_admin),
+):
+    """Mark a crisis alert as resolved."""
+    from datetime import datetime, timezone
+
+    cursor = await db.execute(
+        "SELECT id FROM crisis_alerts WHERE id = ?", (alert_id,)
+    )
+    if not await cursor.fetchone():
+        raise HTTPException(status_code=404, detail="Alert not found")
+
+    await db.execute(
+        """UPDATE crisis_alerts
+           SET is_resolved = TRUE, resolved_by = ?, resolved_at = ?, description = description || '\n\nResolution: ' || ?
+           WHERE id = ?""",
+        (user.get("email"), datetime.now(timezone.utc).isoformat(), notes, alert_id),
+    )
+    await db.commit()
+    return {"resolved": True, "alert_id": alert_id}
+
+
+# ── Sentiment Analysis ─────────────────────────────────────────────────────────
+
+@router.post("/engagement/{event_id}/analyze-sentiment")
+async def analyze_sentiment_endpoint(
+    event_id: int,
+    db: aiosqlite.Connection = Depends(get_db),
+    user: dict = Depends(require_admin),
+):
+    """Run AI sentiment analysis on an engagement event."""
+    result = await analyze_engagement_sentiment(event_id)
+    return result
+
+
+@router.post("/engagement/batch-analyze-sentiment")
+async def batch_analyze_sentiment(
+    limit: int = 100,
+    user: dict = Depends(require_admin),
+):
+    """Batch analyze sentiment for all unprocessed engagement events."""
+    processed = await batch_analyze_unprocessed(limit=limit)
+    return {"processed": processed}
+
+
+@router.get("/sentiment-trends")
+async def sentiment_trends(
+    days: int = 7,
+    user: dict = Depends(require_admin),
+):
+    """Get sentiment trends over time."""
+    return await get_sentiment_trends(days=days)
+
+
+# ── Revenue Attribution ───────────────────────────────────────────────────────
+
+@router.get("/revenue-attribution")
+async def get_revenue_attribution(
+    post_id: int | None = None,
+    since: str | None = None,
+    db: aiosqlite.Connection = Depends(get_db),
+    user: dict = Depends(require_admin),
+):
+    """Get revenue attribution for social posts (UTM-based tracking)."""
+    conditions = []
+    params: list = []
+
+    if post_id:
+        conditions.append("social_post_id = ?")
+        params.append(post_id)
+    if since:
+        conditions.append("sra.created_at >= ?")
+        params.append(since)
+
+    where = f"WHERE {' AND '.join(conditions)}" if conditions else ""
+
+    # Summary stats
+    cursor = await db.execute(
+        f"""SELECT
+            COUNT(DISTINCT sra.social_post_id) as posts_with_revenue,
+            COUNT(sra.id) as total_orders,
+            SUM(sra.revenue_cents) / 100.0 as total_revenue,
+            AVG(sra.revenue_cents) / 100.0 as avg_order_value
+        FROM social_revenue_attribution sra
+        {where}""",
+        params,
+    )
+    summary = dict(await cursor.fetchone())
+
+    # Top performing posts
+    cursor = await db.execute(
+        f"""SELECT
+            sp.id, sp.platform, sp.content,
+            SUM(sra.revenue_cents) / 100.0 as revenue,
+            COUNT(sra.id) as orders
+        FROM social_revenue_attribution sra
+        JOIN social_posts sp ON sra.social_post_id = sp.id
+        {where}
+        GROUP BY sp.id
+        ORDER BY revenue DESC
+        LIMIT 20""",
+        params,
+    )
+    top_posts = [dict(r) for r in await cursor.fetchall()]
+
+    return {"summary": summary, "top_posts": top_posts}
