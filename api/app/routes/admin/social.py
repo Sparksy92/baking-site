@@ -14,6 +14,8 @@ from app.auth import require_admin
 from app.database import get_db
 from app.services.social_publish_service import publish_post, PublishError
 from app.services.token_refresh_service import refresh_expiring_tokens
+from app.services.engagement_service import sync_all_engagement_metrics
+from app.services.reply_service import generate_reply_draft, store_reply_draft, mark_reply_sent
 
 logger = logging.getLogger(__name__)
 
@@ -644,3 +646,251 @@ async def update_ai_model_config(
     )
     updated = await cursor.fetchone()
     return dict(updated)
+
+
+# ── Engagement metrics ───────────────────────────────────────────────────────
+
+@router.post("/sync-engagement")
+async def manual_sync_engagement(
+    user: dict = Depends(require_admin),
+):
+    """Manually trigger engagement metrics sync from Meta.
+
+    Runs automatically every 4 hours. Use this for on-demand refresh.
+    """
+    summary = await sync_all_engagement_metrics()
+    return summary
+
+
+@router.get("/engagement")
+async def list_engagement_events(
+    platform: str | None = None,
+    replied: bool | None = None,
+    page: int = 1,
+    limit: int = 50,
+    db: aiosqlite.Connection = Depends(get_db),
+    user: dict = Depends(require_admin),
+):
+    """List engagement events (comments, reactions, mentions) from webhooks.
+
+    Filter by platform or replied status. Used for the AI reply workflow.
+    """
+    conditions = []
+    params: list = []
+
+    if platform:
+        conditions.append("platform = ?")
+        params.append(platform)
+    if replied is True:
+        conditions.append("replied_at IS NOT NULL")
+    elif replied is False:
+        conditions.append("replied_at IS NULL")
+
+    where = f"WHERE {' AND '.join(conditions)}" if conditions else ""
+    offset = (page - 1) * limit
+
+    cursor = await db.execute(
+        f"SELECT COUNT(*) FROM social_engagement_events {where}",
+        params,
+    )
+    total = (await cursor.fetchone())[0]
+
+    cursor = await db.execute(
+        f"""SELECT e.*, sp.content as post_content
+            FROM social_engagement_events e
+            LEFT JOIN social_posts sp ON e.platform_post_id = sp.platform_post_id
+            {where}
+            ORDER BY e.created_at DESC
+            LIMIT ? OFFSET ?""",
+        params + [limit, offset],
+    )
+    rows = await cursor.fetchall()
+    return {"events": [dict(r) for r in rows], "total": total, "page": page}
+
+
+class GenerateReplyRequest(BaseModel):
+    engagement_event_id: int
+
+
+@router.post("/engagement/generate-reply")
+async def generate_reply(
+    body: GenerateReplyRequest,
+    db: aiosqlite.Connection = Depends(get_db),
+    user: dict = Depends(require_admin),
+):
+    """Generate an AI reply draft for an engagement event.
+
+    Uses brand persona + SOCIAL_REPLY task type (best model for tone).
+    Stores the draft; admin must approve before sending.
+    """
+    cursor = await db.execute(
+        "SELECT * FROM social_engagement_events WHERE id = ?",
+        (body.engagement_event_id,),
+    )
+    event = await cursor.fetchone()
+    if not event:
+        raise HTTPException(status_code=404, detail="Engagement event not found")
+
+    event = dict(event)
+
+    cursor = await db.execute(
+        "SELECT content FROM social_posts WHERE platform_post_id = ?",
+        (event["platform_post_id"],),
+    )
+    post_row = await cursor.fetchone()
+    post_context = post_row["content"] if post_row else None
+
+    draft = await generate_reply_draft(
+        original_comment=event.get("message") or event.get("raw_payload", "")[:500],
+        commenter_name=event.get("actor_name", "there"),
+        platform=event["platform"],
+        post_context=post_context,
+    )
+
+    await store_reply_draft(body.engagement_event_id, draft)
+
+    return {"reply_draft": draft, "engagement_event_id": body.engagement_event_id}
+
+
+class SendReplyRequest(BaseModel):
+    engagement_event_id: int
+    reply_content: str | None = None  # if null, use the stored draft
+
+
+@router.post("/engagement/send-reply")
+async def send_reply(
+    body: SendReplyRequest,
+    db: aiosqlite.Connection = Depends(get_db),
+    user: dict = Depends(require_admin),
+):
+    """Send a reply to a social media comment.
+
+    If reply_content is provided, uses that; otherwise uses the stored AI draft.
+    Marks the engagement event as replied.
+
+    Note: Actual Meta API reply publishing is Sprint 5.5 (requires comment_id + reply endpoint).
+    For now, marks as replied in DB and logs for manual follow-up if API not ready.
+    """
+    cursor = await db.execute(
+        "SELECT * FROM social_engagement_events WHERE id = ?",
+        (body.engagement_event_id,),
+    )
+    event = await cursor.fetchone()
+    if not event:
+        raise HTTPException(status_code=404, detail="Engagement event not found")
+
+    event = dict(event)
+
+    content = body.reply_content or event.get("reply_content", "")
+    if not content:
+        raise HTTPException(status_code=400, detail="No reply content provided or stored")
+
+    # TODO: Sprint 5.5 — call Meta API to publish reply
+    # For now, mark as replied and log
+    await mark_reply_sent(body.engagement_event_id, content)
+
+    logger.info(f"Reply marked sent for engagement {body.engagement_event_id}")
+    return {"sent": True, "reply_content": content}
+
+
+# ── Content templates ────────────────────────────────────────────────────────
+
+class ContentTemplateCreate(BaseModel):
+    name: str
+    template_type: str  # 'blog' | 'social_facebook' | 'social_instagram' | etc.
+    prompt_template: str
+    variables: str = ""  # comma-separated list
+
+
+@router.get("/templates")
+async def list_templates(
+    template_type: str | None = None,
+    db: aiosqlite.Connection = Depends(get_db),
+    user: dict = Depends(require_admin),
+):
+    """List content templates. Filter by type: 'blog', 'social_facebook', etc."""
+    if template_type:
+        cursor = await db.execute(
+            "SELECT * FROM content_templates WHERE template_type = ? AND is_active = TRUE ORDER BY name",
+            (template_type,),
+        )
+    else:
+        cursor = await db.execute(
+            "SELECT * FROM content_templates WHERE is_active = TRUE ORDER BY template_type, name"
+        )
+    rows = await cursor.fetchall()
+    return {"templates": [dict(r) for r in rows]}
+
+
+@router.post("/templates")
+async def create_template(
+    body: ContentTemplateCreate,
+    db: aiosqlite.Connection = Depends(get_db),
+    user: dict = Depends(require_admin),
+):
+    """Create a new content template."""
+    cursor = await db.execute(
+        """INSERT INTO content_templates
+           (name, template_type, prompt_template, variables, created_by)
+           VALUES (?, ?, ?, ?, ?)""",
+        (body.name, body.template_type, body.prompt_template, body.variables, user.get("email", "admin")),
+    )
+    await db.commit()
+    template_id = cursor.lastrowid
+    return {"id": template_id, **body.dict()}
+
+
+@router.post("/templates/{template_id}/generate")
+async def generate_from_template(
+    template_id: int,
+    variables: dict,
+    db: aiosqlite.Connection = Depends(get_db),
+    user: dict = Depends(require_admin),
+):
+    """Generate content using a template + provided variables.
+
+    Variables dict keys must match the template's variables list.
+    Returns generated content ready for review.
+    """
+    from app.services.ai_service import generate_blog_post, generate_social_post
+    from app.services.ai_router import AITaskType
+
+    cursor = await db.execute(
+        "SELECT * FROM content_templates WHERE id = ? AND is_active = TRUE",
+        (template_id,),
+    )
+    row = await cursor.fetchone()
+    if not row:
+        raise HTTPException(status_code=404, detail="Template not found")
+
+    template = dict(row)
+
+    # Substitute variables into prompt template
+    prompt = template["prompt_template"]
+    for key, value in variables.items():
+        prompt = prompt.replace(f"{{{key}}}", str(value))
+
+    # Track usage
+    await db.execute(
+        "UPDATE content_templates SET usage_count = usage_count + 1 WHERE id = ?",
+        (template_id,),
+    )
+    await db.commit()
+
+    # Generate based on type
+    template_type = template["template_type"]
+    if template_type == "blog":
+        content = await generate_blog_post(prompt)
+    elif template_type.startswith("social_"):
+        platform = template_type.replace("social_", "")
+        task_type = AITaskType.PRODUCT_SOCIAL if "product" in prompt.lower() else AITaskType.SOCIAL_CAPTION
+        content = await generate_social_post(prompt, platform, task_type=task_type)
+    else:
+        content = await generate_blog_post(prompt)
+
+    return {
+        "content": content,
+        "template_id": template_id,
+        "template_name": template["name"],
+        "prompt_used": prompt,
+    }

@@ -13,6 +13,7 @@ from app.database import init_db
 from app.services.meta_service import run_social_sync
 from app.services.token_refresh_service import refresh_expiring_tokens
 from app.services.scheduler_service import run_scheduled_publisher
+from app.services.engagement_service import sync_all_engagement_metrics
 from app.middleware.logging import setup_logging
 from app.middleware.rate_limit import RateLimitMiddleware
 from app.middleware.request_id import RequestIdMiddleware
@@ -106,9 +107,22 @@ async def lifespan(app: FastAPI):
                 logger.error(f"Background scheduler error: {e}", exc_info=True)
             await asyncio.sleep(60)
 
+    async def _background_engagement_sync():
+        """Poll Meta for engagement metrics every 4 hours."""
+        await asyncio.sleep(60)
+        while True:
+            try:
+                summary = await sync_all_engagement_metrics()
+                if summary["synced"] or summary["failed"]:
+                    logger.info(f"Engagement sync: {summary}")
+            except Exception as e:
+                logger.error(f"Background engagement sync error: {e}", exc_info=True)
+            await asyncio.sleep(14400)
+
     sync_task = asyncio.ensure_future(_background_social_sync())
     token_task = asyncio.ensure_future(_background_token_refresh())
     scheduler_task = asyncio.ensure_future(_background_scheduler())
+    engagement_task = asyncio.ensure_future(_background_engagement_sync())
 
     await init_db()
     logger.info("Database initialized")
@@ -116,6 +130,7 @@ async def lifespan(app: FastAPI):
     sync_task.cancel()
     token_task.cancel()
     scheduler_task.cancel()
+    engagement_task.cancel()
     logger.info("Shutting down")
 
 
