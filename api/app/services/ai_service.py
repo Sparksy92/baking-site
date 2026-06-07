@@ -2,6 +2,7 @@ import logging
 import httpx
 from app.config import get_settings
 from app.database import db_connection
+from app.services.seo_service import research_trending_topics
 
 logger = logging.getLogger(__name__)
 
@@ -73,15 +74,29 @@ Platform: {platform.upper()}
 
 
 async def generate_blog_post(prompt: str) -> str:
-    """Generate a blog post from a prompt using the configured AI provider."""
+    """Generate a blog post from a prompt using the configured AI provider.
+
+    Automatically researches trending topics related to the prompt and injects
+    them into the AI context to help the content rank in search results.
+    """
     settings = get_settings()
     persona = await _get_active_persona()
+
+    trend_context = await research_trending_topics(prompt)
+    enriched_prompt = prompt
+    if trend_context:
+        enriched_prompt = (
+            f"{prompt}\n\n"
+            f"--- SEO CONTEXT (use this to make the post rank well in search) ---\n"
+            f"{trend_context}"
+        )
+
     system_prompt = _build_system_prompt(settings.brand_name, settings.brand_tagline, persona, "blog")
 
     if settings.openai_api_key:
-        return await _generate_with_openai(prompt, settings.openai_api_key, system_prompt)
+        return await _generate_with_openai(enriched_prompt, settings.openai_api_key, system_prompt)
     elif settings.gemini_api_key:
-        return await _generate_with_gemini(prompt, settings.gemini_api_key, system_prompt)
+        return await _generate_with_gemini(enriched_prompt, settings.gemini_api_key, system_prompt)
     else:
         raise ValueError("No AI provider configured. Please set OPENAI_API_KEY or GEMINI_API_KEY in your environment.")
 
@@ -112,6 +127,62 @@ async def generate_social_post(prompt: str, platform: str) -> str:
         return await _generate_with_gemini(prompt, settings.gemini_api_key, system_prompt)
     else:
         raise ValueError("No AI provider configured. Please set OPENAI_API_KEY or GEMINI_API_KEY in your environment.")
+
+async def generate_social_drafts_for_page(page_id: int, title: str, content: str, image_url: str | None) -> int:
+    """Generate social post drafts for all enabled platforms when a blog post is published.
+
+    One draft per enabled platform is created in social_posts with status='draft'.
+    If a platform has auto_publish=True, it is marked 'approved' immediately
+    (Sprint 3 will handle the actual outbound API call).
+
+    Returns the number of drafts created.
+    """
+    created = 0
+    source_prompt = f"Title: {title}\n\n{content[:1200]}"
+
+    try:
+        async with db_connection() as db:
+            cursor = await db.execute(
+                "SELECT platform, hashtag_bank, auto_publish FROM social_platform_configs WHERE enabled = TRUE"
+            )
+            platforms = await cursor.fetchall()
+
+        for row in platforms:
+            platform = row["platform"]
+            hashtag_bank = (row["hashtag_bank"] or "").strip()
+            auto_publish = row["auto_publish"]
+
+            try:
+                content_text = await generate_social_post(source_prompt, platform)
+
+                if hashtag_bank:
+                    tags = " ".join(
+                        t.strip() for t in hashtag_bank.splitlines() if t.strip()
+                    )
+                    content_text = f"{content_text}\n\n{tags}"
+
+                initial_status = "approved" if auto_publish else "draft"
+
+                async with db_connection() as db:
+                    await db.execute(
+                        """INSERT INTO social_posts
+                           (page_id, platform, content, image_url, hashtags, status)
+                           VALUES (?, ?, ?, ?, ?, ?)""",
+                        (page_id, platform, content_text, image_url, hashtag_bank, initial_status),
+                    )
+                    await db.commit()
+
+                created += 1
+                logger.info(f"Created {initial_status} social draft for platform={platform} page_id={page_id}")
+
+            except Exception as e:
+                logger.error(f"Failed to generate social draft for {platform}: {e}")
+
+    except Exception as e:
+        logger.error(f"generate_social_drafts_for_page failed: {e}")
+
+    return created
+
 
 async def _generate_with_openai(prompt: str, api_key: str, system_prompt: str) -> str:
     url = "https://api.openai.com/v1/chat/completions"

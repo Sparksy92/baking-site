@@ -90,7 +90,7 @@ async def _process_meta_posts(posts: list, platform: str):
                         content_html,
                         local_image_url,
                         'blog_post',
-                        'published',
+                        'draft',
                         settings.brand_name,
                         timestamp,
                         external_id

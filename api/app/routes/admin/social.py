@@ -37,6 +37,12 @@ class PlatformUpdate(BaseModel):
     access_token: str | None = None
 
 
+class OutboxPostUpdate(BaseModel):
+    content: str | None = None
+    status: str | None = None    # 'draft' | 'approved' | 'rejected'
+    scheduled_at: str | None = None
+
+
 # ── Persona endpoints ────────────────────────────────────────────────────────
 
 @router.get("/persona")
@@ -166,3 +172,144 @@ async def update_platform(
     )
     await db.commit()
     return {"updated": True}
+
+
+# ── Outbox endpoints ─────────────────────────────────────────────────────────
+
+@router.get("/outbox")
+async def list_outbox(
+    platform: str | None = None,
+    post_status: str | None = None,
+    page: int = 1,
+    limit: int = 50,
+    db: aiosqlite.Connection = Depends(get_db),
+    user: dict = Depends(require_admin),
+):
+    """List social post drafts in the outbox."""
+    conditions = []
+    params: list = []
+
+    if platform:
+        conditions.append("sp.platform = ?")
+        params.append(platform)
+    if post_status:
+        conditions.append("sp.status = ?")
+        params.append(post_status)
+
+    where = f"WHERE {' AND '.join(conditions)}" if conditions else ""
+    offset = (page - 1) * limit
+
+    cursor = await db.execute(f"SELECT COUNT(*) FROM social_posts sp {where}", params)
+    total = (await cursor.fetchone())[0]
+
+    cursor = await db.execute(
+        f"""SELECT sp.*, p.title AS page_title, p.slug AS page_slug
+            FROM social_posts sp
+            LEFT JOIN pages p ON sp.page_id = p.id
+            {where}
+            ORDER BY sp.created_at DESC LIMIT ? OFFSET ?""",
+        params + [limit, offset],
+    )
+    rows = await cursor.fetchall()
+    return {"posts": [dict(r) for r in rows], "total": total, "page": page}
+
+
+@router.get("/outbox/{post_id}")
+async def get_outbox_post(
+    post_id: int,
+    db: aiosqlite.Connection = Depends(get_db),
+    user: dict = Depends(require_admin),
+):
+    cursor = await db.execute(
+        """SELECT sp.*, p.title AS page_title, p.slug AS page_slug
+           FROM social_posts sp LEFT JOIN pages p ON sp.page_id = p.id
+           WHERE sp.id = ?""",
+        (post_id,),
+    )
+    row = await cursor.fetchone()
+    if not row:
+        raise HTTPException(status_code=404, detail="Post not found")
+    return dict(row)
+
+
+@router.patch("/outbox/{post_id}")
+async def update_outbox_post(
+    post_id: int,
+    body: OutboxPostUpdate,
+    db: aiosqlite.Connection = Depends(get_db),
+    user: dict = Depends(require_admin),
+):
+    """Edit content, approve, or reject a social draft."""
+    cursor = await db.execute("SELECT id FROM social_posts WHERE id = ?", (post_id,))
+    if not await cursor.fetchone():
+        raise HTTPException(status_code=404, detail="Post not found")
+
+    updates = body.model_dump(exclude_unset=True)
+    if not updates:
+        raise HTTPException(status_code=400, detail="No fields to update")
+
+    valid_statuses = {"draft", "approved", "rejected", "scheduled"}
+    if "status" in updates and updates["status"] not in valid_statuses:
+        raise HTTPException(status_code=400, detail=f"Invalid status. Must be one of: {valid_statuses}")
+
+    set_parts = [f"{k} = ?" for k in updates]
+    values = list(updates.values()) + [post_id]
+    await db.execute(
+        f"UPDATE social_posts SET {', '.join(set_parts)}, updated_at = CURRENT_TIMESTAMP WHERE id = ?",
+        values,
+    )
+    await db.commit()
+    return {"updated": True}
+
+
+@router.delete("/outbox/{post_id}")
+async def delete_outbox_post(
+    post_id: int,
+    db: aiosqlite.Connection = Depends(get_db),
+    user: dict = Depends(require_admin),
+):
+    cursor = await db.execute("SELECT id FROM social_posts WHERE id = ?", (post_id,))
+    if not await cursor.fetchone():
+        raise HTTPException(status_code=404, detail="Post not found")
+    await db.execute("DELETE FROM social_posts WHERE id = ?", (post_id,))
+    await db.commit()
+    return {"deleted": True}
+
+
+@router.post("/outbox/{post_id}/publish")
+async def publish_outbox_post(
+    post_id: int,
+    db: aiosqlite.Connection = Depends(get_db),
+    user: dict = Depends(require_admin),
+):
+    """Publish a social post to its platform. Sprint 3 wires up the actual API calls.
+    For now, marks the post as published immediately (manual confirmation flow).
+    """
+    cursor = await db.execute("SELECT * FROM social_posts WHERE id = ?", (post_id,))
+    row = await cursor.fetchone()
+    if not row:
+        raise HTTPException(status_code=404, detail="Post not found")
+
+    post = dict(row)
+    if post["status"] not in ("draft", "approved"):
+        raise HTTPException(
+            status_code=400,
+            detail=f"Cannot publish a post with status '{post['status']}'"
+        )
+
+    cursor = await db.execute(
+        "SELECT enabled, setup_status FROM social_platform_configs WHERE platform = ?",
+        (post["platform"],),
+    )
+    platform_cfg = await cursor.fetchone()
+    if not platform_cfg or not platform_cfg["enabled"]:
+        raise HTTPException(status_code=400, detail=f"Platform '{post['platform']}' is not enabled")
+
+    await db.execute(
+        "UPDATE social_posts SET status = 'published', published_at = CURRENT_TIMESTAMP, updated_at = CURRENT_TIMESTAMP WHERE id = ?",
+        (post_id,),
+    )
+    await db.commit()
+
+    logger.info(f"Social post {post_id} marked published (platform={post['platform']}) — outbound API call wired in Sprint 3")
+    return {"published": True, "note": "Outbound API publishing added in Sprint 3"}

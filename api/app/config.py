@@ -88,6 +88,7 @@ class Settings(BaseSettings):
     # ── Integrations — AI ────────────────────────────────────────
     openai_api_key: str = ""
     gemini_api_key: str = ""
+    serp_api_key: str = ""    # SerpAPI — 100 free searches/month at serpapi.com
 
     # ── Integrations — LinkedIn ──────────────────────────────────
     linkedin_client_id: str = ""
