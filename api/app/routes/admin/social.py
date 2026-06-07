@@ -1998,3 +1998,40 @@ async def suggest_hashtags_endpoint(
     from app.services.hashtag_service import suggest_hashtags
     suggestions = await suggest_hashtags(content, platform, limit)
     return {"suggestions": suggestions}
+
+
+# ── Dashboard Reporting ─────────────────────────────────────────────────────────
+
+@router.get("/dashboard")
+async def get_dashboard(
+    days: int = 7,
+    user: dict = Depends(require_admin),
+):
+    """Get complete platform dashboard overview.
+
+    Single endpoint shows everything: content pipeline, engagement,
+    revenue, crisis status, pending approvals.
+    """
+    from app.services.dashboard_service import get_dashboard_overview
+    dashboard = await get_dashboard_overview(days)
+    return dashboard
+
+
+@router.get("/dashboard/compact")
+async def get_compact_status(
+    user: dict = Depends(require_admin),
+):
+    """Get one-line status for quick checks."""
+    from app.services.dashboard_service import get_compact_status
+    status = await get_compact_status()
+    return {"status": status}
+
+
+@router.get("/dashboard/ai-brief")
+async def get_ai_brief(
+    user: dict = Depends(require_admin),
+):
+    """Get AI-optimized dashboard brief (concise for LLM consumption)."""
+    from app.services.dashboard_service import get_ai_agent_brief
+    brief = await get_ai_agent_brief()
+    return brief

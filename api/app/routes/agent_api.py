@@ -396,3 +396,47 @@ async def outbox_status(
         },
         "meta": {},
     }
+
+
+@router.get("/dashboard")
+@require_agent_scope("read:metrics")
+async def get_agent_dashboard(
+    request: Request,
+    agent: dict = Depends(get_agent),
+):
+    """Get platform dashboard - AI-optimized brief for agent decision-making.
+
+    This gives agents the context they need to make intelligent decisions
+    about what content to create, when to post, what needs attention.
+    """
+    from datetime import datetime, timezone
+
+    start_time = datetime.now(timezone.utc)
+
+    from app.services.dashboard_service import get_ai_agent_brief
+    brief = await get_ai_agent_brief(agent["id"])
+
+    duration_ms = int((datetime.now(timezone.utc) - start_time).total_seconds() * 1000)
+
+    # Log the access
+    from app.database import db_connection
+    async with db_connection() as db:
+        from app.routes.agent_api import log_agent_action
+        await log_agent_action(
+            db, agent, "read_dashboard", request, 200,
+            duration_ms=duration_ms,
+        )
+
+    return {
+        "data": brief,
+        "meta": {
+            "agent_id": agent["id"],
+            "accessed_at": start_time.isoformat(),
+        },
+    }
+
+
+@router.get("/health")
+async def agent_health_check():
+    """Simple health check - no auth required for basic connectivity test."""
+    return {"status": "ok", "service": "social-agent-api"}
