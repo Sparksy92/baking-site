@@ -3,7 +3,7 @@ from __future__ import annotations
 import logging
 
 from fastapi import APIRouter, Depends, HTTPException, Query, Request, status
-import aiosqlite
+from app.database import PostgresConnection
 
 from app.customer_auth import get_optional_customer
 from app.database import get_db
@@ -22,7 +22,7 @@ router = APIRouter(tags=["checkout"])
 async def checkout(
     body: CheckoutRequest,
     request: Request,
-    db: aiosqlite.Connection = Depends(get_db),
+    db: PostgresConnection = Depends(get_db),
     customer: dict | None = Depends(get_optional_customer),
 ):
     """Create order and redirect to Stripe Checkout.
@@ -149,7 +149,7 @@ async def checkout(
 async def create_payment_intent(
     body: CheckoutRequest,
     request: Request,
-    db: aiosqlite.Connection = Depends(get_db),
+    db: PostgresConnection = Depends(get_db),
     customer: dict | None = Depends(get_optional_customer),
 ):
     """Create order + Stripe PaymentIntent for Apple Pay / Google Pay express checkout.
@@ -226,7 +226,7 @@ async def create_payment_intent(
 async def lookup_order(
     order_number: str,
     email: str = Query(..., description="Customer email for privacy gate"),
-    db: aiosqlite.Connection = Depends(get_db),
+    db: PostgresConnection = Depends(get_db),
 ):
     """Public order lookup — requires matching email."""
     cursor = await db.execute(

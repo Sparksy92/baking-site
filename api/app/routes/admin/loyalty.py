@@ -5,7 +5,7 @@ import logging
 
 from fastapi import APIRouter, Depends, HTTPException, status
 from pydantic import BaseModel, Field
-import aiosqlite
+from app.database import PostgresConnection
 
 from app.auth import require_admin
 from app.database import get_db
@@ -30,7 +30,7 @@ class PointsAdjust(BaseModel):
 
 @router.get("/rules")
 async def list_rules(
-    db: aiosqlite.Connection = Depends(get_db),
+    db: PostgresConnection = Depends(get_db),
     user: dict = Depends(require_admin),
 ):
     cursor = await db.execute("SELECT * FROM loyalty_rules ORDER BY created_at DESC")
@@ -40,7 +40,7 @@ async def list_rules(
 @router.post("/rules", status_code=status.HTTP_201_CREATED)
 async def create_rule(
     body: LoyaltyRuleCreate,
-    db: aiosqlite.Connection = Depends(get_db),
+    db: PostgresConnection = Depends(get_db),
     user: dict = Depends(require_admin),
 ):
     # Deactivate existing rules
@@ -58,7 +58,7 @@ async def create_rule(
 @router.post("/adjust")
 async def adjust_points(
     body: PointsAdjust,
-    db: aiosqlite.Connection = Depends(get_db),
+    db: PostgresConnection = Depends(get_db),
     user: dict = Depends(require_admin),
 ):
     """Manually adjust a customer's loyalty points."""
@@ -86,7 +86,7 @@ async def adjust_points(
 
 @router.get("/stats")
 async def loyalty_stats(
-    db: aiosqlite.Connection = Depends(get_db),
+    db: PostgresConnection = Depends(get_db),
     user: dict = Depends(require_admin),
 ):
     cursor = await db.execute("SELECT COUNT(*) as members, SUM(loyalty_points) as total_outstanding FROM customers WHERE loyalty_points > 0")

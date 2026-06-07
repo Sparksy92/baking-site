@@ -3,7 +3,7 @@ from __future__ import annotations
 from datetime import datetime, timezone
 
 from fastapi import APIRouter, Depends, HTTPException, status
-import aiosqlite
+from app.database import PostgresConnection
 
 from app.database import get_db
 from app.models.schemas import PromoValidateResponse
@@ -15,7 +15,7 @@ router = APIRouter(tags=["promos"])
 async def validate_promo(
     code: str,
     subtotal_cents: int = 0,
-    db: aiosqlite.Connection = Depends(get_db),
+    db: PostgresConnection = Depends(get_db),
 ):
     """Validate a promo code and return discount info.
     Used by storefront to show discount before checkout."""
@@ -24,7 +24,7 @@ async def validate_promo(
 
 
 async def _validate_promo_code(
-    db: aiosqlite.Connection, code: str, subtotal_cents: int = 0
+    db: PostgresConnection, code: str, subtotal_cents: int = 0
 ) -> PromoValidateResponse:
     """Core promo validation logic, reused by checkout."""
     cursor = await db.execute(

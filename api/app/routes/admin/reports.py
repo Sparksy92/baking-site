@@ -2,7 +2,7 @@
 from __future__ import annotations
 
 from fastapi import APIRouter, Depends, Query
-import aiosqlite
+from app.database import PostgresConnection
 
 from app.auth import require_admin
 from app.database import get_db
@@ -14,7 +14,7 @@ router = APIRouter(prefix="/admin/reports", tags=["admin-reports"])
 async def sales_report(
     from_date: str = Query(description="Start date (YYYY-MM-DD)"),
     to_date: str = Query(description="End date (YYYY-MM-DD)"),
-    db: aiosqlite.Connection = Depends(get_db),
+    db: PostgresConnection = Depends(get_db),
     user: dict = Depends(require_admin),
 ):
     """Sales report for a date range: revenue, orders, AOV, refunds."""
@@ -141,7 +141,7 @@ async def sales_report(
 async def ltv_report(
     limit: int = Query(default=50, ge=1, le=500),
     min_orders: int = Query(default=1, ge=1, description="Only include customers with at least this many orders"),
-    db: aiosqlite.Connection = Depends(get_db),
+    db: PostgresConnection = Depends(get_db),
     user: dict = Depends(require_admin),
 ):
     """Customer Lifetime Value report.

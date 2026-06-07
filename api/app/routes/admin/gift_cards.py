@@ -6,7 +6,7 @@ import logging
 
 from fastapi import APIRouter, Depends, HTTPException, Query, status
 from pydantic import BaseModel, Field
-import aiosqlite
+from app.database import PostgresConnection
 
 from app.auth import require_admin
 from app.database import get_db
@@ -40,7 +40,7 @@ class GiftCardAdjust(BaseModel):
 async def list_gift_cards(
     page: int = Query(1, ge=1),
     limit: int = Query(50, ge=1, le=200),
-    db: aiosqlite.Connection = Depends(get_db),
+    db: PostgresConnection = Depends(get_db),
     user: dict = Depends(require_admin),
 ):
     offset = (page - 1) * limit
@@ -56,7 +56,7 @@ async def list_gift_cards(
 @router.post("", status_code=status.HTTP_201_CREATED)
 async def create_gift_card(
     body: GiftCardCreate,
-    db: aiosqlite.Connection = Depends(get_db),
+    db: PostgresConnection = Depends(get_db),
     user: dict = Depends(require_admin),
 ):
     code = _generate_code()
@@ -77,7 +77,7 @@ async def create_gift_card(
 @router.get("/{card_id}")
 async def get_gift_card(
     card_id: int,
-    db: aiosqlite.Connection = Depends(get_db),
+    db: PostgresConnection = Depends(get_db),
     user: dict = Depends(require_admin),
 ):
     cursor = await db.execute("SELECT * FROM gift_cards WHERE id = ?", (card_id,))
@@ -100,7 +100,7 @@ async def get_gift_card(
 async def adjust_balance(
     card_id: int,
     body: GiftCardAdjust,
-    db: aiosqlite.Connection = Depends(get_db),
+    db: PostgresConnection = Depends(get_db),
     user: dict = Depends(require_admin),
 ):
     """Manually adjust gift card balance."""
@@ -132,7 +132,7 @@ async def adjust_balance(
 @router.patch("/{card_id}/deactivate")
 async def deactivate_gift_card(
     card_id: int,
-    db: aiosqlite.Connection = Depends(get_db),
+    db: PostgresConnection = Depends(get_db),
     user: dict = Depends(require_admin),
 ):
     cursor = await db.execute("SELECT id FROM gift_cards WHERE id = ?", (card_id,))

@@ -2,7 +2,7 @@
 from __future__ import annotations
 
 from fastapi import APIRouter, Depends, HTTPException, Query, status
-import aiosqlite
+from app.database import PostgresConnection
 
 from app.database import get_db
 
@@ -14,7 +14,7 @@ async def list_pages(
     page_type: str = Query("page"),
     page: int = Query(1, ge=1),
     limit: int = Query(20, ge=1, le=100),
-    db: aiosqlite.Connection = Depends(get_db),
+    db: PostgresConnection = Depends(get_db),
 ):
     """List published pages or blog posts."""
     offset = (page - 1) * limit
@@ -34,7 +34,7 @@ async def list_pages(
 
 
 @router.get("/{slug}")
-async def get_page(slug: str, db: aiosqlite.Connection = Depends(get_db)):
+async def get_page(slug: str, db: PostgresConnection = Depends(get_db)):
     """Get a single published page by slug."""
     cursor = await db.execute(
         "SELECT * FROM pages WHERE slug = ? AND status = 'published'", (slug,)

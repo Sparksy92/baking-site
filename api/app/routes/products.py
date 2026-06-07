@@ -3,7 +3,7 @@ from __future__ import annotations
 import logging
 
 from fastapi import APIRouter, Depends, HTTPException, Query, status
-import aiosqlite
+from app.database import PostgresConnection
 
 from app.database import get_db
 from app.models.schemas import ProductListItem, ProductResponse, VariantResponse, ImageResponse, CategoryResponse, TagResponse
@@ -14,7 +14,7 @@ router = APIRouter(tags=["products"])
 
 
 @router.get("/tags")
-async def list_tags(db: aiosqlite.Connection = Depends(get_db)):
+async def list_tags(db: PostgresConnection = Depends(get_db)):
     """List all tags that have at least one active product."""
     cursor = await db.execute(
         """SELECT t.id, t.name, t.slug, COUNT(pt.product_id) as product_count
@@ -38,7 +38,7 @@ async def list_products(
     sort: str | None = None,
     page: int = Query(default=1, ge=1),
     limit: int = Query(default=24, ge=1, le=100),
-    db: aiosqlite.Connection = Depends(get_db),
+    db: PostgresConnection = Depends(get_db),
 ):
     """List products with optional filters."""
     offset = (page - 1) * limit
@@ -141,7 +141,7 @@ async def list_products(
 
 
 @router.get("/products/{slug}", response_model=ProductResponse)
-async def get_product(slug: str, db: aiosqlite.Connection = Depends(get_db)):
+async def get_product(slug: str, db: PostgresConnection = Depends(get_db)):
     """Get a single product with variants and images."""
     cursor = await db.execute(
         "SELECT * FROM products WHERE slug = ? AND is_active = 1", (slug,)
@@ -223,7 +223,7 @@ async def get_product(slug: str, db: aiosqlite.Connection = Depends(get_db)):
 
 
 @router.get("/categories", response_model=list[CategoryResponse])
-async def list_categories(db: aiosqlite.Connection = Depends(get_db)):
+async def list_categories(db: PostgresConnection = Depends(get_db)):
     """List active categories with product counts."""
     cursor = await db.execute("""
         SELECT c.*, COUNT(p.id) as product_count
@@ -245,7 +245,7 @@ async def list_categories(db: aiosqlite.Connection = Depends(get_db)):
 
 
 @router.get("/categories/{slug}", response_model=CategoryResponse)
-async def get_category(slug: str, db: aiosqlite.Connection = Depends(get_db)):
+async def get_category(slug: str, db: PostgresConnection = Depends(get_db)):
     """Get a single category by slug with SEO fields."""
     cursor = await db.execute("""
         SELECT c.*, COUNT(p.id) as product_count
@@ -269,7 +269,7 @@ async def get_category(slug: str, db: aiosqlite.Connection = Depends(get_db)):
 
 
 @router.get("/collections", response_model=list)
-async def list_collections(db: aiosqlite.Connection = Depends(get_db)):
+async def list_collections(db: PostgresConnection = Depends(get_db)):
     """List active collections with product counts."""
     cursor = await db.execute("""
         SELECT col.*, COUNT(cp.product_id) as product_count
@@ -292,7 +292,7 @@ async def list_collections(db: aiosqlite.Connection = Depends(get_db)):
 
 
 @router.get("/collections/{slug}")
-async def get_collection(slug: str, db: aiosqlite.Connection = Depends(get_db)):
+async def get_collection(slug: str, db: PostgresConnection = Depends(get_db)):
     """Get collection details."""
     cursor = await db.execute("SELECT * FROM collections WHERE slug = ? AND is_active = 1", (slug,))
     collection = await cursor.fetchone()

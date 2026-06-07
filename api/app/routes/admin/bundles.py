@@ -3,7 +3,7 @@ from __future__ import annotations
 
 from fastapi import APIRouter, Depends, HTTPException, status
 from pydantic import BaseModel, Field
-import aiosqlite
+from app.database import PostgresConnection
 
 from app.auth import require_admin
 from app.database import get_db
@@ -36,7 +36,7 @@ class BundleUpdate(BaseModel):
 
 @router.get("")
 async def list_bundles(
-    db: aiosqlite.Connection = Depends(get_db),
+    db: PostgresConnection = Depends(get_db),
     user: dict = Depends(require_admin),
 ):
     cursor = await db.execute("SELECT * FROM bundles ORDER BY created_at DESC")
@@ -46,7 +46,7 @@ async def list_bundles(
 @router.post("", status_code=status.HTTP_201_CREATED)
 async def create_bundle(
     body: BundleCreate,
-    db: aiosqlite.Connection = Depends(get_db),
+    db: PostgresConnection = Depends(get_db),
     user: dict = Depends(require_admin),
 ):
     try:
@@ -55,7 +55,7 @@ async def create_bundle(
                VALUES (?, ?, ?, ?, ?)""",
             (body.name, body.slug, body.description, body.discount_type, body.discount_value),
         )
-    except aiosqlite.IntegrityError:
+    except Exception:
         raise HTTPException(status_code=status.HTTP_409_CONFLICT, detail="Slug already exists")
 
     bundle_id = cursor.lastrowid
@@ -73,7 +73,7 @@ async def create_bundle(
 async def update_bundle(
     bundle_id: int,
     body: BundleUpdate,
-    db: aiosqlite.Connection = Depends(get_db),
+    db: PostgresConnection = Depends(get_db),
     user: dict = Depends(require_admin),
 ):
     cursor = await db.execute("SELECT id FROM bundles WHERE id = ?", (bundle_id,))
@@ -100,7 +100,7 @@ async def update_bundle(
 @router.delete("/{bundle_id}")
 async def delete_bundle(
     bundle_id: int,
-    db: aiosqlite.Connection = Depends(get_db),
+    db: PostgresConnection = Depends(get_db),
     user: dict = Depends(require_admin),
 ):
     cursor = await db.execute("SELECT id FROM bundles WHERE id = ?", (bundle_id,))

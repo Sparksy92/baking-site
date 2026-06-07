@@ -5,7 +5,7 @@ import random
 from datetime import datetime, timezone
 
 from fastapi import APIRouter, Depends
-import aiosqlite
+from app.database import PostgresConnection
 
 from app.database import get_db
 
@@ -15,7 +15,7 @@ router = APIRouter(prefix="/social-proof", tags=["social-proof"])
 @router.get("/{product_id}")
 async def get_social_proof(
     product_id: int,
-    db: aiosqlite.Connection = Depends(get_db),
+    db: PostgresConnection = Depends(get_db),
 ):
     """Return social proof data for a product.
 

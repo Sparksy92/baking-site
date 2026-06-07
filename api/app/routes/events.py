@@ -6,7 +6,7 @@ import logging
 
 from fastapi import APIRouter, Depends, Request
 from pydantic import BaseModel
-import aiosqlite
+from app.database import PostgresConnection
 
 from app.customer_auth import get_optional_customer
 from app.database import get_db
@@ -35,7 +35,7 @@ ALLOWED_EVENTS = {
 async def track_event(
     body: EventCreate,
     request: Request,
-    db: aiosqlite.Connection = Depends(get_db),
+    db: PostgresConnection = Depends(get_db),
     customer: dict | None = Depends(get_optional_customer),
 ):
     """Track a storefront event. Returns 202 (fire-and-forget)."""

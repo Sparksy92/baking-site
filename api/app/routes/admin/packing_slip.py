@@ -3,7 +3,7 @@ from __future__ import annotations
 
 from fastapi import APIRouter, Depends, HTTPException, status
 from fastapi.responses import HTMLResponse
-import aiosqlite
+from app.database import PostgresConnection
 
 from app.auth import require_admin
 from app.config import get_settings
@@ -15,7 +15,7 @@ router = APIRouter(prefix="/admin/orders", tags=["admin-orders"])
 @router.get("/{order_id}/packing-slip", response_class=HTMLResponse)
 async def get_packing_slip(
     order_id: int,
-    db: aiosqlite.Connection = Depends(get_db),
+    db: PostgresConnection = Depends(get_db),
     user: dict = Depends(require_admin),
 ):
     """Generate a printable packing slip for an order."""
@@ -34,7 +34,7 @@ async def get_packing_slip(
 @router.get("/{order_id}/invoice", response_class=HTMLResponse)
 async def get_invoice(
     order_id: int,
-    db: aiosqlite.Connection = Depends(get_db),
+    db: PostgresConnection = Depends(get_db),
     user: dict = Depends(require_admin),
 ):
     """Generate a printable invoice for an order."""

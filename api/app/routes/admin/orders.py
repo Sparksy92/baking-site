@@ -3,7 +3,7 @@ from __future__ import annotations
 import logging
 
 from fastapi import APIRouter, Depends, HTTPException, Query, status
-import aiosqlite
+from app.database import PostgresConnection
 
 from app.auth import require_admin
 from app.database import get_db
@@ -21,7 +21,7 @@ async def list_orders(
     status_filter: str | None = Query(None, alias="status"),
     page: int = Query(default=1, ge=1),
     limit: int = Query(default=50, ge=1, le=200),
-    db: aiosqlite.Connection = Depends(get_db),
+    db: PostgresConnection = Depends(get_db),
     user: dict = Depends(require_admin),
 ):
     """List all orders with pagination."""
@@ -61,7 +61,7 @@ async def list_orders(
 @router.get("/{order_id}")
 async def get_order(
     order_id: int,
-    db: aiosqlite.Connection = Depends(get_db),
+    db: PostgresConnection = Depends(get_db),
     user: dict = Depends(require_admin),
 ):
     """Get full order details."""
@@ -80,7 +80,7 @@ async def get_order(
 async def update_order(
     order_id: int,
     body: OrderStatusUpdate,
-    db: aiosqlite.Connection = Depends(get_db),
+    db: PostgresConnection = Depends(get_db),
     user: dict = Depends(require_admin),
 ):
     """Update order status, tracking, or notes."""
@@ -127,7 +127,7 @@ async def update_order(
 async def refund_order(
     order_id: int,
     body: RefundRequest,
-    db: aiosqlite.Connection = Depends(get_db),
+    db: PostgresConnection = Depends(get_db),
     user: dict = Depends(require_admin),
 ):
     """Issue a full or partial refund via Stripe and update order status."""

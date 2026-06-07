@@ -7,13 +7,13 @@ from __future__ import annotations
 import logging
 from datetime import datetime, timezone
 
-import aiosqlite
+from app.database import PostgresConnection
 
 logger = logging.getLogger(__name__)
 
 
 async def evaluate_auto_discounts(
-    db: aiosqlite.Connection,
+    db: PostgresConnection,
     items: list[dict],
     subtotal_cents: int,
 ) -> list[dict]:

@@ -3,7 +3,7 @@ from __future__ import annotations
 
 from fastapi import APIRouter, Depends, HTTPException, Query, status
 from pydantic import BaseModel
-import aiosqlite
+from app.database import PostgresConnection
 
 from app.auth import require_admin
 from app.database import get_db
@@ -20,7 +20,7 @@ async def list_reviews(
     status_filter: str = Query(default="pending", alias="status"),
     page: int = Query(default=1, ge=1),
     limit: int = Query(default=20, ge=1, le=100),
-    db: aiosqlite.Connection = Depends(get_db),
+    db: PostgresConnection = Depends(get_db),
     user: dict = Depends(require_admin),
 ):
     """List reviews for moderation."""
@@ -51,7 +51,7 @@ async def list_reviews(
 async def moderate_review(
     review_id: int,
     body: ReviewModerate,
-    db: aiosqlite.Connection = Depends(get_db),
+    db: PostgresConnection = Depends(get_db),
     user: dict = Depends(require_admin),
 ):
     """Approve or reject a review."""
@@ -73,7 +73,7 @@ async def moderate_review(
 @router.delete("/{review_id}")
 async def delete_review(
     review_id: int,
-    db: aiosqlite.Connection = Depends(get_db),
+    db: PostgresConnection = Depends(get_db),
     user: dict = Depends(require_admin),
 ):
     """Delete a review permanently."""

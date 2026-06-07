@@ -7,7 +7,7 @@ import logging
 
 from fastapi import APIRouter, Depends, File, HTTPException, UploadFile, status
 from fastapi.responses import StreamingResponse
-import aiosqlite
+from app.database import PostgresConnection
 
 from app.auth import require_admin
 from app.database import get_db
@@ -27,7 +27,7 @@ CSV_EXPORT_HEADERS = [
 
 @router.get("/export.csv")
 async def export_products_csv(
-    db: aiosqlite.Connection = Depends(get_db),
+    db: PostgresConnection = Depends(get_db),
     user: dict = Depends(require_admin),
 ):
     """Export all products and variants as CSV."""
@@ -62,7 +62,7 @@ async def export_products_csv(
 @router.post("/import.csv", status_code=status.HTTP_201_CREATED)
 async def import_products_csv(
     file: UploadFile = File(...),
-    db: aiosqlite.Connection = Depends(get_db),
+    db: PostgresConnection = Depends(get_db),
     user: dict = Depends(require_admin),
 ):
     """Import products and variants from CSV.

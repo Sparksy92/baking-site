@@ -3,7 +3,7 @@ from __future__ import annotations
 
 from fastapi import APIRouter, Depends, HTTPException, Query, status
 from pydantic import BaseModel, Field
-import aiosqlite
+from app.database import PostgresConnection
 
 from app.auth import require_admin
 from app.database import get_db
@@ -50,7 +50,7 @@ class AutoDiscountUpdate(BaseModel):
 @router.get("")
 async def list_auto_discounts(
     is_active: bool | None = None,
-    db: aiosqlite.Connection = Depends(get_db),
+    db: PostgresConnection = Depends(get_db),
     user: dict = Depends(require_admin),
 ):
     """List all automatic discounts."""
@@ -73,7 +73,7 @@ async def list_auto_discounts(
 @router.post("", status_code=status.HTTP_201_CREATED)
 async def create_auto_discount(
     body: AutoDiscountCreate,
-    db: aiosqlite.Connection = Depends(get_db),
+    db: PostgresConnection = Depends(get_db),
     user: dict = Depends(require_admin),
 ):
     """Create an automatic discount rule."""
@@ -97,7 +97,7 @@ async def create_auto_discount(
 @router.get("/{discount_id}")
 async def get_auto_discount(
     discount_id: int,
-    db: aiosqlite.Connection = Depends(get_db),
+    db: PostgresConnection = Depends(get_db),
     user: dict = Depends(require_admin),
 ):
     """Get a single automatic discount."""
@@ -112,7 +112,7 @@ async def get_auto_discount(
 async def update_auto_discount(
     discount_id: int,
     body: AutoDiscountUpdate,
-    db: aiosqlite.Connection = Depends(get_db),
+    db: PostgresConnection = Depends(get_db),
     user: dict = Depends(require_admin),
 ):
     """Update an automatic discount."""
@@ -139,7 +139,7 @@ async def update_auto_discount(
 @router.delete("/{discount_id}")
 async def delete_auto_discount(
     discount_id: int,
-    db: aiosqlite.Connection = Depends(get_db),
+    db: PostgresConnection = Depends(get_db),
     user: dict = Depends(require_admin),
 ):
     """Delete an automatic discount."""

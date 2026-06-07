@@ -2,7 +2,7 @@
 from __future__ import annotations
 
 from fastapi import APIRouter, Depends
-import aiosqlite
+from app.database import PostgresConnection
 
 from app.auth import require_admin
 from app.database import get_db
@@ -12,7 +12,7 @@ router = APIRouter(prefix="/admin/dashboard", tags=["admin-dashboard"])
 
 @router.get("/stats")
 async def dashboard_stats(
-    db: aiosqlite.Connection = Depends(get_db),
+    db: PostgresConnection = Depends(get_db),
     user: dict = Depends(require_admin),
 ):
     """Aggregated dashboard statistics."""

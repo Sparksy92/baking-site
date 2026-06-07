@@ -2,7 +2,7 @@
 from __future__ import annotations
 
 from fastapi import APIRouter, Depends, HTTPException, status
-import aiosqlite
+from app.database import PostgresConnection
 
 from app.customer_auth import get_current_customer
 from app.database import get_db
@@ -12,7 +12,7 @@ router = APIRouter(prefix="/store-credit", tags=["store-credit"])
 
 @router.get("/balance")
 async def get_store_credit_balance(
-    db: aiosqlite.Connection = Depends(get_db),
+    db: PostgresConnection = Depends(get_db),
     customer: dict = Depends(get_current_customer),
 ):
     """Return the customer's current store credit balance."""
@@ -29,7 +29,7 @@ async def get_store_credit_balance(
 
 @router.get("/history")
 async def get_store_credit_history(
-    db: aiosqlite.Connection = Depends(get_db),
+    db: PostgresConnection = Depends(get_db),
     customer: dict = Depends(get_current_customer),
 ):
     """Return up to 50 most recent store credit transactions."""

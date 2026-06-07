@@ -1,7 +1,7 @@
 from __future__ import annotations
 
 from fastapi import APIRouter, Depends, HTTPException, status
-import aiosqlite
+from app.database import IntegrityError, PostgresConnection
 
 from app.auth import require_admin
 from app.database import get_db
@@ -12,7 +12,7 @@ router = APIRouter(prefix="/admin/categories", tags=["admin-categories"])
 
 @router.get("")
 async def list_categories(
-    db: aiosqlite.Connection = Depends(get_db),
+    db: PostgresConnection = Depends(get_db),
     user: dict = Depends(require_admin),
 ):
     """List all categories (including inactive) for admin."""
@@ -30,7 +30,7 @@ async def list_categories(
 @router.post("", status_code=status.HTTP_201_CREATED)
 async def create_category(
     body: CategoryCreate,
-    db: aiosqlite.Connection = Depends(get_db),
+    db: PostgresConnection = Depends(get_db),
     user: dict = Depends(require_admin),
 ):
     """Create a new category."""
@@ -47,14 +47,14 @@ async def create_category(
         row_cur = await db.execute("SELECT * FROM categories WHERE id = ?", (new_id,))
         row = await row_cur.fetchone()
         return dict(row)
-    except aiosqlite.IntegrityError:
+    except IntegrityError:
         raise HTTPException(status_code=status.HTTP_409_CONFLICT, detail="Category slug already exists")
 
 
 @router.get("/{category_id}")
 async def get_category(
     category_id: int,
-    db: aiosqlite.Connection = Depends(get_db),
+    db: PostgresConnection = Depends(get_db),
     user: dict = Depends(require_admin),
 ):
     """Get a single category by ID."""
@@ -69,7 +69,7 @@ async def get_category(
 async def update_category(
     category_id: int,
     body: CategoryUpdate,
-    db: aiosqlite.Connection = Depends(get_db),
+    db: PostgresConnection = Depends(get_db),
     user: dict = Depends(require_admin),
 ):
     """Update category fields."""
@@ -95,7 +95,7 @@ async def update_category(
 @router.delete("/{category_id}")
 async def delete_category(
     category_id: int,
-    db: aiosqlite.Connection = Depends(get_db),
+    db: PostgresConnection = Depends(get_db),
     user: dict = Depends(require_admin),
 ):
     """Delete a category. Products in this category will have their category_id set to NULL."""
