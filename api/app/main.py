@@ -12,6 +12,7 @@ from app.config import get_settings
 from app.database import init_db
 from app.services.meta_service import run_social_sync
 from app.services.token_refresh_service import refresh_expiring_tokens
+from app.services.scheduler_service import run_scheduled_publisher
 from app.middleware.logging import setup_logging
 from app.middleware.rate_limit import RateLimitMiddleware
 from app.middleware.request_id import RequestIdMiddleware
@@ -93,14 +94,28 @@ async def lifespan(app: FastAPI):
                 logger.error(f"Background token refresh error: {e}", exc_info=True)
             await asyncio.sleep(86400)
 
+    async def _background_scheduler():
+        """Publish scheduled social posts — checks every 60 seconds."""
+        await asyncio.sleep(15)
+        while True:
+            try:
+                count = await run_scheduled_publisher()
+                if count:
+                    logger.info(f"Scheduler: published {count} due post(s)")
+            except Exception as e:
+                logger.error(f"Background scheduler error: {e}", exc_info=True)
+            await asyncio.sleep(60)
+
     sync_task = asyncio.ensure_future(_background_social_sync())
     token_task = asyncio.ensure_future(_background_token_refresh())
+    scheduler_task = asyncio.ensure_future(_background_scheduler())
 
     await init_db()
     logger.info("Database initialized")
     yield
     sync_task.cancel()
     token_task.cancel()
+    scheduler_task.cancel()
     logger.info("Shutting down")
 
 
@@ -216,6 +231,10 @@ def create_app() -> FastAPI:
     blog_uploads_dir = uploads_dir.parent / "blog"
     blog_uploads_dir.mkdir(parents=True, exist_ok=True)
     app.mount("/images/uploads/blog", StaticFiles(directory=str(blog_uploads_dir)), name="blog-images")
+
+    media_library_dir = uploads_dir.parent / "media"
+    media_library_dir.mkdir(parents=True, exist_ok=True)
+    app.mount("/media/library", StaticFiles(directory=str(media_library_dir)), name="media-library")
 
     return app
 

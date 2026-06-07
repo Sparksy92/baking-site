@@ -134,23 +134,121 @@ async def publish_to_instagram(content: str, image_url: str | None) -> str:
         return media_id
 
 
+# ── LinkedIn ─────────────────────────────────────────────────────────────────
+
+LINKEDIN_API_BASE = "https://api.linkedin.com/v2"
+
+
+async def publish_to_linkedin(content: str, image_url: str | None, access_token: str, author_urn: str) -> str:
+    """Post a text/image share to LinkedIn via the ugcPosts API.
+
+    Requires:
+      - access_token: OAuth 2.0 Bearer token with w_member_social or w_organization_social scope
+      - author_urn:   'urn:li:organization:123456' for company pages
+                      'urn:li:person:XXXXXX' for personal profiles
+
+    Returns the LinkedIn post URN on success.
+    Raises PublishError on failure.
+    """
+    settings = get_settings()
+    if not access_token or not author_urn:
+        raise PublishError(
+            "LinkedIn not configured. Set up OAuth in Admin → Social → Platforms → LinkedIn."
+        )
+
+    headers = {
+        "Authorization": f"Bearer {access_token}",
+        "Content-Type": "application/json",
+        "X-Restli-Protocol-Version": "2.0.0",
+    }
+
+    share_content: dict = {
+        "shareCommentary": {"text": content},
+        "shareMediaCategory": "NONE",
+    }
+
+    if image_url:
+        absolute_url = _make_absolute(image_url, settings.store_domain)
+        tagged_url = tag_content_links(absolute_url, "linkedin", "social-post")
+        share_content["shareMediaCategory"] = "ARTICLE"
+        share_content["media"] = [{
+            "status": "READY",
+            "originalUrl": tagged_url,
+        }]
+
+    payload = {
+        "author": author_urn,
+        "lifecycleState": "PUBLISHED",
+        "specificContent": {
+            "com.linkedin.ugc.ShareContent": share_content
+        },
+        "visibility": {
+            "com.linkedin.ugc.MemberNetworkVisibility": "PUBLIC"
+        },
+    }
+
+    try:
+        async with httpx.AsyncClient() as client:
+            resp = await client.post(
+                f"{LINKEDIN_API_BASE}/ugcPosts",
+                headers=headers,
+                json=payload,
+                timeout=30.0,
+            )
+            data = resp.json()
+    except Exception as e:
+        raise PublishError(f"LinkedIn publish failed: {e}") from e
+
+    if resp.status_code not in (200, 201):
+        msg = data.get("message") or data.get("error", {}).get("message", "Unknown LinkedIn error")
+        raise PublishError(f"LinkedIn API error ({resp.status_code}): {msg}")
+
+    post_urn = resp.headers.get("x-restli-id") or data.get("id", "")
+    if not post_urn:
+        raise PublishError("LinkedIn returned no post URN")
+
+    logger.info(f"Published to LinkedIn: post_urn={post_urn}")
+    return post_urn
+
+
 # ── Dispatcher ───────────────────────────────────────────────────────────────
 
-async def publish_post(platform: str, content: str, image_url: str | None) -> str:
+async def publish_post(
+    platform: str,
+    content: str,
+    image_url: str | None,
+    video_url: str | None = None,
+) -> str:
     """Dispatch to the correct platform publisher.
 
     Returns platform_post_id on success.
     Raises PublishError with a user-displayable message on failure.
     """
     if platform == "facebook":
-        return await publish_to_facebook(content, image_url)
+        return await publish_to_facebook(content, video_url or image_url)
     elif platform == "instagram":
-        return await publish_to_instagram(content, image_url)
-    else:
-        raise PublishError(
-            f"Outbound publishing for '{platform}' is not yet implemented. "
-            f"LinkedIn and TikTok are coming in Sprint 4."
+        return await publish_to_instagram(content, video_url or image_url)
+    elif platform == "linkedin":
+        from app.database import db_connection as _db
+        async with _db() as db:
+            cur = await db.execute(
+                "SELECT access_token, account_id FROM social_platform_configs WHERE platform = 'linkedin'"
+            )
+            row = await cur.fetchone()
+        if not row:
+            raise PublishError("LinkedIn platform config not found")
+        return await publish_to_linkedin(
+            content,
+            video_url or image_url,
+            access_token=row["access_token"] or "",
+            author_urn=row["account_id"] or "",
         )
+    elif platform in ("tiktok", "x", "youtube"):
+        raise PublishError(
+            f"Outbound publishing for '{platform}' is not yet implemented. Coming in a future sprint."
+        )
+    else:
+        raise PublishError(f"Unknown platform: '{platform}'")
 
 
 # ── Helpers ──────────────────────────────────────────────────────────────────
