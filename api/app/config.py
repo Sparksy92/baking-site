@@ -80,12 +80,28 @@ class Settings(BaseSettings):
     # ── Dev ──────────────────────────────────────────────────────
     dev_mode: bool = True
 
-    # ── Integrations ─────────────────────────────────────────────
+    # ── Integrations — Meta (Facebook / Instagram) ───────────────
     meta_page_access_token: str = ""
     meta_facebook_page_id: str = ""
     meta_instagram_account_id: str = ""
+
+    # ── Integrations — AI ────────────────────────────────────────
     openai_api_key: str = ""
     gemini_api_key: str = ""
+
+    # ── Integrations — LinkedIn ──────────────────────────────────
+    linkedin_client_id: str = ""
+    linkedin_client_secret: str = ""
+
+    # ── Integrations — TikTok ────────────────────────────────────
+    tiktok_client_key: str = ""
+    tiktok_client_secret: str = ""
+
+    # ── Integrations — X / Twitter ───────────────────────────────
+    x_api_key: str = ""
+    x_api_secret: str = ""
+    x_access_token: str = ""
+    x_access_token_secret: str = ""
 
     # ── App version ──────────────────────────────────────────────
     app_version: str = "0.1.0"

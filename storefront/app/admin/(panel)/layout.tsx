@@ -6,7 +6,7 @@ import Link from 'next/link';
 import {
   LayoutDashboard, Package, ShoppingCart, Layers, FolderOpen, Tag, Settings, LogOut, Mail,
   BarChart3, RotateCcw, Webhook, Gift, Star, PackageOpen, FileText, Tags, Users, Ruler, Shield,
-  ArrowLeftRight, ChevronDown, ChevronRight, Megaphone, Wrench, CreditCard, TrendingUp,
+  ArrowLeftRight, ChevronDown, ChevronRight, Megaphone, Wrench, CreditCard, TrendingUp, Share2, Bot, Inbox,
 } from 'lucide-react';
 import { api } from '@/lib/api';
 import { Toaster } from '@/components/Toaster';
@@ -45,6 +45,16 @@ const SECTIONS: NavSection[] = [
       { label: 'Newsletter',  to: '/admin/newsletter',  icon: Mail },
       { label: 'Analytics',   to: '/admin/analytics',   icon: BarChart3 },
       { label: 'LTV Report',  to: '/admin/ltv',          icon: TrendingUp },
+    ],
+  },
+  {
+    id: 'social',
+    label: 'Social & AI',
+    icon: Share2,
+    items: [
+      { label: 'Brand Persona',  to: '/admin/social/persona',   icon: Bot },
+      { label: 'Platforms',      to: '/admin/social/platforms', icon: Share2 },
+      { label: 'Outbox',         to: '/admin/social/outbox',    icon: Inbox },
     ],
   },
   {

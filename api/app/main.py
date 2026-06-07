@@ -47,6 +47,7 @@ from app.routes.admin import (
     webhooks as admin_webhooks,
     redirects as admin_redirects,
     store_credit as admin_store_credit,
+    social as admin_social,
 )
 
 logger = logging.getLogger(__name__)
@@ -190,6 +191,7 @@ def create_app() -> FastAPI:
     app.include_router(admin_returns.router, prefix="/api")
     app.include_router(admin_webhooks.router, prefix="/api")
     app.include_router(admin_store_credit.router, prefix="/api")
+    app.include_router(admin_social.router, prefix="/api")
 
     # ── Static files (uploaded images) ─────────────────────────
     uploads_dir = app_settings.uploads_dir
