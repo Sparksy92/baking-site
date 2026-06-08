@@ -84,8 +84,8 @@ export default function ABTestsPage() {
   async function loadTests() {
     try {
       setLoading(true);
-      const data = await api.get<ABTest[]>('/api/admin/social/ab-tests');
-      setTests(data);
+      const data = await api.get<ABTest[] | { tests: ABTest[] }>('/api/admin/social/ab-tests');
+      setTests(Array.isArray(data) ? data : data.tests ?? []);
     } catch (err) {
       addToast('Failed to load A/B tests', 'error');
     } finally {

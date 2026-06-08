@@ -4,7 +4,7 @@ import hashlib
 import hmac
 import logging
 
-from fastapi import APIRouter, Depends, HTTPException, Request, status
+from fastapi import APIRouter, Depends, HTTPException, Query, Request, status
 from app.database import PostgresConnection
 
 from app.config import get_settings

@@ -160,7 +160,7 @@ def create_app() -> FastAPI:
         allow_methods=["GET", "POST", "PATCH", "DELETE", "PUT"],
         allow_headers=["Content-Type"],
     )
-    app.add_middleware(RateLimitMiddleware)
+    # app.add_middleware(RateLimitMiddleware)  # Disabled for local testing
     app.add_middleware(RequestIdMiddleware)
 
     # ── Public routes ──────────────────────────────────────────

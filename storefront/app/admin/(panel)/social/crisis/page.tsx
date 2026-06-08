@@ -75,8 +75,8 @@ export default function CrisisAlertsPage() {
       if (filterSeverity) params.append('severity', filterSeverity);
       if (filterStatus) params.append('status', filterStatus);
       
-      const data = await api.get<CrisisAlert[]>(`/api/admin/social/crisis?${params}`);
-      setAlerts(data);
+      const data = await api.get<CrisisAlert[] | { alerts: CrisisAlert[] }>(`/api/admin/social/crisis-alerts?${params}`);
+      setAlerts(Array.isArray(data) ? data : data.alerts ?? []);
     } catch (err) {
       addToast('Failed to load crisis alerts', 'error');
     } finally {
@@ -86,7 +86,7 @@ export default function CrisisAlertsPage() {
 
   async function acknowledgeAlert(id: number) {
     try {
-      await api.post(`/api/admin/social/crisis/${id}/acknowledge`, {});
+      await api.post(`/api/admin/social/crisis-alerts/${id}/acknowledge`, {});
       addToast('Alert acknowledged', 'success');
       loadAlerts();
     } catch (err) {
@@ -96,7 +96,7 @@ export default function CrisisAlertsPage() {
 
   async function resolveAlert(id: number, resolution: string) {
     try {
-      await api.post(`/api/admin/social/crisis/${id}/resolve`, { resolution });
+      await api.post(`/api/admin/social/crisis-alerts/${id}/resolve`, { resolution });
       addToast('Alert resolved', 'success');
       loadAlerts();
     } catch (err) {

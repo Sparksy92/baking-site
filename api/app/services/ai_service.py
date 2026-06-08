@@ -139,23 +139,20 @@ async def generate_social_drafts_for_page(page_id: int, title: str, content: str
     try:
         async with db_connection() as db:
             cursor = await db.execute(
-                "SELECT platform, hashtag_bank, auto_publish FROM social_platform_configs WHERE enabled = TRUE"
+                "SELECT platform, brand_hashtag, auto_publish FROM social_platform_configs WHERE enabled = TRUE"
             )
             platforms = await cursor.fetchall()
 
         for row in platforms:
             platform = row["platform"]
-            hashtag_bank = (row["hashtag_bank"] or "").strip()
+            brand_hashtag = (row["brand_hashtag"] or "").strip()
             auto_publish = row["auto_publish"]
 
             try:
                 content_text = await generate_social_post(source_prompt, platform)
 
-                if hashtag_bank:
-                    tags = " ".join(
-                        t.strip() for t in hashtag_bank.splitlines() if t.strip()
-                    )
-                    content_text = f"{content_text}\n\n{tags}"
+                if brand_hashtag:
+                    content_text = f"{content_text}\n\n{brand_hashtag}"
 
                 initial_status = "approved" if auto_publish else "draft"
 
@@ -164,7 +161,7 @@ async def generate_social_drafts_for_page(page_id: int, title: str, content: str
                         """INSERT INTO social_posts
                            (page_id, platform, content, image_url, hashtags, status)
                            VALUES (?, ?, ?, ?, ?, ?)""",
-                        (page_id, platform, content_text, image_url, hashtag_bank, initial_status),
+                        (page_id, platform, content_text, image_url, brand_hashtag, initial_status),
                     )
                     await db.commit()
 

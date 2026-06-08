@@ -100,20 +100,23 @@ async def get_recommended_times(
 
     Returns ranked slots with confidence scores.
     """
-    async with db_connection() as db:
-        cursor = await db.execute(
-            """SELECT
-                day_of_week, hour_of_day,
-                avg_reach, avg_engagement, avg_ctr,
-                sample_size, confidence
-            FROM optimal_posting_times
-            WHERE platform = ?
-            AND confidence >= ?
-            ORDER BY avg_engagement DESC
-            LIMIT ?""",
-            (platform, min_confidence, limit),
-        )
-        rows = await cursor.fetchall()
+    try:
+        async with db_connection() as db:
+            cursor = await db.execute(
+                """SELECT
+                    day_of_week, hour_of_day,
+                    avg_reach, avg_engagement, avg_ctr,
+                    sample_size, confidence
+                FROM optimal_posting_times
+                WHERE platform = ?
+                AND confidence >= ?
+                ORDER BY avg_engagement DESC
+                LIMIT ?""",
+                (platform, min_confidence, limit),
+            )
+            rows = await cursor.fetchall()
+    except Exception:
+        rows = []
 
     days = ["Sunday", "Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday"]
 

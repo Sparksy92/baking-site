@@ -23,7 +23,7 @@ async def run_scheduled_publisher() -> int:
 
     Returns the number of posts attempted.
     """
-    now = datetime.now(timezone.utc).isoformat()
+    now = datetime.now(timezone.utc)
     attempted = 0
 
     try:

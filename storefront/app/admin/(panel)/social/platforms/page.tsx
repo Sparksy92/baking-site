@@ -13,11 +13,21 @@ type Platform = {
   display_name: string;
   enabled: boolean;
   prompt_template: string;
-  hashtag_bank: string;
+  hashtag_mode: 'auto' | 'manual' | 'none';
+  brand_hashtag: string | null;
+  banned_hashtags: string | null;
+  max_hashtags: number;
+  max_caption_chars: number;
   auto_publish: boolean;
   account_id: string | null;
   setup_status: 'not_configured' | 'pending_review' | 'active' | 'error';
   setup_notes: string | null;
+};
+
+const HASHTAG_MODE_LABELS: Record<string, string> = {
+  auto:   'AI-Suggested (recommended)',
+  manual: 'Manual Only',
+  none:   'Disabled — no hashtags',
 };
 
 type SaveState = Record<string, boolean>;
@@ -76,7 +86,10 @@ export default function PlatformsPage() {
       await api.patch(`/api/admin/social/platforms/${p.platform}`, {
         enabled: p.enabled,
         prompt_template: p.prompt_template,
-        hashtag_bank: p.hashtag_bank,
+        hashtag_mode: p.hashtag_mode,
+        brand_hashtag: p.brand_hashtag,
+        banned_hashtags: p.banned_hashtags,
+        max_hashtags: p.max_hashtags,
         auto_publish: p.auto_publish,
         account_id: p.account_id,
       });
@@ -103,7 +116,7 @@ export default function PlatformsPage() {
       <div className="space-y-3">
         {platforms.map((p) => {
           const isOpen = !!expanded[p.platform];
-          const statusMeta = STATUS_META[p.setup_status];
+          const statusMeta = STATUS_META[p.setup_status] ?? STATUS_META.not_configured;
           const StatusIcon = statusMeta.icon;
           const isYoutube = p.platform === 'youtube';
 
@@ -182,7 +195,7 @@ export default function PlatformsPage() {
                         </label>
                         <textarea
                           rows={4}
-                          value={p.prompt_template}
+                          value={p.prompt_template ?? ''}
                           onChange={(e) => update(p.platform, 'prompt_template', e.target.value)}
                           className="w-full px-4 py-2.5 rounded-lg border border-gray-200 focus:border-brand outline-none text-sm resize-y bg-white"
                           placeholder={`Leave blank to use the built-in ${p.display_name} prompt template. The brand persona and voice are always applied on top.`}
@@ -192,22 +205,91 @@ export default function PlatformsPage() {
                         </p>
                       </div>
 
-                      {/* Hashtag bank */}
+                      {/* Hashtag mode */}
                       <div>
                         <label className="text-sm font-medium text-gray-700 block mb-1">
-                          Hashtag Bank
+                          Hashtag Strategy
                         </label>
-                        <textarea
-                          rows={3}
-                          value={p.hashtag_bank}
-                          onChange={(e) => update(p.platform, 'hashtag_bank', e.target.value)}
-                          className="w-full px-4 py-2.5 rounded-lg border border-gray-200 focus:border-brand outline-none text-sm resize-y bg-white font-mono"
-                          placeholder={'#indigenous\n#streetwear\n#nativefashion'}
-                        />
+                        <select
+                          value={p.hashtag_mode}
+                          onChange={(e) => update(p.platform, 'hashtag_mode', e.target.value)}
+                          className="w-full px-4 py-2.5 rounded-lg border border-gray-200 focus:border-brand outline-none text-sm bg-white"
+                        >
+                          {Object.entries(HASHTAG_MODE_LABELS).map(([k, v]) => (
+                            <option key={k} value={k}>{v}</option>
+                          ))}
+                        </select>
                         <p className="mt-1 text-xs text-gray-400">
-                          One hashtag per line. These are appended to every generated post for this platform.
+                          Auto = AI suggests per-post hashtags. Manual = you add them in the Outbox. None = no hashtags (recommended for Facebook).
                         </p>
                       </div>
+
+                      {p.hashtag_mode !== 'none' && (
+                        <>
+                          {/* Max hashtags */}
+                          <div className="grid grid-cols-2 gap-4">
+                            <div>
+                              <label className="text-sm font-medium text-gray-700 block mb-1">
+                                Max Hashtags
+                              </label>
+                              <input
+                                type="number"
+                                min={0}
+                                max={30}
+                                value={p.max_hashtags}
+                                onChange={(e) => update(p.platform, 'max_hashtags', parseInt(e.target.value) || 0)}
+                                className="w-full px-4 py-2.5 rounded-lg border border-gray-200 focus:border-brand outline-none text-sm bg-white"
+                              />
+                            </div>
+                            <div>
+                              <label className="text-sm font-medium text-gray-700 block mb-1">
+                                Max Caption Characters
+                              </label>
+                              <input
+                                type="number"
+                                min={1}
+                                value={p.max_caption_chars}
+                                onChange={(e) => update(p.platform, 'max_caption_chars', parseInt(e.target.value) || 280)}
+                                className="w-full px-4 py-2.5 rounded-lg border border-gray-200 focus:border-brand outline-none text-sm bg-white"
+                              />
+                            </div>
+                          </div>
+
+                          {/* Brand hashtag */}
+                          <div>
+                            <label className="text-sm font-medium text-gray-700 block mb-1">
+                              Brand Hashtag
+                            </label>
+                            <input
+                              type="text"
+                              value={p.brand_hashtag ?? ''}
+                              onChange={(e) => update(p.platform, 'brand_hashtag', e.target.value)}
+                              className="w-full px-4 py-2.5 rounded-lg border border-gray-200 focus:border-brand outline-none text-sm bg-white font-mono"
+                              placeholder="#YourBrand"
+                            />
+                            <p className="mt-1 text-xs text-gray-400">
+                              Always appended to every post on this platform.
+                            </p>
+                          </div>
+
+                          {/* Banned hashtags */}
+                          <div>
+                            <label className="text-sm font-medium text-gray-700 block mb-1">
+                              Banned Hashtags
+                            </label>
+                            <textarea
+                              rows={2}
+                              value={p.banned_hashtags ?? ''}
+                              onChange={(e) => update(p.platform, 'banned_hashtags', e.target.value)}
+                              className="w-full px-4 py-2.5 rounded-lg border border-gray-200 focus:border-brand outline-none text-sm resize-y bg-white font-mono"
+                              placeholder={'#spam\n#followforfollow'}
+                            />
+                            <p className="mt-1 text-xs text-gray-400">
+                              One per line. AI will never suggest these.
+                            </p>
+                          </div>
+                        </>
+                      )}
 
                       {/* Auto-publish toggle */}
                       <div className="flex items-center justify-between py-2 border-t border-gray-200">

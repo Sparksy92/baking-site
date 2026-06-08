@@ -35,7 +35,7 @@ export function Header() {
     return () => window.removeEventListener('scroll', handler);
   }, []);
 
-  useEffect(() => { setMobileOpen(false); }, [pathname]);
+  useEffect(() => { setMobileOpen(false); }, [pathname, searchParams]);
 
   const navLinks = brandConfig.navigation.mainLinks;
 

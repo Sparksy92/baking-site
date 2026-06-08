@@ -25,22 +25,26 @@ interface GaryVeeScore {
   recommendations: string[];
 }
 
+interface DailyPlanRaw {
+  date: string;
+  total_target: number;
+  total_needed: number;
+  by_platform: Record<string, {
+    target_posts: number;
+    already_scheduled: number;
+    needed: number;
+    optimal_slots: string[];
+    content_mix: Record<string, number>;
+  }>;
+}
+
 interface DailyPlan {
   date: string;
-  platform: string;
   target_posts: number;
   recommended_times: string[];
   content_suggestions: string[];
 }
 
-const CONTENT_TYPES = [
-  { key: 'educational', label: 'Educational', description: 'Tips, how-tos, industry insights' },
-  { key: 'inspirational', label: 'Inspirational', description: 'Motivational quotes, success stories' },
-  { key: 'entertaining', label: 'Entertaining', description: 'Humor, memes, light content' },
-  { key: 'promotional', label: 'Promotional', description: 'Products, sales, direct CTAs' },
-  { key: 'engagement', label: 'Engagement', description: 'Polls, questions, community' },
-  { key: 'behind_scenes', label: 'Behind the Scenes', description: 'Process, team, raw content' },
-];
 
 export default function StrategyPage() {
   const [strategy, setStrategy] = useState<PostingStrategy | null>(null);
@@ -66,8 +70,27 @@ export default function StrategyPage() {
       
       // Load today's plan
       const today = new Date().toISOString().split('T')[0];
-      const plan = await api.get<DailyPlan>(`/api/admin/social/strategy/daily-plan?date=${today}`).catch(() => null);
-      setDailyPlan(plan);
+      const rawPlan = await api.get<DailyPlanRaw>(`/api/admin/social/strategy/daily-plan?date=${today}`).catch(() => null);
+      if (rawPlan && rawPlan.by_platform) {
+        const allSlots: string[] = [];
+        const suggestions: string[] = [];
+        for (const [plat, info] of Object.entries(rawPlan.by_platform)) {
+          allSlots.push(...(info.optimal_slots || []).map(s => {
+            const d = new Date(s);
+            return `${plat} ${d.getUTCHours().toString().padStart(2,'0')}:${d.getUTCMinutes().toString().padStart(2,'0')}`;
+          }));
+          const topType = Object.entries(info.content_mix || {}).sort((a,b) => b[1]-a[1])[0];
+          if (topType) suggestions.push(`${plat}: ${topType[0].replace('_',' ')} (${Math.round(topType[1]*100)}%)`);
+        }
+        setDailyPlan({
+          date: rawPlan.date,
+          target_posts: rawPlan.total_target,
+          recommended_times: allSlots,
+          content_suggestions: suggestions,
+        });
+      } else {
+        setDailyPlan(null);
+      }
     } catch (err) {
       addToast('Failed to load strategy data', 'error');
     } finally {
@@ -222,7 +245,7 @@ export default function StrategyPage() {
       <div className="space-y-4">
         <h2 className="text-lg font-semibold text-gray-900">Platform Configuration</h2>
         
-        {strategy && Object.entries(strategy.platforms).map(([platform, config]) => (
+        {strategy && Object.entries((strategy as any).platforms ?? strategy).map(([platform, config]: [string, any]) => (
           <div key={platform} className="bg-white rounded-xl border border-gray-200 p-6">
             <div className="flex items-center justify-between mb-4">
               <div className="flex items-center gap-3">
@@ -330,7 +353,7 @@ export default function StrategyPage() {
                 <div>
                   <p className="text-sm text-gray-600 mb-1">Best Times</p>
                   <div className="flex flex-wrap gap-1">
-                    {config.best_times?.slice(0, 3).map((time, i) => (
+                    {config.best_times?.slice(0, 3).map((time: string, i: number) => (
                       <span key={i} className="px-2 py-1 bg-gray-100 rounded text-sm text-gray-700 flex items-center gap-1">
                         <Clock className="h-3 w-3" />
                         {time}
@@ -341,10 +364,10 @@ export default function StrategyPage() {
                 <div>
                   <p className="text-sm text-gray-600 mb-1">Content Mix</p>
                   <div className="text-sm text-gray-700">
-                    {Object.entries(config.content_mix || {}).slice(0, 2).map(([type, pct]) => (
+                    {Object.entries(config.content_mix || {}).slice(0, 2).map(([type, pct]: [string, any]) => (
                       <div key={type} className="flex justify-between">
                         <span className="capitalize">{type.replace('_', ' ')}:</span>
-                        <span className="font-medium">{pct}%</span>
+                        <span className="font-medium">{typeof pct === 'number' && pct < 1 ? Math.round(pct * 100) : pct}%</span>
                       </div>
                     ))}
                   </div>
@@ -353,25 +376,6 @@ export default function StrategyPage() {
             )}
           </div>
         ))}
-      </div>
-
-      {/* Content Mix Guidelines */}
-      <div className="bg-gray-50 rounded-xl p-6">
-        <h3 className="font-semibold text-gray-900 mb-4">Gary Vee Content Mix Guidelines</h3>
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-          {CONTENT_TYPES.map((type) => (
-            <div key={type.key} className="bg-white p-4 rounded-lg border border-gray-200">
-              <h4 className="font-medium text-gray-900">{type.label}</h4>
-              <p className="text-sm text-gray-600 mt-1">{type.description}</p>
-            </div>
-          ))}
-        </div>
-        <div className="mt-4 p-4 bg-blue-50 rounded-lg">
-          <p className="text-sm text-blue-800">
-            <strong>Pro Tip:</strong> Gary Vee recommends the 80/20 rule - 80% value (educational, inspirational, entertaining), 
-            20% promotional. High-volume posting works best when you provide consistent value.
-          </p>
-        </div>
       </div>
     </div>
   );

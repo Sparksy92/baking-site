@@ -89,7 +89,8 @@ function readOpenSections(): Record<string, boolean> {
 }
 
 function NavLink({ item, pathname }: { item: NavItem; pathname: string }) {
-  const active = item.to === '/admin' ? pathname === '/admin' : pathname.startsWith(item.to);
+  const isExactParent = item.to === '/admin' || item.to === '/admin/social';
+  const active = isExactParent ? pathname === item.to : pathname.startsWith(item.to);
   const Icon = item.icon;
   return (
     <Link

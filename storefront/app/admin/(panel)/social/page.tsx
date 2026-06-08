@@ -10,39 +10,59 @@ import {
 } from 'lucide-react';
 import Link from 'next/link';
 
+// Matches actual API response from dashboard_service.py
+interface DashboardRaw {
+  health_score: { score: number; status: string };
+  content_pipeline: { drafts: number; scheduled: number; pending_approval: number; published_recent: number; failed: number };
+  attention_needed: { unreplied_comments: number; pending_agent_approvals: number; pending_influencer_approvals: number; failed_posts: number; active_crisis_alerts: number };
+  engagement: { total_events: number; avg_sentiment_score: number; reply_rate: number };
+  revenue: { monetized_posts: number; attributed_orders: number; revenue_usd: number };
+  ai_agent_activity: { total_actions: number };
+  recommendations: { next_best_action: string };
+  [key: string]: unknown;
+}
+
+// Normalized for the UI
 interface DashboardData {
   health_score: number;
-  summary: {
-    drafts_pending: number;
-    awaiting_approval: number;
-    scheduled_today: number;
-    published_today: number;
-    failed_posts: number;
-  };
-  engagement: {
-    unreplied_comments: number;
-    unreplied_messages: number;
-    avg_sentiment: string;
-    engagement_rate: string;
-  };
-  crisis_alerts: {
-    active_count: number;
-    alerts: Array<{
-      id: number;
-      severity: string;
-      message: string;
-      created_at: string;
-    }>;
-  };
-  revenue: {
-    total_revenue_cents: number;
-    social_orders_count: number;
-    top_platform: string;
-    avg_order_value_cents: number;
-  };
-  ai_activity: {
-    drafts_submitted_24h: number;
-    avg_confidence: number;
+  summary: { drafts_pending: number; awaiting_approval: number; scheduled_today: number; published_today: number; failed_posts: number };
+  engagement: { unreplied_comments: number; unreplied_messages: number; avg_sentiment: string; engagement_rate: string };
+  crisis_alerts: { active_count: number; alerts: Array<{ id: number; severity: string; message: string; created_at: string }> };
+  revenue: { total_revenue_cents: number; social_orders_count: number; top_platform: string; avg_order_value_cents: number };
+  ai_activity: { drafts_submitted_24h: number; avg_confidence: number };
+}
+
+function normalizeDashboard(raw: DashboardRaw): DashboardData {
+  const sentScore = raw.engagement?.avg_sentiment_score ?? 0;
+  return {
+    health_score: raw.health_score?.score ?? 0,
+    summary: {
+      drafts_pending: raw.content_pipeline?.drafts ?? 0,
+      awaiting_approval: raw.content_pipeline?.pending_approval ?? 0,
+      scheduled_today: raw.content_pipeline?.scheduled ?? 0,
+      published_today: raw.content_pipeline?.published_recent ?? 0,
+      failed_posts: raw.content_pipeline?.failed ?? 0,
+    },
+    engagement: {
+      unreplied_comments: raw.attention_needed?.unreplied_comments ?? 0,
+      unreplied_messages: 0,
+      avg_sentiment: sentScore > 0.3 ? 'positive' : sentScore < -0.2 ? 'negative' : 'neutral',
+      engagement_rate: ((raw.engagement?.reply_rate ?? 0) * 100).toFixed(1),
+    },
+    crisis_alerts: {
+      active_count: raw.attention_needed?.active_crisis_alerts ?? 0,
+      alerts: [],
+    },
+    revenue: {
+      total_revenue_cents: (raw.revenue?.revenue_usd ?? 0) * 100,
+      social_orders_count: raw.revenue?.attributed_orders ?? 0,
+      top_platform: 'n/a',
+      avg_order_value_cents: 0,
+    },
+    ai_activity: {
+      drafts_submitted_24h: raw.ai_agent_activity?.total_actions ?? 0,
+      avg_confidence: 0,
+    },
   };
 }
 
@@ -66,11 +86,11 @@ export default function SocialDashboardPage() {
   async function loadDashboard() {
     try {
       setLoading(true);
-      const [dashData, garyData] = await Promise.all([
-        api.get<DashboardData>('/api/admin/social/dashboard'),
+      const [rawDash, garyData] = await Promise.all([
+        api.get<DashboardRaw>('/api/admin/social/dashboard'),
         api.get<GaryVeeScore>('/api/admin/social/strategy/gary-vee-score').catch(() => null)
       ]);
-      setData(dashData);
+      setData(normalizeDashboard(rawDash));
       setGaryVee(garyData);
     } catch (err) {
       addToast('Failed to load dashboard', 'error');
@@ -184,7 +204,7 @@ export default function SocialDashboardPage() {
           icon={MessageCircle}
           label="Unreplied Comments"
           value={data.engagement.unreplied_comments}
-          href="/admin/social/engagement"
+          href="/admin/social/outbox"
           color="purple"
         />
         <QuickActionCard 

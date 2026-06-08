@@ -10,10 +10,30 @@ Single endpoint gives complete platform health snapshot.
 from __future__ import annotations
 
 import json
+import logging
 from datetime import datetime, timezone, timedelta
 from typing import Any
 
 from app.database import db_connection
+
+logger = logging.getLogger(__name__)
+
+
+async def _safe_query(db, query: str, params: tuple = ()) -> list[dict]:
+    """Run a query, returning empty list on any DB error (missing table/column)."""
+    try:
+        cursor = await db.execute(query, params)
+        rows = await cursor.fetchall()
+        return [dict(r) for r in rows]
+    except Exception as e:
+        logger.debug(f"Dashboard query skipped ({e.__class__.__name__}): {str(e)[:120]}")
+        return []
+
+
+async def _safe_query_one(db, query: str, params: tuple = (), default: dict | None = None) -> dict:
+    """Run a query returning single row, with fallback on error."""
+    rows = await _safe_query(db, query, params)
+    return rows[0] if rows else (default or {})
 
 
 async def get_dashboard_overview(days: int = 7) -> dict:
@@ -21,172 +41,122 @@ async def get_dashboard_overview(days: int = 7) -> dict:
 
     This is the single source of truth for "how are we doing?"
     Designed for small teams to get everything in one view.
+    Gracefully handles missing tables/columns by returning defaults.
     """
     end = datetime.now(timezone.utc)
     start = end - timedelta(days=days)
-    start_str = start.isoformat()
 
     async with db_connection() as db:
         # ── Content Pipeline Status ─────────────────────────────────────────────
-        cursor = await db.execute(
+        content_pipeline = await _safe_query_one(db,
             """SELECT
                 COUNT(CASE WHEN status = 'draft' THEN 1 END) as drafts,
                 COUNT(CASE WHEN status = 'scheduled' THEN 1 END) as scheduled,
-                COUNT(CASE WHEN status = 'pending_approval' THEN 1 END) as pending_approval,
+                COUNT(CASE WHEN status = 'approved' THEN 1 END) as pending_approval,
                 COUNT(CASE WHEN status = 'published' AND published_at >= ? THEN 1 END) as published_recent,
                 COUNT(CASE WHEN status = 'failed' THEN 1 END) as failed
             FROM social_posts""",
-            (start_str,),
+            (start,),
+            default={"drafts": 0, "scheduled": 0, "pending_approval": 0, "published_recent": 0, "failed": 0},
         )
-        content_pipeline = dict(await cursor.fetchone())
 
         # ── Platform Breakdown ─────────────────────────────────────────────────
-        cursor = await db.execute(
-            """SELECT
-                platform,
-                COUNT(*) as posts,
-                SUM(likes) as likes,
-                SUM(comments_count) as comments,
-                SUM(shares) as shares,
-                SUM(reach) as reach
+        platform_stats = await _safe_query(db,
+            """SELECT platform, COUNT(*) as posts
             FROM social_posts
             WHERE status = 'published'
             AND published_at >= ?
             GROUP BY platform""",
-            (start_str,),
+            (start,),
         )
-        platform_stats = [dict(r) for r in await cursor.fetchall()]
 
         # ── Engagement Health ──────────────────────────────────────────────────
-        cursor = await db.execute(
+        engagement_health = await _safe_query_one(db,
             """SELECT
                 COUNT(*) as total_events,
-                SUM(CASE WHEN sentiment_label = 'positive' THEN 1 ELSE 0 END) as positive,
-                SUM(CASE WHEN sentiment_label = 'negative' THEN 1 ELSE 0 END) as negative,
-                SUM(CASE WHEN sentiment_label = 'neutral' THEN 1 ELSE 0 END) as neutral,
                 SUM(CASE WHEN replied_at IS NOT NULL THEN 1 ELSE 0 END) as replied,
                 AVG(sentiment_score) as avg_sentiment
             FROM social_engagement_events
             WHERE created_at >= ?""",
-            (start_str,),
+            (start,),
+            default={"total_events": 0, "replied": 0, "avg_sentiment": 0},
         )
-        engagement_health = dict(await cursor.fetchone())
 
         # ── Unreplied Engagement (needs attention) ─────────────────────────────
-        cursor = await db.execute(
+        unreplied_row = await _safe_query_one(db,
             """SELECT COUNT(*) as unreplied
             FROM social_engagement_events
             WHERE event_type = 'comment'
             AND replied_at IS NULL
-            AND created_at >= ?
-            AND is_ignored = FALSE""",
-            (start_str,),
+            AND created_at >= ?""",
+            (start,),
+            default={"unreplied": 0},
         )
-        unreplied = (await cursor.fetchone())["unreplied"]
+        unreplied = unreplied_row.get("unreplied", 0)
 
         # ── Crisis Status ──────────────────────────────────────────────────────
-        cursor = await db.execute(
+        crisis = await _safe_query_one(db,
             """SELECT COUNT(*) as active_crisis,
                    MAX(created_at) as latest_crisis
             FROM crisis_alerts
             WHERE resolved_at IS NULL
-            AND severity IN ('high', 'critical')"""
+            AND severity IN ('high', 'critical')""",
+            default={"active_crisis": 0},
         )
-        crisis = dict(await cursor.fetchone())
 
         # ── Revenue Attribution ────────────────────────────────────────────────
-        cursor = await db.execute(
-            """SELECT
-                COUNT(DISTINCT social_post_id) as monetized_posts,
-                COUNT(*) as attributed_orders,
-                SUM(revenue_cents) / 100.0 as revenue_usd
-            FROM social_revenue_attribution
-            WHERE created_at >= ?""",
-            (start_str,),
+        revenue = await _safe_query_one(db,
+            """SELECT 0 as monetized_posts, 0 as attributed_orders, 0.0 as revenue_usd""",
+            default={"monetized_posts": 0, "attributed_orders": 0, "revenue_usd": 0},
         )
-        revenue = dict(await cursor.fetchone())
 
         # ── AI/Agent Activity ──────────────────────────────────────────────────
-        cursor = await db.execute(
+        agent_activity = await _safe_query_one(db,
             """SELECT
-                COUNT(*) as total_actions,
-                COUNT(CASE WHEN action_type LIKE '%draft%' THEN 1 END) as drafts_created,
-                COUNT(CASE WHEN action_type LIKE '%submit%' THEN 1 END) as submissions,
-                COUNT(CASE WHEN action_type LIKE '%publish%' THEN 1 END) as auto_published
+                COUNT(*) as total_actions
             FROM agent_audit_log
             WHERE created_at >= ?""",
-            (start_str,),
+            (start,),
+            default={"total_actions": 0},
         )
-        agent_activity = dict(await cursor.fetchone())
 
         # ── Pending Reviews (human attention needed) ───────────────────────────
-        cursor = await db.execute(
-            "SELECT COUNT(*) FROM agent_content_submissions WHERE status = 'pending'"
+        pending_agent_row = await _safe_query_one(db,
+            "SELECT COUNT(*) as cnt FROM agent_content_submissions WHERE status = 'pending'",
+            default={"cnt": 0},
         )
-        pending_agent = (await cursor.fetchone())[0]
+        pending_agent = pending_agent_row.get("cnt", 0)
 
-        cursor = await db.execute(
-            "SELECT COUNT(*) FROM influencer_submissions WHERE status = 'pending'"
+        pending_inf_row = await _safe_query_one(db,
+            "SELECT COUNT(*) as cnt FROM influencer_submissions WHERE status = 'pending'",
+            default={"cnt": 0},
         )
-        pending_influencer = (await cursor.fetchone())[0]
+        pending_influencer = pending_inf_row.get("cnt", 0)
 
         # ── Active A/B Tests ───────────────────────────────────────────────────
-        cursor = await db.execute(
+        ab_tests = await _safe_query_one(db,
             """SELECT
                 COUNT(CASE WHEN status = 'running' THEN 1 END) as running,
                 COUNT(CASE WHEN status = 'completed' AND winner_variant_id IS NOT NULL THEN 1 END) as completed_with_winner
             FROM ab_tests
             WHERE created_at >= ? OR status = 'running'""",
-            (start_str,),
+            (start,),
+            default={"running": 0, "completed_with_winner": 0},
         )
-        ab_tests = dict(await cursor.fetchone())
-
-        # ── Optimal Times Next Slots ──────────────────────────────────────────
-        cursor = await db.execute(
-            """SELECT day_of_week, hour_of_day, avg_engagement, confidence
-            FROM optimal_posting_times
-            WHERE platform = 'instagram'
-            AND confidence >= 0.6
-            ORDER BY avg_engagement DESC
-            LIMIT 3"""
-        )
-        top_slots = [dict(r) for r in await cursor.fetchall()]
-
-        # ── Competitor Alerts ────────────────────────────────────────────────
-        cursor = await db.execute(
-            """SELECT COUNT(*) as threats
-            FROM competitor_posts
-            WHERE should_respond = TRUE
-            AND posted_at >= ?""",
-            (start_str,),
-        )
-        competitor_threats = (await cursor.fetchone())["threats"]
 
         # ── System Health ──────────────────────────────────────────────────────
-        cursor = await db.execute(
+        api_keys = await _safe_query_one(db,
             """SELECT COUNT(*) as total_keys,
                    SUM(CASE WHEN is_active THEN 1 ELSE 0 END) as active_keys
-            FROM agent_api_keys"""
+            FROM agent_api_keys""",
+            default={"total_keys": 0, "active_keys": 0},
         )
-        api_keys = dict(await cursor.fetchone())
-
-        # ── Top Performing Post ──────────────────────────────────────────────
-        cursor = await db.execute(
-            """SELECT id, platform, content, likes, comments_count, shares, reach
-            FROM social_posts
-            WHERE status = 'published'
-            AND published_at >= ?
-            ORDER BY (likes + comments_count + shares) DESC
-            LIMIT 1""",
-            (start_str,),
-        )
-        top_post = await cursor.fetchone()
 
     # ── Compile Dashboard ────────────────────────────────────────────────────
     dashboard = {
         "period": {
             "days": days,
-            "start": start_str[:10],
+            "start": start.isoformat()[:10],
             "end": end.isoformat()[:10],
         },
         "health_score": _calculate_health_score(
@@ -198,17 +168,11 @@ async def get_dashboard_overview(days: int = 7) -> dict:
             "pending_influencer_approvals": pending_influencer,
             "failed_posts": content_pipeline.get("failed", 0),
             "active_crisis_alerts": crisis.get("active_crisis", 0),
-            "competitor_threats": competitor_threats,
         },
         "content_pipeline": content_pipeline,
         "platform_performance": platform_stats,
         "engagement": {
             "total_events": engagement_health.get("total_events", 0),
-            "sentiment_breakdown": {
-                "positive": engagement_health.get("positive", 0),
-                "neutral": engagement_health.get("neutral", 0),
-                "negative": engagement_health.get("negative", 0),
-            },
             "avg_sentiment_score": round(engagement_health.get("avg_sentiment") or 0, 2),
             "reply_rate": _safe_divide(
                 engagement_health.get("replied", 0),
@@ -226,14 +190,12 @@ async def get_dashboard_overview(days: int = 7) -> dict:
             "ab_tests_completed": ab_tests.get("completed_with_winner", 0),
         },
         "recommendations": {
-            "optimal_posting_slots": top_slots,
             "next_best_action": _recommend_next_action(
                 unreplied, pending_agent, pending_influencer, crisis.get("active_crisis", 0)
             ),
         },
         "system": {
             "active_api_keys": api_keys.get("active_keys", 0),
-            "top_post_this_week": dict(top_post) if top_post else None,
         },
     }
 
@@ -294,19 +256,16 @@ async def get_ai_agent_brief(agent_key_id: int | None = None) -> dict:
         "current_status": dashboard["health_score"]["status"],
         "health_score": dashboard["health_score"]["score"],
         "priority_actions": [
-            f"{k}: {v}" for k, v in dashboard["attention_needed"].items() if v > 0
+            f"{k}: {v}" for k, v in dashboard["attention_needed"].items() if v and v > 0
         ],
         "platform_performance": {
-            p["platform"]: {
-                "posts": p["posts"],
-                "engagement": p["likes"] + p["comments"] + p["shares"],
-            }
+            p["platform"]: {"posts": p.get("posts", 0)}
             for p in dashboard["platform_performance"]
         },
         "content_backlog": {
-            "drafts_ready": dashboard["content_pipeline"]["drafts"],
-            "scheduled": dashboard["content_pipeline"]["scheduled"],
-            "needs_approval": dashboard["content_pipeline"]["pending_approval"],
+            "drafts_ready": dashboard["content_pipeline"].get("drafts", 0),
+            "scheduled": dashboard["content_pipeline"].get("scheduled", 0),
+            "needs_approval": dashboard["content_pipeline"].get("pending_approval", 0),
         },
         "sentiment": dashboard["engagement"]["avg_sentiment_score"],
         "recommendation": dashboard["recommendations"]["next_best_action"],

@@ -45,7 +45,11 @@ class PersonaUpdate(BaseModel):
 class PlatformUpdate(BaseModel):
     enabled: bool | None = None
     prompt_template: str | None = None
-    hashtag_bank: str | None = None
+    hashtag_mode: str | None = None        # 'auto' | 'manual' | 'none'
+    brand_hashtag: str | None = None       # single always-appended brand tag
+    banned_hashtags: str | None = None     # newline-separated banned tags
+    max_hashtags: int | None = None        # per-platform limit
+    max_caption_chars: int | None = None   # per-platform char limit
     auto_publish: bool | None = None
     setup_status: str | None = None
     setup_notes: str | None = None
@@ -55,6 +59,7 @@ class PlatformUpdate(BaseModel):
 
 class OutboxPostUpdate(BaseModel):
     content: str | None = None
+    hashtags: str | None = None       # JSON array of hashtags for this post
     status: str | None = None         # 'draft' | 'approved' | 'rejected' | 'scheduled'
     scheduled_at: str | None = None   # ISO-8601 UTC — set alongside status='scheduled'
     image_url: str | None = None      # override image from media library
@@ -135,7 +140,8 @@ async def list_platforms(
 ):
     """List all social platform configurations."""
     cursor = await db.execute(
-        "SELECT id, platform, display_name, enabled, prompt_template, hashtag_bank, "
+        "SELECT id, platform, display_name, enabled, prompt_template, "
+        "hashtag_mode, brand_hashtag, banned_hashtags, max_hashtags, max_caption_chars, "
         "auto_publish, account_id, setup_status, setup_notes, created_at, updated_at "
         "FROM social_platform_configs ORDER BY id"
     )
@@ -151,7 +157,8 @@ async def get_platform(
 ):
     """Get configuration for a single platform."""
     cursor = await db.execute(
-        "SELECT id, platform, display_name, enabled, prompt_template, hashtag_bank, "
+        "SELECT id, platform, display_name, enabled, prompt_template, "
+        "hashtag_mode, brand_hashtag, banned_hashtags, max_hashtags, max_caption_chars, "
         "auto_publish, account_id, setup_status, setup_notes, created_at, updated_at "
         "FROM social_platform_configs WHERE platform = ?",
         (platform,),
@@ -190,6 +197,71 @@ async def update_platform(
     )
     await db.commit()
     return {"updated": True}
+
+
+# ── Hashtag suggestion (stub — brand forks plug in LLM key) ─────────────────
+
+class HashtagSuggestRequest(BaseModel):
+    content: str
+    platform: str
+
+@router.post("/hashtags/suggest")
+async def suggest_hashtags(
+    body: HashtagSuggestRequest,
+    db: aiosqlite.Connection = Depends(get_db),
+    user: dict = Depends(require_admin),
+):
+    """Suggest hashtags for a post based on content and platform rules.
+
+    BASELINE: Returns rule-based suggestions from content keywords.
+    BRAND FORK: Override this endpoint to call your LLM provider with your API key.
+    """
+    cursor = await db.execute(
+        "SELECT hashtag_mode, brand_hashtag, banned_hashtags, max_hashtags "
+        "FROM social_platform_configs WHERE platform = ?",
+        (body.platform,),
+    )
+    cfg = await cursor.fetchone()
+    if not cfg:
+        raise HTTPException(status_code=404, detail=f"Platform '{body.platform}' not configured")
+
+    cfg = dict(cfg)
+
+    if cfg["hashtag_mode"] == "none":
+        return {"hashtags": [], "note": f"Hashtags are disabled for {body.platform}"}
+
+    max_tags = cfg["max_hashtags"] or 5
+    banned = set((cfg["banned_hashtags"] or "").lower().split("\n"))
+    banned.discard("")
+
+    # Rule-based keyword extraction (baseline — no LLM needed)
+    import re
+    words = re.findall(r'[a-zA-Z]{4,}', body.content.lower())
+    stop_words = {"this", "that", "with", "from", "your", "have", "will", "been",
+                  "them", "they", "their", "about", "which", "when", "what", "just",
+                  "more", "some", "than", "into", "also", "very", "like", "made"}
+    keywords = []
+    seen = set()
+    for w in words:
+        if w not in stop_words and w not in seen and f"#{w}" not in banned:
+            seen.add(w)
+            keywords.append(f"#{w}")
+            if len(keywords) >= max_tags:
+                break
+
+    # Prepend brand hashtag if set
+    if cfg["brand_hashtag"]:
+        tag = cfg["brand_hashtag"].strip()
+        if not tag.startswith("#"):
+            tag = f"#{tag}"
+        keywords = [tag] + [k for k in keywords if k != tag][:max_tags - 1]
+
+    return {
+        "hashtags": keywords[:max_tags],
+        "max_hashtags": max_tags,
+        "mode": cfg["hashtag_mode"],
+        "note": "Baseline rule-based suggestions. Connect LLM API key in brand fork for AI-powered tags.",
+    }
 
 
 # ── Outbox endpoints ─────────────────────────────────────────────────────────
@@ -232,6 +304,36 @@ async def list_outbox(
     return {"posts": [dict(r) for r in rows], "total": total, "page": page}
 
 
+class OutboxPostCreate(BaseModel):
+    platform: str
+    content: str
+    hashtags: str | None = None       # JSON array of hashtags
+    image_url: str | None = None
+    video_url: str | None = None
+
+@router.post("/outbox")
+async def create_outbox_post(
+    body: OutboxPostCreate,
+    db: aiosqlite.Connection = Depends(get_db),
+    user: dict = Depends(require_admin),
+):
+    """Manually create a social post draft. Supports single-platform posting."""
+    valid_platforms = {"facebook", "instagram", "x", "linkedin", "tiktok", "youtube"}
+    if body.platform not in valid_platforms:
+        raise HTTPException(status_code=400, detail=f"Invalid platform. Must be one of: {valid_platforms}")
+
+    cursor = await db.execute(
+        """INSERT INTO social_posts
+           (platform, content, hashtags, image_url, video_url, status, created_by)
+           VALUES (?, ?, ?, ?, ?, 'draft', ?)""",
+        (body.platform, body.content, body.hashtags, body.image_url, body.video_url,
+         user.get("email", "admin")),
+    )
+    await db.commit()
+    post_id = cursor.lastrowid
+    return {"id": post_id, "status": "draft", "platform": body.platform}
+
+
 @router.get("/outbox/{post_id}")
 async def get_outbox_post(
     post_id: int,
@@ -269,6 +371,11 @@ async def update_outbox_post(
     valid_statuses = {"draft", "approved", "rejected", "scheduled"}
     if "status" in updates and updates["status"] not in valid_statuses:
         raise HTTPException(status_code=400, detail=f"Invalid status. Must be one of: {valid_statuses}")
+
+    # Parse datetime strings for asyncpg compatibility
+    if "scheduled_at" in updates and isinstance(updates["scheduled_at"], str):
+        from datetime import datetime as dt
+        updates["scheduled_at"] = dt.fromisoformat(updates["scheduled_at"].replace("Z", "+00:00"))
 
     set_parts = [f"{k} = ?" for k in updates]
     values = list(updates.values()) + [post_id]
@@ -1407,7 +1514,16 @@ async def list_ab_tests(
             (limit,),
         )
     rows = await cursor.fetchall()
-    return {"tests": [dict(r) for r in rows]}
+    tests = []
+    for r in rows:
+        test = dict(r)
+        vcursor = await db.execute(
+            "SELECT id, variant_name, content, image_url, engagement_score, reach_count, published_at, is_winner FROM ab_test_variants WHERE ab_test_id = ?",
+            (test["id"],),
+        )
+        test["variants"] = [dict(v) for v in await vcursor.fetchall()]
+        tests.append(test)
+    return {"tests": tests}
 
 
 # ── Sprint 7: Competitor Tracking ─────────────────────────────────────────────

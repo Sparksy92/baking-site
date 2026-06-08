@@ -1,11 +1,8 @@
 import html
 import logging
-import asyncio
 import httpx
 from datetime import datetime, timezone
-import os
 import aiofiles
-from pathlib import Path
 
 from app.config import get_settings
 from app.database import db_connection
@@ -35,7 +32,8 @@ async def download_image(url: str, filename: str) -> str | None:
         return None
 
 async def _process_meta_posts(posts: list, platform: str):
-    """Process posts and insert them into the database."""
+    """Process posts and insert them into the database as blog_post drafts."""
+    settings = get_settings()
     async with db_connection() as db:
         for post in posts:
             post_id = post.get('id')
@@ -52,10 +50,15 @@ async def _process_meta_posts(posts: list, platform: str):
             if await existing.fetchone():
                 continue
                 
-            # Prepare metadata
+            # Prepare metadata — published_at is TEXT in pages table
             timestamp = post.get('timestamp') or post.get('created_time')
-            if not timestamp:
-                timestamp = datetime.now(timezone.utc).replace(tzinfo=None).isoformat()
+            if timestamp:
+                try:
+                    published_at = datetime.fromisoformat(timestamp.replace('Z', '+00:00')).isoformat()
+                except (ValueError, AttributeError):
+                    published_at = datetime.now(timezone.utc).isoformat()
+            else:
+                published_at = datetime.now(timezone.utc).isoformat()
                 
             media_url = post.get('media_url') or post.get('full_picture')
             local_image_url = None
@@ -92,7 +95,7 @@ async def _process_meta_posts(posts: list, platform: str):
                         'blog_post',
                         'draft',
                         settings.brand_name,
-                        timestamp,
+                        published_at,
                         external_id
                     )
                 )

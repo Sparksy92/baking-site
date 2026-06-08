@@ -22,7 +22,6 @@ from datetime import datetime, timezone, timedelta
 
 from app.database import db_connection
 from app.services.best_time_service import suggest_next_post_time
-from app.services.scheduler_service import schedule_post
 
 logger = logging.getLogger(__name__)
 
@@ -62,12 +61,16 @@ async def create_ab_test(
             # Get suggested time for this platform
             time_suggestion = await suggest_next_post_time(platform, min_hours_ahead=2 + (i * 2))
 
-            if "suggested_time" not in time_suggestion:
+            if "suggested_time" not in time_suggestion or not time_suggestion["suggested_time"]:
                 # Fallback to now + 2 hours + i hours
-                fallback_time = datetime.now(timezone.utc) + timedelta(hours=2 + i)
-                time_suggestion["suggested_time"] = fallback_time.isoformat()
-
-            scheduled_at = time_suggestion["suggested_time"]
+                scheduled_at = datetime.now(timezone.utc) + timedelta(hours=2 + i)
+            else:
+                # Parse ISO string back to datetime for the DB driver
+                raw = time_suggestion["suggested_time"]
+                if isinstance(raw, str):
+                    scheduled_at = datetime.fromisoformat(raw)
+                else:
+                    scheduled_at = raw
 
             # Create variant record
             cursor = await db.execute(
@@ -103,7 +106,7 @@ async def create_ab_test(
                 "variant_id": variant_id,
                 "variant_name": variant["variant_name"],
                 "social_post_id": social_post_id,
-                "scheduled_at": scheduled_at,
+                "scheduled_at": scheduled_at.isoformat() if hasattr(scheduled_at, 'isoformat') else str(scheduled_at),
             })
 
         await db.commit()
@@ -131,7 +134,7 @@ async def start_ab_test(test_id: int) -> dict:
 
         await db.execute(
             """UPDATE ab_tests
-               SET status = 'running', start_time = CURRENT_TIMESTAMP
+               SET status = 'running', started_at = CURRENT_TIMESTAMP
                WHERE id = ?""",
             (test_id,),
         )
@@ -243,8 +246,8 @@ async def complete_ab_test(test_id: int) -> dict:
         await db.execute(
             """UPDATE ab_tests
                SET status = 'completed',
-                   end_time = CURRENT_TIMESTAMP,
-                   winning_variant_id = ?
+                   completed_at = CURRENT_TIMESTAMP,
+                   winner_variant_id = ?
                WHERE id = ?""",
             (winner["id"] if winner else None, test_id),
         )
