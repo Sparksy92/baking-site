@@ -512,6 +512,9 @@ CREATE TABLE pages (
     page_type TEXT NOT NULL DEFAULT 'page',  -- 'page' | 'blog_post'
     status TEXT NOT NULL DEFAULT 'draft',    -- 'draft' | 'published'
     author TEXT,
+    noindex BOOLEAN DEFAULT FALSE,
+    canonical_url TEXT,
+    external_id TEXT UNIQUE,                 -- for social sync dedup (e.g. 'ig-12345')
     published_at TEXT,
     created_at TEXT NOT NULL DEFAULT (CURRENT_TIMESTAMP),
     updated_at TEXT NOT NULL DEFAULT (CURRENT_TIMESTAMP)

@@ -53,3 +53,44 @@ async def get_social_proof(
         "viewers": viewers,
         "sold_this_week": sold_this_week,
     }
+
+
+@router.get("/instagram-feed")
+async def get_instagram_feed(
+    limit: int = 12,
+    db: aiosqlite.Connection = Depends(get_db),
+):
+    """Return recent Instagram posts for the storefront social proof grid.
+
+    Pulls from social_posts where platform='instagram' and status='published'.
+    Includes engagement metrics (likes, comments) if synced from Meta.
+    """
+    cursor = await db.execute(
+        """SELECT sp.*, p.slug as blog_slug
+           FROM social_posts sp
+           LEFT JOIN pages p ON sp.page_id = p.id
+           WHERE sp.platform = 'instagram'
+           AND sp.status = 'published'
+           AND sp.platform_post_id IS NOT NULL
+           ORDER BY sp.published_at DESC
+           LIMIT ?""",
+        (limit,),
+    )
+    rows = await cursor.fetchall()
+
+    posts = []
+    for r in rows:
+        post = dict(r)
+        posts.append({
+            "id": post["id"],
+            "platform_post_id": post["platform_post_id"],
+            "content": post["content"],
+            "image_url": post["image_url"],
+            "video_url": post["video_url"],
+            "published_at": post["published_at"],
+            "likes": post.get("likes", 0),
+            "comments_count": post.get("comments_count", 0),
+            "blog_slug": post.get("blog_slug"),
+        })
+
+    return {"posts": posts, "count": len(posts)}

@@ -80,12 +80,31 @@ class Settings(BaseSettings):
     # ── Dev ──────────────────────────────────────────────────────
     dev_mode: bool = True
 
-    # ── Integrations ─────────────────────────────────────────────
+    # ── Integrations — Meta (Facebook / Instagram) ───────────────
     meta_page_access_token: str = ""
     meta_facebook_page_id: str = ""
     meta_instagram_account_id: str = ""
+    meta_app_secret: str = ""         # Used to verify webhook signatures (Meta App Secret from developer portal)
+    meta_webhook_verify_token: str = "rez-hub-webhook-verify"  # Arbitrary string — must match what you set in Meta dashboard
+
+    # ── Integrations — AI ────────────────────────────────────────
     openai_api_key: str = ""
     gemini_api_key: str = ""
+    serp_api_key: str = ""    # SerpAPI — 100 free searches/month at serpapi.com
+
+    # ── Integrations — LinkedIn ──────────────────────────────────
+    linkedin_client_id: str = ""
+    linkedin_client_secret: str = ""
+
+    # ── Integrations — TikTok ────────────────────────────────────
+    tiktok_client_key: str = ""
+    tiktok_client_secret: str = ""
+
+    # ── Integrations — X / Twitter ───────────────────────────────
+    x_api_key: str = ""
+    x_api_secret: str = ""
+    x_access_token: str = ""
+    x_access_token_secret: str = ""
 
     # ── App version ──────────────────────────────────────────────
     app_version: str = "0.1.0"

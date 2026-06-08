@@ -6,7 +6,8 @@ import Link from 'next/link';
 import {
   LayoutDashboard, Package, ShoppingCart, Layers, FolderOpen, Tag, Settings, LogOut, Mail,
   BarChart3, RotateCcw, Webhook, Gift, Star, PackageOpen, FileText, Tags, Users, Ruler, Shield,
-  ArrowLeftRight, ChevronDown, ChevronRight, Megaphone, Wrench, CreditCard, TrendingUp,
+  ArrowLeftRight, ChevronDown, ChevronRight, Megaphone, Wrench, CreditCard, TrendingUp, Share2, Bot, Inbox,
+  AlertTriangle,
 } from 'lucide-react';
 import { api } from '@/lib/api';
 import { Toaster } from '@/components/Toaster';
@@ -48,6 +49,20 @@ const SECTIONS: NavSection[] = [
     ],
   },
   {
+    id: 'social',
+    label: 'Social & AI',
+    icon: Share2,
+    items: [
+      { label: 'Dashboard',      to: '/admin/social',           icon: LayoutDashboard },
+      { label: 'Outbox',         to: '/admin/social/outbox',    icon: Inbox },
+      { label: 'Crisis Alerts',  to: '/admin/social/crisis',    icon: AlertTriangle },
+      { label: 'Strategy',       to: '/admin/social/strategy',  icon: TrendingUp },
+      { label: 'A/B Tests',      to: '/admin/social/ab-tests',  icon: BarChart3 },
+      { label: 'Brand Persona',  to: '/admin/social/persona',   icon: Bot },
+      { label: 'Platforms',      to: '/admin/social/platforms', icon: Share2 },
+    ],
+  },
+  {
     id: 'advanced',
     label: 'Advanced',
     icon: Wrench,
@@ -74,7 +89,8 @@ function readOpenSections(): Record<string, boolean> {
 }
 
 function NavLink({ item, pathname }: { item: NavItem; pathname: string }) {
-  const active = item.to === '/admin' ? pathname === '/admin' : pathname.startsWith(item.to);
+  const isExactParent = item.to === '/admin' || item.to === '/admin/social';
+  const active = isExactParent ? pathname === item.to : pathname.startsWith(item.to);
   const Icon = item.icon;
   return (
     <Link
