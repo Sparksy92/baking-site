@@ -52,7 +52,7 @@ async def unsubscribe(
 ):
     """Unsubscribe an email from the newsletter."""
     result = await db.execute(
-        "UPDATE newsletter_subscribers SET is_active = 0 WHERE email = ? COLLATE NOCASE",
+        "UPDATE newsletter_subscribers SET is_active = 0 WHERE LOWER(email) = LOWER(?)",
         (body.email.lower(),),
     )
     await db.commit()

@@ -31,16 +31,14 @@ async def _create_delivered_order(admin_client: AsyncClient, db) -> tuple[int, i
         VALUES (?, ?, ?, 'Return Tee', 'M', 'Black', 4500, 1, 4500)
     """, (order_id, pid, vid))
     oi_id = cursor.lastrowid
-    await db.commit()
     return order_id, oi_id
 
 
 @pytest.mark.asyncio
 async def test_customer_create_return(admin_client: AsyncClient, customer_client: AsyncClient):
-    from app.database import get_db
-    async for db in get_db():
+    from app.database import db_connection
+    async with db_connection() as db:
         order_id, oi_id = await _create_delivered_order(admin_client, db)
-        break
 
     resp = await customer_client.post("/api/returns", json={
         "order_id": order_id,
@@ -54,13 +52,11 @@ async def test_customer_create_return(admin_client: AsyncClient, customer_client
 
 @pytest.mark.asyncio
 async def test_customer_list_returns(admin_client: AsyncClient, customer_client: AsyncClient):
-    from app.database import get_db
-    async for db in get_db():
+    from app.database import db_connection
+    async with db_connection() as db:
         order_id, oi_id = await _create_delivered_order(admin_client, db)
         # Use different order number
         await db.execute("UPDATE orders SET order_number = 'ORD-RET-2' WHERE id = ?", (order_id,))
-        await db.commit()
-        break
 
     await customer_client.post("/api/returns", json={
         "order_id": order_id, "reason": "Wrong color", "items": [{"order_item_id": oi_id, "quantity": 1}],
@@ -79,12 +75,10 @@ async def test_admin_list_returns(admin_client: AsyncClient):
 
 @pytest.mark.asyncio
 async def test_admin_approve_return(admin_client: AsyncClient, customer_client: AsyncClient):
-    from app.database import get_db
-    async for db in get_db():
+    from app.database import db_connection
+    async with db_connection() as db:
         order_id, oi_id = await _create_delivered_order(admin_client, db)
         await db.execute("UPDATE orders SET order_number = 'ORD-RET-3' WHERE id = ?", (order_id,))
-        await db.commit()
-        break
 
     resp = await customer_client.post("/api/returns", json={
         "order_id": order_id, "reason": "Defective", "items": [{"order_item_id": oi_id, "quantity": 1}],
@@ -102,12 +96,10 @@ async def test_admin_approve_return(admin_client: AsyncClient, customer_client: 
 
 @pytest.mark.asyncio
 async def test_admin_reject_return(admin_client: AsyncClient, customer_client: AsyncClient):
-    from app.database import get_db
-    async for db in get_db():
+    from app.database import db_connection
+    async with db_connection() as db:
         order_id, oi_id = await _create_delivered_order(admin_client, db)
         await db.execute("UPDATE orders SET order_number = 'ORD-RET-4' WHERE id = ?", (order_id,))
-        await db.commit()
-        break
 
     resp = await customer_client.post("/api/returns", json={
         "order_id": order_id, "reason": "Changed mind", "items": [{"order_item_id": oi_id, "quantity": 1}],
@@ -122,12 +114,10 @@ async def test_admin_reject_return(admin_client: AsyncClient, customer_client: A
 
 @pytest.mark.asyncio
 async def test_invalid_transition_rejected(admin_client: AsyncClient, customer_client: AsyncClient):
-    from app.database import get_db
-    async for db in get_db():
+    from app.database import db_connection
+    async with db_connection() as db:
         order_id, oi_id = await _create_delivered_order(admin_client, db)
         await db.execute("UPDATE orders SET order_number = 'ORD-RET-5' WHERE id = ?", (order_id,))
-        await db.commit()
-        break
 
     resp = await customer_client.post("/api/returns", json={
         "order_id": order_id, "reason": "Test", "items": [{"order_item_id": oi_id, "quantity": 1}],

@@ -6,8 +6,7 @@ from pydantic import BaseModel, Field
 from typing import List, Optional
 
 from app.auth import require_admin
-from app.database import get_db
-import aiosqlite
+from app.database import get_db, PostgresConnection
 
 from app.services.linkinbio_service import (
     create_page,
@@ -43,7 +42,7 @@ class LinkCreate(BaseModel):
 @router.post("/pages")
 async def create_linkinbio_page(
     data: PageCreate,
-    db: aiosqlite.Connection = Depends(get_db),
+    db: PostgresConnection = Depends(get_db),
     user: dict = Depends(require_admin),
 ):
     """Create a new link in bio page."""
@@ -61,7 +60,7 @@ async def create_linkinbio_page(
 
 @router.get("/pages")
 async def list_pages(
-    db: aiosqlite.Connection = Depends(get_db),
+    db: PostgresConnection = Depends(get_db),
     user: dict = Depends(require_admin),
 ):
     """List all link in bio pages."""
@@ -78,7 +77,7 @@ async def list_pages(
 @router.get("/pages/{page_id}")
 async def get_page(
     page_id: int,
-    db: aiosqlite.Connection = Depends(get_db),
+    db: PostgresConnection = Depends(get_db),
     user: dict = Depends(require_admin),
 ):
     """Get page details with links."""
@@ -107,7 +106,7 @@ async def get_page(
 async def add_page_link(
     page_id: int,
     data: LinkCreate,
-    db: aiosqlite.Connection = Depends(get_db),
+    db: PostgresConnection = Depends(get_db),
     user: dict = Depends(require_admin),
 ):
     """Add a link to a page."""
@@ -154,7 +153,7 @@ async def create_from_collection(
 @public_router.get("/{slug}")
 async def view_page(
     slug: str,
-    db: aiosqlite.Connection = Depends(get_db),
+    db: PostgresConnection = Depends(get_db),
 ):
     """Public view of a link in bio page."""
     page = await get_page_by_slug(slug, track_view=True)
@@ -167,7 +166,7 @@ async def view_page(
 async def track_link_click(
     slug: str,
     link_id: int,
-    db: aiosqlite.Connection = Depends(get_db),
+    db: PostgresConnection = Depends(get_db),
 ):
     """Track a link click (called by frontend)."""
     from app.services.linkinbio_service import track_link_click

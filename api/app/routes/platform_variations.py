@@ -6,8 +6,7 @@ from pydantic import BaseModel, Field
 from typing import List, Optional
 
 from app.auth import require_admin
-from app.database import get_db
-import aiosqlite
+from app.database import get_db, PostgresConnection
 import json
 
 from app.services.platform_variation_service import (

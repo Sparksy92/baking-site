@@ -6,8 +6,7 @@ from pydantic import BaseModel, Field
 from typing import Optional
 
 from app.auth import require_admin
-from app.database import get_db
-import aiosqlite
+from app.database import get_db, PostgresConnection
 
 from app.services.rss_service import (
     create_feed,
@@ -38,7 +37,7 @@ class FeedUpdate(BaseModel):
 @router.post("/feeds")
 async def create_rss_feed(
     data: FeedCreate,
-    db: aiosqlite.Connection = Depends(get_db),
+    db: PostgresConnection = Depends(get_db),
     user: dict = Depends(require_admin),
 ):
     """Create a new RSS feed subscription."""
@@ -56,7 +55,7 @@ async def create_rss_feed(
 
 @router.get("/feeds")
 async def list_feeds(
-    db: aiosqlite.Connection = Depends(get_db),
+    db: PostgresConnection = Depends(get_db),
     user: dict = Depends(require_admin),
 ):
     """List all RSS feeds."""
@@ -73,7 +72,7 @@ async def list_feeds(
 @router.get("/feeds/{feed_id}")
 async def get_feed(
     feed_id: int,
-    db: aiosqlite.Connection = Depends(get_db),
+    db: PostgresConnection = Depends(get_db),
     user: dict = Depends(require_admin),
 ):
     """Get RSS feed details."""
@@ -126,7 +125,7 @@ async def get_stats(
 async def update_feed(
     feed_id: int,
     data: FeedUpdate,
-    db: aiosqlite.Connection = Depends(get_db),
+    db: PostgresConnection = Depends(get_db),
     user: dict = Depends(require_admin),
 ):
     """Update RSS feed settings."""

@@ -36,7 +36,7 @@ def _clear_rate_limits(app):
 async def client():
     """Provide an async test client with a clean database."""
     from app.config import get_settings
-    from app.database import init_db, db_connection
+    from app.database import init_db, close_db, db_connection
 
     get_settings.cache_clear()
 
@@ -47,9 +47,10 @@ async def client():
     # Initialize connection pool and run migrations
     await init_db()
 
-    # Truncate all tables to ensure clean state
-    async with db_connection() as db:
-        records = await db.conn.fetch("""
+    # Truncate all tables to ensure clean state (use raw connection outside transaction)
+    from app.database import _pool
+    async with _pool.acquire() as conn:
+        records = await conn.fetch("""
             SELECT tablename
             FROM pg_tables
             WHERE schemaname = 'public'
@@ -57,7 +58,7 @@ async def client():
         """)
         if records:
             tables = ", ".join([f'"{r["tablename"]}"' for r in records])
-            await db.conn.execute(f"TRUNCATE {tables} RESTART IDENTITY CASCADE;")
+            await conn.execute(f"TRUNCATE {tables} RESTART IDENTITY CASCADE;")
 
     from app.main import app
     _clear_rate_limits(app)
@@ -65,6 +66,8 @@ async def client():
     transport = ASGITransport(app=app)
     async with AsyncClient(transport=transport, base_url="http://test") as ac:
         yield ac
+
+    await close_db()
 
 
 @pytest.fixture

@@ -597,3 +597,11 @@ CREATE INDEX idx_agent_api_keys_active ON agent_api_keys(is_active);
 CREATE INDEX idx_agent_submissions_status ON agent_content_submissions(status);
 CREATE INDEX idx_media_library_type ON media_library(media_type);
 CREATE INDEX idx_admin_audit_action ON admin_audit_log(action);
+
+INSERT INTO social_platform_configs (platform, display_name, enabled) VALUES
+    ('facebook',  'Facebook',  FALSE),
+    ('instagram', 'Instagram', FALSE),
+    ('twitter',   'X/Twitter', FALSE),
+    ('linkedin',  'LinkedIn',  FALSE),
+    ('tiktok',    'TikTok',    FALSE)
+ON CONFLICT (platform) DO NOTHING;

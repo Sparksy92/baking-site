@@ -12,8 +12,8 @@ async def _create_order(admin_client: AsyncClient) -> tuple[int, int, int]:
     })
     vid = resp.json()["id"]
 
-    from app.database import get_db
-    async for db in get_db():
+    from app.database import db_connection
+    async with db_connection() as db:
         cursor = await db.execute("""
             INSERT INTO orders (order_number, customer_name, customer_email, status, payment_status,
                                subtotal_cents, total_cents, shipping_cents, discount_cents,
@@ -27,8 +27,6 @@ async def _create_order(admin_client: AsyncClient) -> tuple[int, int, int]:
             (order_id, vid),
         )
         item_id = cursor.lastrowid
-        await db.commit()
-        break
 
     return order_id, item_id, vid
 
@@ -67,11 +65,9 @@ async def test_edit_shipped_order_rejected(admin_client: AsyncClient):
     order_id, item_id, _ = await _create_order(admin_client)
 
     # Change status to shipped
-    from app.database import get_db
-    async for db in get_db():
+    from app.database import db_connection
+    async with db_connection() as db:
         await db.execute("UPDATE orders SET status = 'shipped' WHERE id = ?", (order_id,))
-        await db.commit()
-        break
 
     resp = await admin_client.patch(f"/api/admin/orders/{order_id}/items/{item_id}", json={"quantity": 1})
     assert resp.status_code == 400

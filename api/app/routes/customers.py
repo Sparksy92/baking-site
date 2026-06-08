@@ -45,7 +45,7 @@ async def register(
     """Register a new customer account."""
     # Check for existing email
     cursor = await db.execute(
-        "SELECT id FROM customers WHERE email = ? COLLATE NOCASE", (body.email,)
+        "SELECT id FROM customers WHERE LOWER(email) = LOWER(?)", (body.email,)
     )
     if await cursor.fetchone():
         raise HTTPException(
@@ -92,7 +92,7 @@ async def login(
 ):
     """Authenticate a customer."""
     cursor = await db.execute(
-        "SELECT * FROM customers WHERE email = ? COLLATE NOCASE AND is_active = 1",
+        "SELECT * FROM customers WHERE LOWER(email) = LOWER(?) AND is_active = 1",
         (body.email,),
     )
     customer = await cursor.fetchone()
@@ -218,7 +218,7 @@ async def forgot_password(
 ):
     """Request a password reset email."""
     cursor = await db.execute(
-        "SELECT id, first_name FROM customers WHERE email = ? COLLATE NOCASE AND is_active = 1",
+        "SELECT id, first_name FROM customers WHERE LOWER(email) = LOWER(?) AND is_active = 1",
         (body.email,),
     )
     customer = await cursor.fetchone()
@@ -417,7 +417,7 @@ async def list_orders(
     # Match by customer_id (linked) OR by email (guest orders placed before account creation)
     cursor = await db.execute(
         """SELECT * FROM orders
-           WHERE customer_id = ? OR (customer_id IS NULL AND customer_email = ? COLLATE NOCASE)
+           WHERE customer_id = ? OR (customer_id IS NULL AND LOWER(customer_email) = LOWER(?))
            ORDER BY created_at DESC""",
         (customer_id, email),
     )
@@ -456,7 +456,7 @@ async def get_order_detail(
     cursor = await db.execute(
         """SELECT * FROM orders
            WHERE order_number = ?
-             AND (customer_id = ? OR (customer_id IS NULL AND customer_email = ? COLLATE NOCASE))""",
+             AND (customer_id = ? OR (customer_id IS NULL AND LOWER(customer_email) = LOWER(?)))""",
         (order_number, customer_id, email),
     )
     order = await cursor.fetchone()

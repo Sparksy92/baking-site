@@ -58,14 +58,13 @@ async def retry_failed_post(post_id: int) -> dict:
         next_retry_at = datetime.now(timezone.utc) + timedelta(seconds=delay_seconds)
         
         # Log retry attempt
-        await db.execute(
+        insert_cursor = await db.execute(
             """INSERT INTO publish_retries 
                (post_id, attempt_number, scheduled_at, status)
-               VALUES (?, ?, ?, 'pending')
-               RETURNING id""",
+               VALUES (?, ?, ?, 'pending')""",
             (post_id, retry_count + 1, next_retry_at)
         )
-        retry_id = (await cursor.fetchone())["id"]
+        retry_id = insert_cursor.lastrowid
         await db.commit()
     
     logger.info(f"Scheduled retry {retry_count + 1} for post {post_id} at {next_retry_at}")

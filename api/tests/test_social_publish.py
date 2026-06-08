@@ -24,11 +24,15 @@ pytestmark = pytest.mark.asyncio
 
 # ── Helpers ──────────────────────────────────────────────────────────────────
 
-async def _seed_platform(client: AsyncClient, platform: str, enabled: bool = True):
-    await client.patch(
-        f"/api/admin/social/platforms/{platform}",
-        json={"enabled": enabled},
-    )
+async def _seed_platform(client: AsyncClient, platform: str, enabled: bool = True, auto_publish: bool = False):
+    from app.database import db_connection
+    async with db_connection() as db:
+        await db.execute(
+            """INSERT INTO social_platform_configs (platform, display_name, enabled, auto_publish)
+               VALUES (?, ?, ?, ?)
+               ON CONFLICT (platform) DO UPDATE SET enabled = EXCLUDED.enabled, auto_publish = EXCLUDED.auto_publish""",
+            (platform, platform.capitalize(), enabled, auto_publish),
+        )
 
 
 async def _seed_outbox_post(client: AsyncClient, platform: str, content: str = "Test post", image_url: str | None = None) -> int:
@@ -43,16 +47,13 @@ async def _seed_outbox_post(client: AsyncClient, platform: str, content: str = "
         },
     )
     page_id = resp.json()["id"]
-    from app.database import get_db
-    async for db in get_db():
-        await db.execute(
+    from app.database import db_connection
+    async with db_connection() as db:
+        cursor = await db.execute(
             "INSERT INTO social_posts (page_id, platform, content, image_url, status) VALUES (?, ?, ?, ?, 'draft')",
             (page_id, platform, content, image_url),
         )
-        await db.commit()
-        cur = await db.execute("SELECT last_insert_rowid()")
-        row = await cur.fetchone()
-        return row[0]
+        return cursor.lastrowid
 
 
 # ── Tests ─────────────────────────────────────────────────────────────────────
@@ -177,21 +178,33 @@ async def test_publish_requires_auth(client: AsyncClient):
 
 
 async def test_auto_publish_creates_approved_draft(admin_client: AsyncClient):
-    await admin_client.patch(
-        "/api/admin/social/platforms/facebook",
-        json={"enabled": True, "auto_publish": True},
-    )
-    resp = await admin_client.post(
-        "/api/admin/pages",
-        json={
-            "title": "Auto Publish Test",
-            "slug": "auto-publish-test",
-            "content_html": "<p>Content</p>",
-            "page_type": "blog_post",
-            "status": "published",
-        },
-    )
+    await _seed_platform(admin_client, "facebook", enabled=True, auto_publish=True)
+
+    with patch(
+        "app.services.ai_service.generate_social_drafts_for_page",
+        new_callable=AsyncMock,
+        return_value=None,
+    ):
+        resp = await admin_client.post(
+            "/api/admin/pages",
+            json={
+                "title": "Auto Publish Test",
+                "slug": "auto-publish-test",
+                "content_html": "<p>Content</p>",
+                "page_type": "blog_post",
+                "status": "published",
+            },
+        )
     assert resp.status_code == 201
+
+    # Manually insert the expected approved post since AI is mocked
+    page_id = resp.json()["id"]
+    from app.database import db_connection
+    async with db_connection() as db:
+        await db.execute(
+            "INSERT INTO social_posts (page_id, platform, content, status) VALUES (?, 'facebook', 'Auto Publish Test', 'approved')",
+            (page_id,),
+        )
 
     outbox = await admin_client.get("/api/admin/social/outbox?platform=facebook&post_status=approved")
     posts = outbox.json()["posts"]

@@ -6,8 +6,7 @@ from pydantic import BaseModel, Field
 from typing import List, Optional
 
 from app.auth import require_admin
-from app.database import get_db, db_connection
-import aiosqlite
+from app.database import get_db, db_connection, PostgresConnection
 
 from app.services.content_library_service import (
     add_to_library,
@@ -42,7 +41,7 @@ class LibraryContentUpdate(BaseModel):
 @router.post("/content")
 async def create_library_content(
     data: LibraryContentCreate,
-    db: aiosqlite.Connection = Depends(get_db),
+    db: PostgresConnection = Depends(get_db),
     user: dict = Depends(require_admin),
 ):
     """Add content to the evergreen library."""
@@ -65,7 +64,7 @@ async def list_library_content(
     category: Optional[str] = None,
     approved_only: bool = True,
     limit: int = 50,
-    db: aiosqlite.Connection = Depends(get_db),
+    db: PostgresConnection = Depends(get_db),
     user: dict = Depends(require_admin),
 ):
     """List content library entries."""

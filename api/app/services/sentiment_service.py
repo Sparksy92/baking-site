@@ -21,6 +21,37 @@ from app.services.ai_router import AITaskType, get_model_config, generate_with_c
 logger = logging.getLogger(__name__)
 
 
+async def analyze_sentiment(text: str) -> float | None:
+    """Analyze sentiment of raw text. Returns score float (-1.0 to 1.0) or None on failure."""
+    if not text or len(text.strip()) < 3:
+        return None
+
+    system_prompt = """You are a sentiment analysis expert. Analyze the social media comment/mention.
+
+Respond ONLY with a JSON object in this exact format:
+{
+  "score": float between -1.0 (very negative) and 1.0 (very positive),
+  "label": "negative" | "neutral" | "positive",
+  "explanation": "brief reason for the score"
+}
+
+Consider context, sarcasm, emojis, and platform norms. Be precise."""
+
+    try:
+        config = await get_model_config(AITaskType.SOCIAL_REPLY)
+        result_text = await generate_with_config(text, system_prompt, config)
+        result_text = result_text.strip()
+        if "```json" in result_text:
+            result_text = result_text.split("```json")[1].split("```")[0]
+        elif "```" in result_text:
+            result_text = result_text.split("```")[1].split("```")[0]
+        result = json.loads(result_text.strip())
+        return float(result.get("score", 0))
+    except Exception as e:
+        logger.error(f"analyze_sentiment failed: {e}")
+        return None
+
+
 async def analyze_engagement_sentiment(engagement_event_id: int) -> dict:
     """Analyze sentiment of a single engagement event.
 

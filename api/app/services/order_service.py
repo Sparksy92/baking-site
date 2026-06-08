@@ -155,7 +155,7 @@ async def create_order(
         raise CheckoutError("Could not generate unique order number", status_code=500)
 
     # Insert order
-    await db.execute(
+    order_cursor = await db.execute(
         """INSERT INTO orders
            (order_number, payment_method, payment_status, stripe_session_id,
             customer_name, customer_email, customer_phone,
@@ -177,17 +177,14 @@ async def create_order(
             body.utm_source, body.utm_medium, body.utm_campaign,
         ),
     )
+    order_id = order_cursor.lastrowid
 
     # Increment promo usage
     if validated.get("promo_code"):
         await db.execute(
-            "UPDATE promo_codes SET times_used = times_used + 1 WHERE code = ? COLLATE NOCASE",
+            "UPDATE promo_codes SET times_used = times_used + 1 WHERE UPPER(code) = UPPER(?)",
             (validated["promo_code"],),
         )
-
-    # Get order ID
-    cursor = await db.execute("SELECT last_insert_rowid()")
-    order_id = (await cursor.fetchone())[0]
 
     # Insert order items + decrement stock
     for item in validated["order_items"]:

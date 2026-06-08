@@ -134,6 +134,18 @@ async def generate_with_config(
         return await _call_gemini(prompt, system_prompt, config, settings.gemini_api_key)
 
 
+async def ai_generate(prompt: str, max_tokens: int = 1000, temperature: float = 0.7) -> str:
+    """Simple one-shot AI generation convenience wrapper."""
+    config = await get_model_config(AITaskType.CONTENT_GENERATION)
+    config = ModelConfig(
+        provider=config.provider,
+        model=config.model,
+        temperature=temperature,
+        max_tokens=max_tokens,
+    )
+    return await generate_with_config(prompt, "", config)
+
+
 # ── Provider implementations ─────────────────────────────────────────────────
 
 async def _call_openai(prompt: str, system_prompt: str, config: ModelConfig, api_key: str) -> str:
