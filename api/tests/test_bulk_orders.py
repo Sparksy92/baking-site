@@ -5,9 +5,9 @@ from httpx import AsyncClient
 
 async def _create_orders(admin_client: AsyncClient, count: int = 3) -> list[int]:
     """Create test orders via raw DB insert."""
-    from app.database import get_db
+    from app.database import db_connection
     ids = []
-    async for db in get_db():
+    async with db_connection() as db:
         for i in range(count):
             cursor = await db.execute(f"""
                 INSERT INTO orders (order_number, customer_name, customer_email, status, payment_status,
@@ -17,8 +17,6 @@ async def _create_orders(admin_client: AsyncClient, count: int = 3) -> list[int]
                         5000, 5000, '1 Main', 'Toronto', 'ON', 'M5V1A1')
             """)
             ids.append(cursor.lastrowid)
-        await db.commit()
-        break
     return ids
 
 

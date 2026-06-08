@@ -26,11 +26,10 @@ async def test_get_segment_with_members(admin_client: AsyncClient, customer_clie
     sid = resp.json()["id"]
 
     # Get customer ID
-    from app.database import get_db
-    async for db in get_db():
+    from app.database import db_connection
+    async with db_connection() as db:
         cursor = await db.execute("SELECT id FROM customers LIMIT 1")
         cust = await cursor.fetchone()
-        break
 
     # Add member
     resp = await admin_client.post(f"/api/admin/segments/{sid}/members/{cust['id']}")
@@ -47,11 +46,10 @@ async def test_remove_segment_member(admin_client: AsyncClient, customer_client:
     resp = await admin_client.post("/api/admin/segments", json={"name": "Remove Seg", "slug": "remove-seg"})
     sid = resp.json()["id"]
 
-    from app.database import get_db
-    async for db in get_db():
+    from app.database import db_connection
+    async with db_connection() as db:
         cursor = await db.execute("SELECT id FROM customers LIMIT 1")
         cust = await cursor.fetchone()
-        break
 
     await admin_client.post(f"/api/admin/segments/{sid}/members/{cust['id']}")
     resp = await admin_client.delete(f"/api/admin/segments/{sid}/members/{cust['id']}")

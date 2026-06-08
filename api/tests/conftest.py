@@ -1,5 +1,4 @@
 import os
-import tempfile
 import pytest
 from httpx import AsyncClient, ASGITransport
 
@@ -37,30 +36,29 @@ def _clear_rate_limits(app):
 async def client():
     """Provide an async test client with a clean database."""
     from app.config import get_settings
-    from app.database import init_db, get_db
+    from app.database import init_db, close_db, db_connection
 
     get_settings.cache_clear()
-    
+
     # Safety check
     if not get_settings().postgres_db.endswith('test'):
         raise RuntimeError("Refusing to run tests against non-test database to prevent data loss.")
-    
-    # Initialize connection pool if not already initialized
+
+    # Initialize connection pool and run migrations
     await init_db()
 
-    # Truncate all tables to ensure clean state
-    async for db in get_db():
-        # Get all tables
-        records = await db.conn.fetch("""
-            SELECT tablename 
-            FROM pg_tables 
-            WHERE schemaname = 'public' 
+    # Truncate all tables to ensure clean state (use raw connection outside transaction)
+    from app.database import _pool
+    async with _pool.acquire() as conn:
+        records = await conn.fetch("""
+            SELECT tablename
+            FROM pg_tables
+            WHERE schemaname = 'public'
             AND tablename != '_migrations';
         """)
         if records:
             tables = ", ".join([f'"{r["tablename"]}"' for r in records])
-            await db.conn.execute(f"TRUNCATE {tables} RESTART IDENTITY CASCADE;")
-        break
+            await conn.execute(f"TRUNCATE {tables} RESTART IDENTITY CASCADE;")
 
     from app.main import app
     _clear_rate_limits(app)
@@ -69,24 +67,22 @@ async def client():
     async with AsyncClient(transport=transport, base_url="http://test") as ac:
         yield ac
 
-    from app.database import close_db
     await close_db()
 
 
 @pytest.fixture
 async def admin_client(client: AsyncClient):
     """Provide an authenticated admin client."""
-    from app.database import get_db
+    from app.database import db_connection
     from app.auth import hash_password
 
     pw_hash = hash_password("admin123")
 
-    async for db in get_db():
+    async with db_connection() as db:
         await db.execute(
-            "INSERT OR IGNORE INTO admin_users (username, password_hash, role) VALUES (?, ?, ?)",
+            "INSERT INTO admin_users (username, password_hash, role) VALUES (?, ?, ?) ON CONFLICT DO NOTHING",
             ("admin", pw_hash, "owner"),
         )
-        break
 
     resp = await client.post("/api/auth/login", json={"username": "admin", "password": "admin123"})
     assert resp.status_code == 200

@@ -2,6 +2,7 @@ from __future__ import annotations
 
 import asyncio
 import logging
+import sys
 from contextlib import asynccontextmanager
 
 from fastapi import FastAPI
@@ -14,6 +15,7 @@ from app.services.meta_service import run_social_sync
 from app.services.token_refresh_service import refresh_expiring_tokens
 from app.services.scheduler_service import run_scheduled_publisher
 from app.services.engagement_service import sync_all_engagement_metrics
+from app.services.publish_retry_service import run_pending_retries
 from app.middleware.logging import setup_logging
 from app.middleware.rate_limit import RateLimitMiddleware
 from app.middleware.request_id import RequestIdMiddleware
@@ -52,7 +54,8 @@ from app.routes.admin import (
     store_credit as admin_store_credit,
     social as admin_social,
 )
-from app.routes import agent_api
+from app.routes import agent_api, content_library, linkinbio, social_inbox, platform_variations, rss
+from app.services.rss_service import check_all_feeds
 
 logger = logging.getLogger(__name__)
 
@@ -120,18 +123,48 @@ async def lifespan(app: FastAPI):
                 logger.error(f"Background engagement sync error: {e}", exc_info=True)
             await asyncio.sleep(14400)
 
-    sync_task = asyncio.ensure_future(_background_social_sync())
-    token_task = asyncio.ensure_future(_background_token_refresh())
-    scheduler_task = asyncio.ensure_future(_background_scheduler())
-    engagement_task = asyncio.ensure_future(_background_engagement_sync())
+    async def _background_rss_check():
+        """Check RSS feeds every 15 minutes."""
+        await asyncio.sleep(120)
+        while True:
+            try:
+                result = await check_all_feeds()
+                if result.get("total_posts_created", 0) > 0:
+                    logger.info(f"RSS auto-publish: {result['total_posts_created']} posts created")
+            except Exception as e:
+                logger.error(f"Background RSS check error: {e}", exc_info=True)
+            await asyncio.sleep(900)  # 15 minutes
+
+    async def _background_retry_checker():
+        """Check for pending publish retries every 5 minutes."""
+        await asyncio.sleep(180)
+        while True:
+            try:
+                result = await run_pending_retries()
+                if result.get("processed", 0) > 0:
+                    logger.info(f"Retry checker: {result['processed']} retries processed")
+            except Exception as e:
+                logger.error(f"Background retry checker error: {e}", exc_info=True)
+            await asyncio.sleep(300)  # 5 minutes
 
     await init_db()
     logger.info("Database initialized")
+
+    background_tasks = []
+    if "pytest" not in sys.modules:
+        background_tasks = [
+            asyncio.ensure_future(_background_social_sync()),
+            asyncio.ensure_future(_background_token_refresh()),
+            asyncio.ensure_future(_background_scheduler()),
+            asyncio.ensure_future(_background_engagement_sync()),
+            asyncio.ensure_future(_background_rss_check()),
+            asyncio.ensure_future(_background_retry_checker()),
+        ]
+
     yield
-    sync_task.cancel()
-    token_task.cancel()
-    scheduler_task.cancel()
-    engagement_task.cancel()
+
+    for task in background_tasks:
+        task.cancel()
     logger.info("Shutting down")
 
 
@@ -238,6 +271,14 @@ def create_app() -> FastAPI:
     app.include_router(admin_webhooks.router, prefix="/api")
     app.include_router(admin_store_credit.router, prefix="/api")
     app.include_router(admin_social.router, prefix="/api")
+
+    # ── Competitive Gap Features ────────────────────────────────
+    app.include_router(content_library.router, prefix="/api")
+    app.include_router(linkinbio.router, prefix="/api")
+    app.include_router(linkinbio.public_router)  # Public /l/{slug} routes
+    app.include_router(social_inbox.router, prefix="/api")
+    app.include_router(platform_variations.router, prefix="/api")
+    app.include_router(rss.router, prefix="/api")
 
     # ── Agent API (AI integration boundary) ─────────────────────
     app.include_router(agent_api.router)

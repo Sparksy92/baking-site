@@ -20,10 +20,9 @@ from typing import Any
 
 from fastapi import APIRouter, Depends, HTTPException, Request, status
 from pydantic import BaseModel, Field
-import aiosqlite
 
 from app.auth_agent import get_agent, require_agent_scope, AGENT_KEY_HEADER
-from app.database import get_db
+from app.database import get_db, PostgresConnection
 
 logger = logging.getLogger(__name__)
 
@@ -33,7 +32,7 @@ router = APIRouter(prefix="/agent/v1", tags=["agent-api"])
 # ── Audit logging ───────────────────────────────────────────────────────────────
 
 async def log_agent_action(
-    db: aiosqlite.Connection,
+    db: PostgresConnection,
     agent: dict,
     action: str,
     request: Request,
@@ -104,7 +103,7 @@ async def list_unreplied_engagement(
     platform: str | None = None,
     limit: int = 20,
     agent: dict = Depends(get_agent),
-    db: aiosqlite.Connection = Depends(get_db),
+    db: PostgresConnection = Depends(get_db),
 ):
     """Get unreplied engagement events (comments, mentions) for agent to process.
 
@@ -152,7 +151,7 @@ async def submit_reply_draft(
     body: ReplyDraftSubmission,
     request: Request,
     agent: dict = Depends(get_agent),
-    db: aiosqlite.Connection = Depends(get_db),
+    db: PostgresConnection = Depends(get_db),
 ):
     """Submit a reply draft for admin approval.
 
@@ -204,7 +203,7 @@ async def get_post_metrics(
     since: str | None = None,
     limit: int = 50,
     agent: dict = Depends(get_agent),
-    db: aiosqlite.Connection = Depends(get_db),
+    db: PostgresConnection = Depends(get_db),
 ):
     """Get performance metrics for published posts.
 
@@ -254,7 +253,7 @@ async def list_products(
     page: int = 1,
     limit: int = 50,
     agent: dict = Depends(get_agent),
-    db: aiosqlite.Connection = Depends(get_db),
+    db: PostgresConnection = Depends(get_db),
 ):
     """Get product catalog for agent context.
 
@@ -294,7 +293,7 @@ async def list_products(
 async def get_persona(
     request: Request,
     agent: dict = Depends(get_agent),
-    db: aiosqlite.Connection = Depends(get_db),
+    db: PostgresConnection = Depends(get_db),
 ):
     """Get the active brand persona.
 
@@ -323,7 +322,7 @@ async def submit_social_draft(
     body: SocialDraftSubmission,
     request: Request,
     agent: dict = Depends(get_agent),
-    db: aiosqlite.Connection = Depends(get_db),
+    db: PostgresConnection = Depends(get_db),
 ):
     """Submit a social post draft for admin approval.
 
@@ -364,7 +363,7 @@ async def submit_social_draft(
 async def outbox_status(
     request: Request,
     agent: dict = Depends(get_agent),
-    db: aiosqlite.Connection = Depends(get_db),
+    db: PostgresConnection = Depends(get_db),
 ):
     """Get current outbox status counts for agent awareness."""
     start_time = datetime.now(timezone.utc)

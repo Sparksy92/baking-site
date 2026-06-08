@@ -12,8 +12,8 @@ async def _create_order_for_slip(admin_client: AsyncClient) -> int:
     })
     vid = resp.json()["id"]
 
-    from app.database import get_db
-    async for db in get_db():
+    from app.database import db_connection
+    async with db_connection() as db:
         cursor = await db.execute("""
             INSERT INTO orders (order_number, customer_name, customer_email, status, payment_status,
                                subtotal_cents, shipping_cents, discount_cents, total_cents,
@@ -26,8 +26,6 @@ async def _create_order_for_slip(admin_client: AsyncClient) -> int:
             "INSERT INTO order_items (order_id, variant_id, product_name, variant_size, variant_color, quantity, unit_price_cents, line_total_cents) VALUES (?, ?, 'Slip Tee', 'M', 'Black', 1, 4500, 4500)",
             (order_id, vid),
         )
-        await db.commit()
-        break
     return order_id
 
 

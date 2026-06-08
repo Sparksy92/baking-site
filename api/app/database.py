@@ -98,12 +98,16 @@ class PostgresCursor:
         try:
             if is_insert and "RETURNING" in pg_query.upper():
                 try:
+                    await self.conn.execute("SAVEPOINT _ret_id")
                     row = await self.conn.fetchrow(pg_query, *args)
                     if row and 'id' in row:
                         self.lastrowid = row['id']
                     self.rowcount = 1 if row else 0
+                    await self.conn.execute("RELEASE SAVEPOINT _ret_id")
                 except asyncpg.exceptions.UndefinedColumnError:
-                    # Retry without RETURNING id
+                    # Table has no id column — roll back savepoint and retry without RETURNING id
+                    await self.conn.execute("ROLLBACK TO SAVEPOINT _ret_id")
+                    await self.conn.execute("RELEASE SAVEPOINT _ret_id")
                     pg_query_no_return = pg_query.replace(" RETURNING id", "")
                     await self.conn.execute(pg_query_no_return, *args)
                     self.rowcount = 1
@@ -151,10 +155,10 @@ class PostgresConnection:
         await self.conn.execute(script)
 
     async def commit(self):
-        await self.execute("COMMIT")
+        pass  # asyncpg pool connections use autocommit outside explicit transactions
 
     async def rollback(self):
-        await self.execute("ROLLBACK")
+        pass  # asyncpg pool connections use autocommit outside explicit transactions
         
     async def close(self):
         pass
@@ -168,7 +172,8 @@ async def get_db() -> AsyncGenerator[PostgresConnection, None]:
         _pool = await asyncpg.create_pool(settings.database_url)
 
     async with _pool.acquire() as conn:
-        yield PostgresConnection(conn)
+        async with conn.transaction():
+            yield PostgresConnection(conn)
 
 
 @asynccontextmanager
@@ -185,19 +190,26 @@ async def db_connection() -> AsyncGenerator[PostgresConnection, None]:
         _pool = await asyncpg.create_pool(settings.database_url)
 
     async with _pool.acquire() as conn:
-        yield PostgresConnection(conn)
+        async with conn.transaction():
+            yield PostgresConnection(conn)
 
 
 async def init_db() -> None:
     """Initialize database pool and run migrations."""
     global _pool
     settings = get_settings()
-    
+
     settings.uploads_dir.mkdir(parents=True, exist_ok=True)
-    
-    if not _pool:
-        _pool = await asyncpg.create_pool(settings.database_url)
-            
+
+    if _pool:
+        try:
+            await _pool.close()
+        except Exception:
+            pass
+        _pool = None
+
+    _pool = await asyncpg.create_pool(settings.database_url)
+
     async with _pool.acquire() as conn:
         await _run_migrations(conn)
 

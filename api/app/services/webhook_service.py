@@ -8,9 +8,7 @@ import logging
 from datetime import datetime, timezone
 
 import httpx
-from app.database import PostgresConnection
-
-from app.database import get_db
+from app.database import PostgresConnection, db_connection
 
 logger = logging.getLogger(__name__)
 
@@ -22,7 +20,7 @@ async def dispatch_event(event_type: str, payload: dict) -> None:
     Non-blocking — failures are logged but don't affect the caller.
     """
     try:
-        async for db in get_db():
+        async with db_connection() as db:
             cursor = await db.execute(
                 "SELECT * FROM webhooks WHERE is_active = 1"
             )
@@ -34,7 +32,6 @@ async def dispatch_event(event_type: str, payload: dict) -> None:
                     continue
 
                 await _deliver(db, hook, event_type, payload)
-            break
     except Exception:
         logger.exception("Failed to dispatch webhook event: %s", event_type)
 
@@ -70,6 +67,6 @@ async def _deliver(db: PostgresConnection, hook: dict, event_type: str, payload:
     await db.execute(
         """INSERT INTO webhook_deliveries (webhook_id, event_type, payload_json, response_status, response_body, success)
            VALUES (?, ?, ?, ?, ?, ?)""",
-        (hook["id"], event_type, body, response_status, response_body, int(success)),
+        (hook["id"], event_type, body, response_status, response_body, success),
     )
     await db.commit()

@@ -120,6 +120,16 @@ test:api:
     - python -m venv .venv
     - source .venv/bin/activate
     - pip install -r requirements.txt
+    # Wait for PostgreSQL to be ready
+    - |
+      for i in {1..30}; do
+        if python -c "import asyncpg; import asyncio; asyncio.run(asyncpg.connect('postgresql://ecommerce:ecommerce_password@postgres:5432/ecommerce_test'))" 2>/dev/null; then
+          echo "PostgreSQL is ready"
+          break
+        fi
+        echo "Waiting for PostgreSQL... ($i/30)"
+        sleep 2
+      done
   script:
     - source .venv/bin/activate
     - python -m pytest tests/ -v --tb=short --junitxml=../reports/api-test-results.xml

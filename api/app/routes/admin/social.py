@@ -7,11 +7,10 @@ import uuid
 
 from fastapi import APIRouter, Depends, File, HTTPException, UploadFile, status
 from pydantic import BaseModel, Field
-import aiosqlite
 import aiofiles
 
 from app.auth import require_admin
-from app.database import get_db
+from app.database import get_db, PostgresConnection
 from app.services.social_publish_service import publish_post, PublishError
 from app.services.token_refresh_service import refresh_expiring_tokens
 from app.services.engagement_service import sync_all_engagement_metrics
@@ -70,7 +69,7 @@ class OutboxPostUpdate(BaseModel):
 
 @router.get("/persona")
 async def get_persona(
-    db: aiosqlite.Connection = Depends(get_db),
+    db: PostgresConnection = Depends(get_db),
     user: dict = Depends(require_admin),
 ):
     """Return the active brand persona. Creates a default if none exists."""
@@ -95,7 +94,7 @@ async def get_persona(
 @router.patch("/persona")
 async def update_persona(
     body: PersonaUpdate,
-    db: aiosqlite.Connection = Depends(get_db),
+    db: PostgresConnection = Depends(get_db),
     user: dict = Depends(require_admin),
 ):
     """Update the active brand persona. Creates one if none exists."""
@@ -135,7 +134,7 @@ async def update_persona(
 
 @router.get("/platforms")
 async def list_platforms(
-    db: aiosqlite.Connection = Depends(get_db),
+    db: PostgresConnection = Depends(get_db),
     user: dict = Depends(require_admin),
 ):
     """List all social platform configurations."""
@@ -152,7 +151,7 @@ async def list_platforms(
 @router.get("/platforms/{platform}")
 async def get_platform(
     platform: str,
-    db: aiosqlite.Connection = Depends(get_db),
+    db: PostgresConnection = Depends(get_db),
     user: dict = Depends(require_admin),
 ):
     """Get configuration for a single platform."""
@@ -173,7 +172,7 @@ async def get_platform(
 async def update_platform(
     platform: str,
     body: PlatformUpdate,
-    db: aiosqlite.Connection = Depends(get_db),
+    db: PostgresConnection = Depends(get_db),
     user: dict = Depends(require_admin),
 ):
     """Update configuration for a platform. Tokens stored server-side only."""
@@ -208,7 +207,7 @@ class HashtagSuggestRequest(BaseModel):
 @router.post("/hashtags/suggest")
 async def suggest_hashtags(
     body: HashtagSuggestRequest,
-    db: aiosqlite.Connection = Depends(get_db),
+    db: PostgresConnection = Depends(get_db),
     user: dict = Depends(require_admin),
 ):
     """Suggest hashtags for a post based on content and platform rules.
@@ -272,7 +271,7 @@ async def list_outbox(
     post_status: str | None = None,
     page: int = 1,
     limit: int = 50,
-    db: aiosqlite.Connection = Depends(get_db),
+    db: PostgresConnection = Depends(get_db),
     user: dict = Depends(require_admin),
 ):
     """List social post drafts in the outbox."""
@@ -314,7 +313,7 @@ class OutboxPostCreate(BaseModel):
 @router.post("/outbox")
 async def create_outbox_post(
     body: OutboxPostCreate,
-    db: aiosqlite.Connection = Depends(get_db),
+    db: PostgresConnection = Depends(get_db),
     user: dict = Depends(require_admin),
 ):
     """Manually create a social post draft. Supports single-platform posting."""
@@ -337,7 +336,7 @@ async def create_outbox_post(
 @router.get("/outbox/{post_id}")
 async def get_outbox_post(
     post_id: int,
-    db: aiosqlite.Connection = Depends(get_db),
+    db: PostgresConnection = Depends(get_db),
     user: dict = Depends(require_admin),
 ):
     cursor = await db.execute(
@@ -356,7 +355,7 @@ async def get_outbox_post(
 async def update_outbox_post(
     post_id: int,
     body: OutboxPostUpdate,
-    db: aiosqlite.Connection = Depends(get_db),
+    db: PostgresConnection = Depends(get_db),
     user: dict = Depends(require_admin),
 ):
     """Edit content, approve, or reject a social draft."""
@@ -390,7 +389,7 @@ async def update_outbox_post(
 @router.delete("/outbox/{post_id}")
 async def delete_outbox_post(
     post_id: int,
-    db: aiosqlite.Connection = Depends(get_db),
+    db: PostgresConnection = Depends(get_db),
     user: dict = Depends(require_admin),
 ):
     cursor = await db.execute("SELECT id FROM social_posts WHERE id = ?", (post_id,))
@@ -404,7 +403,7 @@ async def delete_outbox_post(
 @router.post("/outbox/{post_id}/publish")
 async def publish_outbox_post(
     post_id: int,
-    db: aiosqlite.Connection = Depends(get_db),
+    db: PostgresConnection = Depends(get_db),
     user: dict = Depends(require_admin),
 ):
     """Publish a social post to its platform via the platform's API.
@@ -424,6 +423,10 @@ async def publish_outbox_post(
             detail=f"Cannot publish a post with status '{post['status']}'"
         )
 
+    # Validate image requirement before platform check (platform-specific pre-flight)
+    if post["platform"] == "instagram" and not post.get("image_url"):
+        raise HTTPException(status_code=502, detail="Instagram requires an image to publish")
+
     cursor = await db.execute(
         "SELECT enabled FROM social_platform_configs WHERE platform = ?",
         (post["platform"],),
@@ -439,12 +442,13 @@ async def publish_outbox_post(
             image_url=post["image_url"],
             video_url=post.get("video_url"),
         )
-    except PublishError as e:
-        await db.execute(
-            "UPDATE social_posts SET status = 'failed', error_message = ?, updated_at = CURRENT_TIMESTAMP WHERE id = ?",
-            (str(e), post_id),
-        )
-        await db.commit()
+    except (PublishError, Exception) as e:
+        from app.database import db_connection as _dbc
+        async with _dbc() as _db:
+            await _db.execute(
+                "UPDATE social_posts SET status = 'failed', error_message = ?, updated_at = CURRENT_TIMESTAMP WHERE id = ?",
+                (str(e), post_id),
+            )
         raise HTTPException(status_code=502, detail=str(e))
 
     await db.execute(
@@ -496,7 +500,7 @@ class ProductSocialRequest(BaseModel):
 @router.post("/product-to-social")
 async def generate_social_from_product(
     body: ProductSocialRequest,
-    db: aiosqlite.Connection = Depends(get_db),
+    db: PostgresConnection = Depends(get_db),
     user: dict = Depends(require_admin),
 ):
     """Generate social post drafts directly from a product — no blog post needed.
@@ -578,7 +582,7 @@ MAX_IMAGE_MB = 20
 async def upload_media(
     file: UploadFile = File(...),
     user: dict = Depends(require_admin),
-    db: aiosqlite.Connection = Depends(get_db),
+    db: PostgresConnection = Depends(get_db),
 ):
     """Upload an image or video to the media library.
 
@@ -644,7 +648,7 @@ async def list_media(
     page: int = 1,
     limit: int = 50,
     media_type: str | None = None,
-    db: aiosqlite.Connection = Depends(get_db),
+    db: PostgresConnection = Depends(get_db),
     user: dict = Depends(require_admin),
 ):
     """List media library items. Filter by type: 'image' or 'video'."""
@@ -683,7 +687,7 @@ class AIModelConfigUpdate(BaseModel):
 
 @router.get("/ai-models")
 async def list_ai_model_configs(
-    db: aiosqlite.Connection = Depends(get_db),
+    db: PostgresConnection = Depends(get_db),
     user: dict = Depends(require_admin),
 ):
     """List all AI task type model configurations with their current resolved model."""
@@ -716,7 +720,7 @@ async def list_ai_model_configs(
 async def update_ai_model_config(
     task_type: str,
     body: AIModelConfigUpdate,
-    db: aiosqlite.Connection = Depends(get_db),
+    db: PostgresConnection = Depends(get_db),
     user: dict = Depends(require_admin),
 ):
     """Override the model config for a specific task type.
@@ -793,7 +797,7 @@ async def list_engagement_events(
     replied: bool | None = None,
     page: int = 1,
     limit: int = 50,
-    db: aiosqlite.Connection = Depends(get_db),
+    db: PostgresConnection = Depends(get_db),
     user: dict = Depends(require_admin),
 ):
     """List engagement events (comments, reactions, mentions) from webhooks.
@@ -840,7 +844,7 @@ class GenerateReplyRequest(BaseModel):
 @router.post("/engagement/generate-reply")
 async def generate_reply(
     body: GenerateReplyRequest,
-    db: aiosqlite.Connection = Depends(get_db),
+    db: PostgresConnection = Depends(get_db),
     user: dict = Depends(require_admin),
 ):
     """Generate an AI reply draft for an engagement event.
@@ -885,7 +889,7 @@ class SendReplyRequest(BaseModel):
 @router.post("/engagement/send-reply")
 async def send_reply(
     body: SendReplyRequest,
-    db: aiosqlite.Connection = Depends(get_db),
+    db: PostgresConnection = Depends(get_db),
     user: dict = Depends(require_admin),
 ):
     """Send a reply to a social media comment.
@@ -922,26 +926,26 @@ async def send_reply(
 
 class ContentTemplateCreate(BaseModel):
     name: str
-    template_type: str  # 'blog' | 'social_facebook' | 'social_instagram' | etc.
-    prompt_template: str
+    content_type: str = "feed"  # 'blog' | 'social_facebook' | 'social_instagram' | 'feed'
+    template_text: str
     variables: str = ""  # comma-separated list
 
 
 @router.get("/templates")
 async def list_templates(
-    template_type: str | None = None,
-    db: aiosqlite.Connection = Depends(get_db),
+    content_type: str | None = None,
+    db: PostgresConnection = Depends(get_db),
     user: dict = Depends(require_admin),
 ):
     """List content templates. Filter by type: 'blog', 'social_facebook', etc."""
-    if template_type:
+    if content_type:
         cursor = await db.execute(
-            "SELECT * FROM content_templates WHERE template_type = ? AND is_active = TRUE ORDER BY name",
-            (template_type,),
+            "SELECT * FROM content_templates WHERE content_type = ? AND is_active = TRUE ORDER BY name",
+            (content_type,),
         )
     else:
         cursor = await db.execute(
-            "SELECT * FROM content_templates WHERE is_active = TRUE ORDER BY template_type, name"
+            "SELECT * FROM content_templates WHERE is_active = TRUE ORDER BY content_type, name"
         )
     rows = await cursor.fetchall()
     return {"templates": [dict(r) for r in rows]}
@@ -950,15 +954,15 @@ async def list_templates(
 @router.post("/templates")
 async def create_template(
     body: ContentTemplateCreate,
-    db: aiosqlite.Connection = Depends(get_db),
+    db: PostgresConnection = Depends(get_db),
     user: dict = Depends(require_admin),
 ):
     """Create a new content template."""
     cursor = await db.execute(
         """INSERT INTO content_templates
-           (name, template_type, prompt_template, variables, created_by)
+           (name, content_type, template_text, variables, created_by)
            VALUES (?, ?, ?, ?, ?)""",
-        (body.name, body.template_type, body.prompt_template, body.variables, user.get("email", "admin")),
+        (body.name, body.content_type, body.template_text, body.variables, user.get("email", "admin")),
     )
     await db.commit()
     template_id = cursor.lastrowid
@@ -969,7 +973,7 @@ async def create_template(
 async def generate_from_template(
     template_id: int,
     variables: dict,
-    db: aiosqlite.Connection = Depends(get_db),
+    db: PostgresConnection = Depends(get_db),
     user: dict = Depends(require_admin),
 ):
     """Generate content using a template + provided variables.
@@ -991,7 +995,7 @@ async def generate_from_template(
     template = dict(row)
 
     # Substitute variables into prompt template
-    prompt = template["prompt_template"]
+    prompt = template["template_text"]
     for key, value in variables.items():
         prompt = prompt.replace(f"{{{key}}}", str(value))
 
@@ -1003,11 +1007,11 @@ async def generate_from_template(
     await db.commit()
 
     # Generate based on type
-    template_type = template["template_type"]
-    if template_type == "blog":
+    tpl_type = template["content_type"]
+    if tpl_type == "blog":
         content = await generate_blog_post(prompt)
-    elif template_type.startswith("social_"):
-        platform = template_type.replace("social_", "")
+    elif tpl_type.startswith("social_"):
+        platform = tpl_type.replace("social_", "")
         task_type = AITaskType.PRODUCT_SOCIAL if "product" in prompt.lower() else AITaskType.SOCIAL_CAPTION
         content = await generate_social_post(prompt, platform, task_type=task_type)
     else:
@@ -1033,7 +1037,7 @@ class AgentKeyCreate(BaseModel):
 @router.post("/agents/keys")
 async def create_agent_key_endpoint(
     body: AgentKeyCreate,
-    db: aiosqlite.Connection = Depends(get_db),
+    db: PostgresConnection = Depends(get_db),
     user: dict = Depends(require_admin),
 ):
     """Create a new agent API key. Returns the plain key — store it securely."""
@@ -1066,7 +1070,7 @@ async def create_agent_key_endpoint(
 
 @router.get("/agents/keys")
 async def list_agent_keys(
-    db: aiosqlite.Connection = Depends(get_db),
+    db: PostgresConnection = Depends(get_db),
     user: dict = Depends(require_admin),
 ):
     """List all agent API keys (hashes hidden, scopes visible)."""
@@ -1083,7 +1087,7 @@ async def list_agent_keys(
 @router.post("/agents/keys/{key_id}/revoke")
 async def revoke_agent_key_endpoint(
     key_id: int,
-    db: aiosqlite.Connection = Depends(get_db),
+    db: PostgresConnection = Depends(get_db),
     user: dict = Depends(require_admin),
 ):
     """Revoke an agent API key."""
@@ -1098,7 +1102,7 @@ async def revoke_agent_key_endpoint(
 @router.get("/agents/submissions")
 async def list_agent_submissions(
     status: str | None = "pending",
-    db: aiosqlite.Connection = Depends(get_db),
+    db: PostgresConnection = Depends(get_db),
     user: dict = Depends(require_admin),
 ):
     """List agent content submissions for review."""
@@ -1131,7 +1135,7 @@ class SubmissionReview(BaseModel):
 async def review_agent_submission(
     submission_id: int,
     body: SubmissionReview,
-    db: aiosqlite.Connection = Depends(get_db),
+    db: PostgresConnection = Depends(get_db),
     user: dict = Depends(require_admin),
 ):
     """Approve or reject an agent content submission.
@@ -1182,7 +1186,7 @@ async def review_agent_submission(
 async def agent_audit_log(
     agent_id: int | None = None,
     limit: int = 100,
-    db: aiosqlite.Connection = Depends(get_db),
+    db: PostgresConnection = Depends(get_db),
     user: dict = Depends(require_admin),
 ):
     """View audit log of all agent actions."""
@@ -1238,7 +1242,7 @@ async def list_crisis_alerts(
     resolved: bool = False,
     severity: str | None = None,
     limit: int = 50,
-    db: aiosqlite.Connection = Depends(get_db),
+    db: PostgresConnection = Depends(get_db),
     user: dict = Depends(require_admin),
 ):
     """List crisis alerts (viral negative content, spam attacks, etc.)."""
@@ -1266,7 +1270,7 @@ async def list_crisis_alerts(
 async def resolve_crisis_alert(
     alert_id: int,
     notes: str = "",
-    db: aiosqlite.Connection = Depends(get_db),
+    db: PostgresConnection = Depends(get_db),
     user: dict = Depends(require_admin),
 ):
     """Mark a crisis alert as resolved."""
@@ -1293,7 +1297,7 @@ async def resolve_crisis_alert(
 @router.post("/engagement/{event_id}/analyze-sentiment")
 async def analyze_sentiment_endpoint(
     event_id: int,
-    db: aiosqlite.Connection = Depends(get_db),
+    db: PostgresConnection = Depends(get_db),
     user: dict = Depends(require_admin),
 ):
     """Run AI sentiment analysis on an engagement event."""
@@ -1326,7 +1330,7 @@ async def sentiment_trends(
 async def get_revenue_attribution(
     post_id: int | None = None,
     since: str | None = None,
-    db: aiosqlite.Connection = Depends(get_db),
+    db: PostgresConnection = Depends(get_db),
     user: dict = Depends(require_admin),
 ):
     """Get revenue attribution for social posts (UTM-based tracking)."""
@@ -1432,7 +1436,7 @@ class ABTestCreate(BaseModel):
 @router.post("/ab-tests")
 async def create_ab_test_endpoint(
     body: ABTestCreate,
-    db: aiosqlite.Connection = Depends(get_db),
+    db: PostgresConnection = Depends(get_db),
     user: dict = Depends(require_admin),
 ):
     """Create an A/B test with variants. Variants get auto-scheduled at optimal times."""
@@ -1499,7 +1503,7 @@ async def complete_ab_test_endpoint(
 async def list_ab_tests(
     status: str | None = None,
     limit: int = 50,
-    db: aiosqlite.Connection = Depends(get_db),
+    db: PostgresConnection = Depends(get_db),
     user: dict = Depends(require_admin),
 ):
     """List A/B tests."""
@@ -1635,7 +1639,7 @@ async def get_competitive_landscape(
 async def send_reply_to_platform_endpoint(
     event_id: int,
     reply_content: str | None = None,  # if null, uses stored draft
-    db: aiosqlite.Connection = Depends(get_db),
+    db: PostgresConnection = Depends(get_db),
     user: dict = Depends(require_admin),
 ):
     """Actually publish a reply to Facebook/Instagram via API.
@@ -1866,7 +1870,7 @@ async def create_collaboration_endpoint(
 async def list_collaborations(
     status: str | None = None,
     influencer_id: int | None = None,
-    db: aiosqlite.Connection = Depends(get_db),
+    db: PostgresConnection = Depends(get_db),
     user: dict = Depends(require_admin),
 ):
     """List influencer collaborations."""
@@ -1935,7 +1939,7 @@ async def review_influencer_submission_endpoint(
 @router.get("/influencers/submissions")
 async def list_influencer_submissions(
     status: str | None = "pending",
-    db: aiosqlite.Connection = Depends(get_db),
+    db: PostgresConnection = Depends(get_db),
     user: dict = Depends(require_admin),
 ):
     """List influencer submissions for review."""
@@ -2060,7 +2064,7 @@ async def generate_weekly_report_endpoint(
 @router.get("/reports/subscriptions")
 async def list_report_subscriptions(
     report_type: str | None = None,
-    db: aiosqlite.Connection = Depends(get_db),
+    db: PostgresConnection = Depends(get_db),
     user: dict = Depends(require_admin),
 ):
     """List report subscriptions."""
@@ -2210,3 +2214,108 @@ async def get_ai_brief(
     from app.services.dashboard_service import get_ai_agent_brief
     brief = await get_ai_agent_brief()
     return brief
+
+
+# ── Sprint 3: Retry Management ───────────────────────────────────────────────
+
+@router.post("/outbox/{post_id}/retry")
+async def retry_failed_post(
+    post_id: int,
+    user: dict = Depends(require_admin),
+):
+    """Schedule a retry for a failed social post.
+    
+    Implements exponential backoff: 5 min → 15 min → 1 hour (max 3 retries).
+    """
+    from app.services.publish_retry_service import retry_failed_post
+    result = await retry_failed_post(post_id)
+    if "error" in result:
+        raise HTTPException(status_code=400, detail=result["error"])
+    return result
+
+
+@router.get("/outbox/{post_id}/retries")
+async def get_post_retry_history(
+    post_id: int,
+    user: dict = Depends(require_admin),
+):
+    """Get retry history for a social post."""
+    from app.services.publish_retry_service import get_retry_history
+    history = await get_retry_history(post_id)
+    return {"post_id": post_id, "retries": history}
+
+
+# ── Sprint 3: Platform-Native Preview ───────────────────────────────────────
+
+class PreviewRequest(BaseModel):
+    content: str
+    platform: str
+    hashtags: list[str] | None = None
+
+
+@router.post("/preview")
+async def preview_content_for_platform(
+    body: PreviewRequest,
+    user: dict = Depends(require_admin),
+):
+    """Preview how content will look on a specific platform.
+    
+    Shows:
+    - Character count vs platform limit
+    - Truncation warnings (X/Twitter 280)
+    - Hashtag count warnings (Instagram 30)
+    - Formatted preview
+    """
+    from app.services.platform_variation_service import PLATFORM_LIMITS
+    from app.services.platform_variation_service import adapt_for_instagram, adapt_for_twitter
+
+    content = body.content
+    platform = body.platform
+    hashtags = body.hashtags or []
+
+    limits = PLATFORM_LIMITS.get(platform, {})
+    max_chars = limits.get("max_chars", 2000)
+    max_hashtags = limits.get("max_hashtags", 30)
+
+    char_count = len(content)
+    hashtag_count = len(hashtags)
+
+    # Generate adapted preview
+    preview_content = content
+    warnings = []
+
+    if platform == "twitter":
+        if char_count > 280:
+            warnings.append(f"Content exceeds 280 char limit by {char_count - 280} chars")
+        if hashtag_count > 3:
+            warnings.append(f"Too many hashtags for X: {hashtag_count} (recommend 1-3)")
+    elif platform == "instagram":
+        if char_count > 2200:
+            warnings.append(f"Caption exceeds 2200 char limit")
+        if hashtag_count > 30:
+            warnings.append(f"Too many hashtags: {hashtag_count} (max 30)")
+        if hashtag_count > 10:
+            warnings.append(f"High hashtag count: {hashtag_count} (consider 5-10 for engagement)")
+    elif platform == "linkedin":
+        if char_count > 3000:
+            warnings.append(f"Content exceeds 3000 char limit")
+        if hashtag_count > 5:
+            warnings.append(f"Too many hashtags for LinkedIn: {hashtag_count} (recommend 3-5)")
+
+    # Format preview
+    formatted = content
+    if hashtags:
+        formatted += "\n\n" + " ".join(hashtags)
+
+    return {
+        "platform": platform,
+        "original_content": content,
+        "preview": formatted[:200] + "..." if len(formatted) > 200 else formatted,
+        "character_count": char_count,
+        "character_limit": max_chars,
+        "within_limit": char_count <= max_chars,
+        "hashtag_count": hashtag_count,
+        "hashtag_limit": max_hashtags,
+        "warnings": warnings,
+        "formatted_preview": formatted[:500]  # First 500 chars
+    }

@@ -230,7 +230,7 @@ async def lookup_order(
 ):
     """Public order lookup — requires matching email."""
     cursor = await db.execute(
-        "SELECT * FROM orders WHERE order_number = ? AND customer_email = ? COLLATE NOCASE",
+        "SELECT * FROM orders WHERE order_number = ? AND LOWER(customer_email) = LOWER(?)",
         (order_number, email),
     )
     order = await cursor.fetchone()

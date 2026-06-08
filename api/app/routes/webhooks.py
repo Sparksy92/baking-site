@@ -155,7 +155,7 @@ async def meta_webhook_verify(
 @router.post("/meta")
 async def meta_webhook_event(
     request: Request,
-    db: aiosqlite.Connection = Depends(get_db),
+    db: PostgresConnection = Depends(get_db),
 ):
     """Receive and process Meta webhook events.
 
@@ -210,7 +210,7 @@ async def meta_webhook_event(
     return {"received": True}
 
 
-async def _handle_facebook_feed_event(db: aiosqlite.Connection, page_id: str, value: dict) -> None:
+async def _handle_facebook_feed_event(db: PostgresConnection, page_id: str, value: dict) -> None:
     """Store Facebook engagement events against the matching social post."""
     item = value.get("item", "")
     verb = value.get("verb", "")
@@ -234,12 +234,12 @@ async def _handle_facebook_feed_event(db: aiosqlite.Connection, page_id: str, va
         logger.warning(f"Could not store Facebook engagement event (table may not exist yet): {e}")
 
 
-async def _handle_instagram_event(db: aiosqlite.Connection, account_id: str, event: dict) -> None:
+async def _handle_instagram_event(db: PostgresConnection, account_id: str, event: dict) -> None:
     """Handle Instagram messaging/reaction events."""
     logger.info(f"Instagram messaging event: account={account_id} keys={list(event.keys())}")
 
 
-async def _handle_instagram_change(db: aiosqlite.Connection, account_id: str, change: dict) -> None:
+async def _handle_instagram_change(db: PostgresConnection, account_id: str, change: dict) -> None:
     """Handle Instagram comment/mention/story_insights changes."""
     field = change.get("field", "")
     value = change.get("value", {})

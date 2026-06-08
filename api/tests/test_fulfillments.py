@@ -19,8 +19,8 @@ async def _create_order_with_items(admin_client: AsyncClient) -> tuple[int, list
 
     # Create order directly in DB via checkout-like flow
     # For test simplicity, use the admin order detail to verify (we'll insert raw)
-    from app.database import get_db
-    async for db in get_db():
+    from app.database import db_connection
+    async with db_connection() as db:
         cursor = await db.execute("""
             INSERT INTO orders (order_number, customer_name, customer_email, status, payment_status,
                                subtotal_cents, total_cents, shipping_address_line1, shipping_address_city,
@@ -39,8 +39,6 @@ async def _create_order_with_items(admin_client: AsyncClient) -> tuple[int, list
             (order_id, vid2),
         )
         item2 = cursor.lastrowid
-        await db.commit()
-        break
 
     return order_id, [item1, item2]
 

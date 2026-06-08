@@ -46,14 +46,12 @@ async def _add_variant(
 
 async def _seed_category(admin_client: AsyncClient, name: str, slug: str) -> int:
     """Create a category via direct DB insert (no admin endpoint yet)."""
-    import os
-    from app.database import get_db
-    async for db in get_db():
+    from app.database import db_connection
+    async with db_connection() as db:
         cursor = await db.execute(
             "INSERT INTO categories (name, slug, is_active) VALUES (?, ?, 1)",
             (name, slug),
         )
-        await db.commit()
         return cursor.lastrowid
 
 
