@@ -129,6 +129,72 @@
 
 ---
 
+## Social Media Content Platform — Sprint Plan
+
+> Branch: `fix/blog-ai-social-improvements` → future: `feature/social-platform`
+> Goal: Blog-to-social pipeline. Write once, publish everywhere. Brand voice stays consistent.
+> Architecture: Persona → Per-platform prompt → Blog publish triggers draft generation → Outbox → Approve → Publish
+
+### Sprint 1 — Foundation: Persona + Platform Config ✅ COMPLETE
+- [x] **Migration 031** — `brand_persona`, `social_platform_configs`, `social_posts` tables
+- [x] **Persona API** — `GET/PATCH /api/admin/social/persona` (single active persona)
+- [x] **Persona admin UI** — voice, audience, values, words to use/avoid (`/admin/social/persona`)
+- [x] **Platform config API** — `GET/PATCH /api/admin/social/platforms/{platform}` — enable/disable, prompt, hashtags, auto-publish toggle
+- [x] **Platform admin UI** — Card per platform: status badge, enable toggle, setup notes, prompt editor, hashtag bank, platform-specific warnings (`/admin/social/platforms`)
+- [x] **Inject persona into all AI calls** — `ai_service.py` fetches active persona and prepends to every prompt
+- [x] **Per-platform prompt templates** — 6 built-in templates (blog/facebook/instagram/x/linkedin/tiktok) + custom DB override per platform
+- [x] **Social & AI nav section** — admin sidebar: Brand Persona, Platforms, Outbox
+- [x] **Config** — LinkedIn, TikTok, X env vars added to `config.py`
+- [x] **Tests** — `test_persona.py` (8 xfail skeletons), `test_social_platforms.py` (8 xfail skeletons)
+
+### Sprint 2 — Blog → Social Pipeline ✅ COMPLETE
+- [x] **SEO trend research** — `seo_service.py` queries SerpAPI (100 free/month) + DuckDuckGo fallback before every blog generation; trend context injected into AI prompt
+- [x] **Blog publish hook** — `create_page` + `update_page` fire `generate_social_drafts_for_page()` as background task on publish
+- [x] **AI generates platform-native drafts** — persona + platform prompt + blog content + hashtag bank → one draft per enabled platform in `social_posts`
+- [x] **Inbound sync → draft** — `meta_service.py` synced posts land as `status='draft'` for admin review
+- [x] **Outbox API** — `GET/PATCH/DELETE /api/admin/social/outbox`, `GET/PATCH/DELETE /api/admin/social/outbox/{id}`, `POST /api/admin/social/outbox/{id}/publish`
+- [x] **Outbox admin UI** — filter by platform/status, approve, edit inline, reject, publish, delete per post (`/admin/social/outbox`)
+- [x] **Auto-publish toggle** — platform `auto_publish=true` marks drafts as `approved` immediately on create
+- [x] **Config** — `SERP_API_KEY` added to `config.py`
+
+### Sprint 3 — Outbound Publishing: Facebook + Instagram (CURRENT)
+- [ ] **Facebook outbound** — `outbox/{id}/publish` → Graph API `/{page_id}/feed`, store `platform_post_id`
+- [ ] **Instagram outbound** — 2-step Graph API: create media container → publish container
+- [ ] **Image attach** — use blog `featured_image_url` for outbound posts; skip if missing (Instagram requires image)
+- [ ] **Publish result tracking** — store `platform_post_id` in `social_posts`, update `status='published'`, log `error_message`
+- [ ] **Retry on failure** — mark as `failed`, surface in outbox UI with error, allow manual retry button
+- [ ] **Tests** — `test_social_publish.py` (10 tests, all Graph API calls mocked)
+
+### Sprint 4 — Platform Expansion + Video
+- [ ] **LinkedIn outbound** — OAuth PKCE flow, post via `ugcPosts` API, store `platform_post_id`
+- [ ] **TikTok outbound** — pending app review; admin shows live review status; Content Posting API on approval
+- [ ] **X / Twitter** — gated behind `X_API_KEY`; admin shows $100/mo cost warning before enable
+- [ ] **Video upload from phone** — admin video upload field on blog/page; attached to `social_posts.video_url`; outbound to Facebook, Instagram Reels, TikTok via upload APIs
+- [ ] **Scheduling** — `scheduled_at` field on outbox, APScheduler background worker publishes at correct time
+- [ ] **Platform-native preview** — character counter (X 280), hashtag count, truncation warnings per platform
+- [ ] **Tests** — `test_scheduling.py`, `test_linkedin.py`, `test_tiktok.py`, `test_video_upload.py`
+
+### Sprint 5 — Intelligence + Engagement Layer
+- [ ] **Engagement pull** — likes, reach, comments from Meta/LinkedIn webhooks stored against `social_posts`
+- [ ] **Reply from outbox** — brand-persona AI drafts reply to comments; admin approves; posts reply via platform API (Gary Vee play)
+- [ ] **AI image generation** — DALL-E 3 prompt generated alongside blog; admin can regenerate + attach as featured image
+- [ ] **AI video generation** — Synthesia/HeyGen API: blog → script → MP4; attach to `social_posts.video_url` for TikTok/Reels/YouTube
+- [ ] **Content calendar view** — admin UI calendar showing scheduled + published across all platforms
+- [ ] **YouTube** — video-only; `youtube.videos.insert` API; requires `video_url` to be set
+- [ ] **llms.txt** — add AI-agent-readable site manifest to storefront `/public/llms.txt` (emerging SEO standard for AI crawlers)
+- [ ] **Agency portal design** — architecture doc for multi-tenant layer sitting above store instances; AI agent calling store APIs per client
+- [ ] **Rate limiting** — auth endpoint rate limit, CORS tightening for prod, security hardening pass
+
+### Platform Setup Checklist (per platform)
+- [ ] **Facebook** — `META_PAGE_ACCESS_TOKEN` + `META_FACEBOOK_PAGE_ID` in env → enable in admin
+- [ ] **Instagram** — `META_PAGE_ACCESS_TOKEN` + `META_INSTAGRAM_ACCOUNT_ID` in env → enable in admin
+- [ ] **X / Twitter** — `X_API_KEY` + `X_API_SECRET` in env (requires $100/mo Basic plan at developer.twitter.com)
+- [ ] **LinkedIn** — Register free app at developer.linkedin.com (needs Company Page, 1–2 week review) → `LINKEDIN_CLIENT_ID` + `LINKEDIN_CLIENT_SECRET`
+- [ ] **TikTok** — Register at developers.tiktok.com, request Content Posting API (1–4 week review, submit now) → `TIKTOK_CLIENT_KEY` + `TIKTOK_CLIENT_SECRET`
+- [ ] **YouTube** — Phase 3 only. YouTube Data API v3 (free) but video-only.
+
+---
+
 ## Deploy Checklist (per brand fork)
 
 When forking the baseline for a new brand, configure these per environment.

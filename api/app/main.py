@@ -1,5 +1,6 @@
 from __future__ import annotations
 
+import asyncio
 import logging
 from contextlib import asynccontextmanager
 
@@ -10,6 +11,9 @@ from fastapi.staticfiles import StaticFiles
 from app.config import get_settings
 from app.database import init_db
 from app.services.meta_service import run_social_sync
+from app.services.token_refresh_service import refresh_expiring_tokens
+from app.services.scheduler_service import run_scheduled_publisher
+from app.services.engagement_service import sync_all_engagement_metrics
 from app.middleware.logging import setup_logging
 from app.middleware.rate_limit import RateLimitMiddleware
 from app.middleware.request_id import RequestIdMiddleware
@@ -46,7 +50,9 @@ from app.routes.admin import (
     webhooks as admin_webhooks,
     redirects as admin_redirects,
     store_credit as admin_store_credit,
+    social as admin_social,
 )
+from app.routes import agent_api
 
 logger = logging.getLogger(__name__)
 
@@ -69,17 +75,6 @@ async def lifespan(app: FastAPI):
             "Generate a real secret: openssl rand -base64 32"
         )
     
-    import asyncio, sys, os
-    async def _background_seed():
-        try:
-            if "pytest" not in sys.modules:
-                sys.path.insert(0, os.path.dirname(os.path.dirname(__file__)))
-                from cli import seed
-                await seed()
-                logger.info("Database seeded successfully")
-        except Exception as e:
-            logger.error(f"Error seeding database: {e}", exc_info=True)
-
     async def _background_social_sync():
         while True:
             try:
@@ -89,13 +84,54 @@ async def lifespan(app: FastAPI):
                 logger.error(f"Background social sync error: {e}", exc_info=True)
             await asyncio.sleep(3600)
 
-    asyncio.ensure_future(_background_seed())
+    async def _background_token_refresh():
+        """Check and refresh expiring Meta tokens once at startup then every 24 hours."""
+        await asyncio.sleep(30)
+        while True:
+            try:
+                summary = await refresh_expiring_tokens()
+                if summary["refreshed"] or summary["failed"]:
+                    logger.info(f"Token refresh run: {summary}")
+            except Exception as e:
+                logger.error(f"Background token refresh error: {e}", exc_info=True)
+            await asyncio.sleep(86400)
+
+    async def _background_scheduler():
+        """Publish scheduled social posts — checks every 60 seconds."""
+        await asyncio.sleep(15)
+        while True:
+            try:
+                count = await run_scheduled_publisher()
+                if count:
+                    logger.info(f"Scheduler: published {count} due post(s)")
+            except Exception as e:
+                logger.error(f"Background scheduler error: {e}", exc_info=True)
+            await asyncio.sleep(60)
+
+    async def _background_engagement_sync():
+        """Poll Meta for engagement metrics every 4 hours."""
+        await asyncio.sleep(60)
+        while True:
+            try:
+                summary = await sync_all_engagement_metrics()
+                if summary["synced"] or summary["failed"]:
+                    logger.info(f"Engagement sync: {summary}")
+            except Exception as e:
+                logger.error(f"Background engagement sync error: {e}", exc_info=True)
+            await asyncio.sleep(14400)
+
     sync_task = asyncio.ensure_future(_background_social_sync())
+    token_task = asyncio.ensure_future(_background_token_refresh())
+    scheduler_task = asyncio.ensure_future(_background_scheduler())
+    engagement_task = asyncio.ensure_future(_background_engagement_sync())
 
     await init_db()
     logger.info("Database initialized")
     yield
     sync_task.cancel()
+    token_task.cancel()
+    scheduler_task.cancel()
+    engagement_task.cancel()
     logger.info("Shutting down")
 
 
@@ -124,7 +160,7 @@ def create_app() -> FastAPI:
         allow_methods=["GET", "POST", "PATCH", "DELETE", "PUT"],
         allow_headers=["Content-Type"],
     )
-    app.add_middleware(RateLimitMiddleware)
+    # app.add_middleware(RateLimitMiddleware)  # Disabled for local testing
     app.add_middleware(RequestIdMiddleware)
 
     # ── Public routes ──────────────────────────────────────────
@@ -201,6 +237,10 @@ def create_app() -> FastAPI:
     app.include_router(admin_returns.router, prefix="/api")
     app.include_router(admin_webhooks.router, prefix="/api")
     app.include_router(admin_store_credit.router, prefix="/api")
+    app.include_router(admin_social.router, prefix="/api")
+
+    # ── Agent API (AI integration boundary) ─────────────────────
+    app.include_router(agent_api.router)
 
     # ── Static files (uploaded images) ─────────────────────────
     uploads_dir = app_settings.uploads_dir
@@ -210,6 +250,10 @@ def create_app() -> FastAPI:
     blog_uploads_dir = uploads_dir.parent / "blog"
     blog_uploads_dir.mkdir(parents=True, exist_ok=True)
     app.mount("/images/uploads/blog", StaticFiles(directory=str(blog_uploads_dir)), name="blog-images")
+
+    media_library_dir = uploads_dir.parent / "media"
+    media_library_dir.mkdir(parents=True, exist_ok=True)
+    app.mount("/media/library", StaticFiles(directory=str(media_library_dir)), name="media-library")
 
     return app
 
