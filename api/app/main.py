@@ -14,6 +14,7 @@ from app.services.meta_service import run_social_sync
 from app.services.token_refresh_service import refresh_expiring_tokens
 from app.services.scheduler_service import run_scheduled_publisher
 from app.services.engagement_service import sync_all_engagement_metrics
+from app.services.publish_retry_service import run_pending_retries
 from app.middleware.logging import setup_logging
 from app.middleware.rate_limit import RateLimitMiddleware
 from app.middleware.request_id import RequestIdMiddleware
@@ -133,11 +134,24 @@ async def lifespan(app: FastAPI):
                 logger.error(f"Background RSS check error: {e}", exc_info=True)
             await asyncio.sleep(900)  # 15 minutes
 
+    async def _background_retry_checker():
+        """Check for pending publish retries every 5 minutes."""
+        await asyncio.sleep(180)
+        while True:
+            try:
+                result = await run_pending_retries()
+                if result.get("processed", 0) > 0:
+                    logger.info(f"Retry checker: {result['processed']} retries processed")
+            except Exception as e:
+                logger.error(f"Background retry checker error: {e}", exc_info=True)
+            await asyncio.sleep(300)  # 5 minutes
+
     sync_task = asyncio.ensure_future(_background_social_sync())
     token_task = asyncio.ensure_future(_background_token_refresh())
     scheduler_task = asyncio.ensure_future(_background_scheduler())
     engagement_task = asyncio.ensure_future(_background_engagement_sync())
     rss_task = asyncio.ensure_future(_background_rss_check())
+    retry_task = asyncio.ensure_future(_background_retry_checker())
 
     await init_db()
     logger.info("Database initialized")
@@ -147,6 +161,7 @@ async def lifespan(app: FastAPI):
     scheduler_task.cancel()
     engagement_task.cancel()
     rss_task.cancel()
+    retry_task.cancel()
     logger.info("Shutting down")
 
 

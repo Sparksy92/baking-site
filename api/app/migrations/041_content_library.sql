@@ -174,8 +174,27 @@ CREATE TABLE rss_items_posted (
 );
 
 -- =====================================================
+-- PUBLISH RETRY TRACKING (Sprint 3)
+-- =====================================================
+
+CREATE TABLE publish_retries (
+    id SERIAL PRIMARY KEY,
+    post_id INTEGER REFERENCES social_posts(id) ON DELETE CASCADE,
+    attempt_number INTEGER NOT NULL,
+    scheduled_at TIMESTAMP WITH TIME ZONE NOT NULL,
+    executed_at TIMESTAMP WITH TIME ZONE,
+    status TEXT DEFAULT 'pending',  -- 'pending', 'success', 'failed'
+    result_message TEXT,
+    error_message TEXT,
+    created_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP
+);
+
+-- =====================================================
 -- INDEXES
 -- =====================================================
+
+CREATE INDEX idx_publish_retries_post ON publish_retries(post_id);
+CREATE INDEX idx_publish_retries_pending ON publish_retries(status, scheduled_at);
 
 CREATE INDEX idx_content_library_platform ON content_library(platform);
 CREATE INDEX idx_content_library_category ON content_library(category);

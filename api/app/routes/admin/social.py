@@ -2210,3 +2210,101 @@ async def get_ai_brief(
     from app.services.dashboard_service import get_ai_agent_brief
     brief = await get_ai_agent_brief()
     return brief
+
+
+# ── Sprint 3: Retry Management ───────────────────────────────────────────────
+
+@router.post("/outbox/{post_id}/retry")
+async def retry_failed_post(
+    post_id: int,
+    user: dict = Depends(require_admin),
+):
+    """Schedule a retry for a failed social post.
+    
+    Implements exponential backoff: 5 min → 15 min → 1 hour (max 3 retries).
+    """
+    from app.services.publish_retry_service import retry_failed_post
+    result = await retry_failed_post(post_id)
+    if "error" in result:
+        raise HTTPException(status_code=400, detail=result["error"])
+    return result
+
+
+@router.get("/outbox/{post_id}/retries")
+async def get_post_retry_history(
+    post_id: int,
+    user: dict = Depends(require_admin),
+):
+    """Get retry history for a social post."""
+    from app.services.publish_retry_service import get_retry_history
+    history = await get_retry_history(post_id)
+    return {"post_id": post_id, "retries": history}
+
+
+# ── Sprint 3: Platform-Native Preview ───────────────────────────────────────
+
+@router.post("/preview")
+async def preview_content_for_platform(
+    content: str,
+    platform: str,
+    hashtags: list[str] | None = None,
+    user: dict = Depends(require_admin),
+):
+    """Preview how content will look on a specific platform.
+    
+    Shows:
+    - Character count vs platform limit
+    - Truncation warnings (X/Twitter 280)
+    - Hashtag count warnings (Instagram 30)
+    - Formatted preview
+    """
+    from app.services.platform_variation_service import PLATFORM_LIMITS
+    from app.services.platform_variation_service import adapt_for_instagram, adapt_for_twitter
+    
+    limits = PLATFORM_LIMITS.get(platform, {})
+    max_chars = limits.get("max_chars", 2000)
+    max_hashtags = limits.get("max_hashtags", 30)
+    
+    hashtags = hashtags or []
+    char_count = len(content)
+    hashtag_count = len(hashtags)
+    
+    # Generate adapted preview
+    preview_content = content
+    warnings = []
+    
+    if platform == "twitter":
+        if char_count > 280:
+            warnings.append(f"Content exceeds 280 char limit by {char_count - 280} chars")
+        if hashtag_count > 3:
+            warnings.append(f"Too many hashtags for X: {hashtag_count} (recommend 1-3)")
+    elif platform == "instagram":
+        if char_count > 2200:
+            warnings.append(f"Caption exceeds 2200 char limit")
+        if hashtag_count > 30:
+            warnings.append(f"Too many hashtags: {hashtag_count} (max 30)")
+        if hashtag_count > 10:
+            warnings.append(f"High hashtag count: {hashtag_count} (consider 5-10 for engagement)")
+    elif platform == "linkedin":
+        if char_count > 3000:
+            warnings.append(f"Content exceeds 3000 char limit")
+        if hashtag_count > 5:
+            warnings.append(f"Too many hashtags for LinkedIn: {hashtag_count} (recommend 3-5)")
+    
+    # Format preview
+    formatted = content
+    if hashtags:
+        formatted += "\n\n" + " ".join(hashtags)
+    
+    return {
+        "platform": platform,
+        "original_content": content,
+        "preview": formatted[:200] + "..." if len(formatted) > 200 else formatted,
+        "character_count": char_count,
+        "character_limit": max_chars,
+        "within_limit": char_count <= max_chars,
+        "hashtag_count": hashtag_count,
+        "hashtag_limit": max_hashtags,
+        "warnings": warnings,
+        "formatted_preview": formatted[:500]  # First 500 chars
+    }
