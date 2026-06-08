@@ -36,7 +36,7 @@ def _clear_rate_limits(app):
 async def client():
     """Provide an async test client with a clean database."""
     from app.config import get_settings
-    from app.database import init_db, close_db, db_connection
+    from app.database import init_db, db_connection
 
     get_settings.cache_clear()
 
@@ -65,8 +65,6 @@ async def client():
     transport = ASGITransport(app=app)
     async with AsyncClient(transport=transport, base_url="http://test") as ac:
         yield ac
-
-    await close_db()
 
 
 @pytest.fixture

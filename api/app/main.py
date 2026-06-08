@@ -2,6 +2,7 @@ from __future__ import annotations
 
 import asyncio
 import logging
+import sys
 from contextlib import asynccontextmanager
 
 from fastapi import FastAPI
@@ -146,22 +147,24 @@ async def lifespan(app: FastAPI):
                 logger.error(f"Background retry checker error: {e}", exc_info=True)
             await asyncio.sleep(300)  # 5 minutes
 
-    sync_task = asyncio.ensure_future(_background_social_sync())
-    token_task = asyncio.ensure_future(_background_token_refresh())
-    scheduler_task = asyncio.ensure_future(_background_scheduler())
-    engagement_task = asyncio.ensure_future(_background_engagement_sync())
-    rss_task = asyncio.ensure_future(_background_rss_check())
-    retry_task = asyncio.ensure_future(_background_retry_checker())
-
     await init_db()
     logger.info("Database initialized")
+
+    background_tasks = []
+    if "pytest" not in sys.modules:
+        background_tasks = [
+            asyncio.ensure_future(_background_social_sync()),
+            asyncio.ensure_future(_background_token_refresh()),
+            asyncio.ensure_future(_background_scheduler()),
+            asyncio.ensure_future(_background_engagement_sync()),
+            asyncio.ensure_future(_background_rss_check()),
+            asyncio.ensure_future(_background_retry_checker()),
+        ]
+
     yield
-    sync_task.cancel()
-    token_task.cancel()
-    scheduler_task.cancel()
-    engagement_task.cancel()
-    rss_task.cancel()
-    retry_task.cancel()
+
+    for task in background_tasks:
+        task.cancel()
     logger.info("Shutting down")
 
 
