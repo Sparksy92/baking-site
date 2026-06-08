@@ -922,26 +922,26 @@ async def send_reply(
 
 class ContentTemplateCreate(BaseModel):
     name: str
-    template_type: str  # 'blog' | 'social_facebook' | 'social_instagram' | etc.
-    prompt_template: str
+    content_type: str = "feed"  # 'blog' | 'social_facebook' | 'social_instagram' | 'feed'
+    template_text: str
     variables: str = ""  # comma-separated list
 
 
 @router.get("/templates")
 async def list_templates(
-    template_type: str | None = None,
+    content_type: str | None = None,
     db: aiosqlite.Connection = Depends(get_db),
     user: dict = Depends(require_admin),
 ):
     """List content templates. Filter by type: 'blog', 'social_facebook', etc."""
-    if template_type:
+    if content_type:
         cursor = await db.execute(
-            "SELECT * FROM content_templates WHERE template_type = ? AND is_active = TRUE ORDER BY name",
-            (template_type,),
+            "SELECT * FROM content_templates WHERE content_type = ? AND is_active = TRUE ORDER BY name",
+            (content_type,),
         )
     else:
         cursor = await db.execute(
-            "SELECT * FROM content_templates WHERE is_active = TRUE ORDER BY template_type, name"
+            "SELECT * FROM content_templates WHERE is_active = TRUE ORDER BY content_type, name"
         )
     rows = await cursor.fetchall()
     return {"templates": [dict(r) for r in rows]}
@@ -956,9 +956,9 @@ async def create_template(
     """Create a new content template."""
     cursor = await db.execute(
         """INSERT INTO content_templates
-           (name, template_type, prompt_template, variables, created_by)
+           (name, content_type, template_text, variables, created_by)
            VALUES (?, ?, ?, ?, ?)""",
-        (body.name, body.template_type, body.prompt_template, body.variables, user.get("email", "admin")),
+        (body.name, body.content_type, body.template_text, body.variables, user.get("email", "admin")),
     )
     await db.commit()
     template_id = cursor.lastrowid
@@ -991,7 +991,7 @@ async def generate_from_template(
     template = dict(row)
 
     # Substitute variables into prompt template
-    prompt = template["prompt_template"]
+    prompt = template["template_text"]
     for key, value in variables.items():
         prompt = prompt.replace(f"{{{key}}}", str(value))
 
@@ -1003,11 +1003,11 @@ async def generate_from_template(
     await db.commit()
 
     # Generate based on type
-    template_type = template["template_type"]
-    if template_type == "blog":
+    tpl_type = template["content_type"]
+    if tpl_type == "blog":
         content = await generate_blog_post(prompt)
-    elif template_type.startswith("social_"):
-        platform = template_type.replace("social_", "")
+    elif tpl_type.startswith("social_"):
+        platform = tpl_type.replace("social_", "")
         task_type = AITaskType.PRODUCT_SOCIAL if "product" in prompt.lower() else AITaskType.SOCIAL_CAPTION
         content = await generate_social_post(prompt, platform, task_type=task_type)
     else:

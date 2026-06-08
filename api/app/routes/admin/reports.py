@@ -73,7 +73,7 @@ async def sales_report(
               AND date(created_at) >= date(?) AND date(created_at) <= date(?)
             GROUP BY customer_email
             HAVING COUNT(*) > 1
-        )
+        ) sub
     """, (from_date, to_date))
     repeat = (await cursor.fetchone())["repeat_count"]
 
@@ -197,7 +197,7 @@ async def ltv_report(
             WHERE payment_status = 'confirmed'
             GROUP BY customer_email
             HAVING COUNT(*) > 1
-        )
+        ) sub
     """)
     repeat_row = dict(await cursor.fetchone())
 

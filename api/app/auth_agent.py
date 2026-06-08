@@ -58,7 +58,7 @@ async def validate_agent_key(agent_key: str) -> dict | None:
                     # Update last_used_at
                     await db.execute(
                         "UPDATE agent_api_keys SET last_used_at = ? WHERE id = ?",
-                        (datetime.now(timezone.utc).isoformat(), row["id"]),
+                        (datetime.now(timezone.utc), row["id"]),
                     )
                     await db.commit()
                     return dict(row)

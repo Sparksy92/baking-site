@@ -21,7 +21,7 @@ async def calculate_optimal_times(platform: str | None = None) -> dict:
     Analyzes last 90 days of published posts, aggregates by day-of-week
     and hour-of-day, computes engagement rate, ranks slots.
     """
-    since = (datetime.now(timezone.utc) - timedelta(days=90)).isoformat()
+    since = datetime.now(timezone.utc) - timedelta(days=90)
 
     platform_filter = "AND platform = ?" if platform else ""
     params = [since]
@@ -33,11 +33,11 @@ async def calculate_optimal_times(platform: str | None = None) -> dict:
         cursor = await db.execute(
             f"""SELECT
                 platform,
-                CAST(strftime('%w', published_at) AS INTEGER) as dow,
-                CAST(strftime('%H', published_at) AS INTEGER) as hour,
-                AVG(COALESCE(reach, impressions, 0)) as avg_reach,
-                AVG(COALESCE(likes, 0) + COALESCE(comments_count, 0) + COALESCE(shares, 0)) as avg_engagement,
-                AVG(COALESCE(clicks, 0) * 1.0 / NULLIF(COALESCE(reach, 1), 0)) as avg_ctr,
+                CAST(EXTRACT(DOW FROM CAST(published_at AS TIMESTAMPTZ)) AS INTEGER) as dow,
+                CAST(EXTRACT(HOUR FROM CAST(published_at AS TIMESTAMPTZ)) AS INTEGER) as hour,
+                AVG(COALESCE(reach_count, 0)) as avg_reach,
+                AVG(COALESCE(engagement_score, 0)) as avg_engagement,
+                AVG(CASE WHEN COALESCE(reach_count, 0) > 0 THEN engagement_score * 1.0 / reach_count ELSE 0 END) as avg_ctr,
                 COUNT(*) as sample_size
             FROM social_posts
             WHERE status = 'published'

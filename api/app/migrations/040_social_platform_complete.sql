@@ -515,6 +515,44 @@ CREATE TABLE optimal_posting_times (
     UNIQUE(platform, day_of_week, hour_of_day)
 );
 
+-- Competitors tracking
+CREATE TABLE competitors (
+    id SERIAL PRIMARY KEY,
+    name TEXT NOT NULL,
+    platform TEXT NOT NULL,
+    platform_handle TEXT NOT NULL,
+    profile_url TEXT,
+    notes TEXT DEFAULT '',
+    is_active BOOLEAN DEFAULT TRUE,
+    created_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP,
+    updated_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP
+);
+
+CREATE TABLE competitor_posts (
+    id SERIAL PRIMARY KEY,
+    competitor_id INTEGER REFERENCES competitors(id),
+    platform_post_id TEXT NOT NULL,
+    content TEXT,
+    posted_at TEXT,
+    likes INTEGER DEFAULT 0,
+    comments INTEGER DEFAULT 0,
+    shares INTEGER DEFAULT 0,
+    engagement_rate FLOAT,
+    created_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP
+);
+
+-- Revenue attribution (UTM-based)
+CREATE TABLE social_revenue_attribution (
+    id SERIAL PRIMARY KEY,
+    social_post_id INTEGER REFERENCES social_posts(id),
+    order_id INTEGER,
+    revenue_cents INTEGER DEFAULT 0,
+    utm_source TEXT,
+    utm_medium TEXT,
+    utm_campaign TEXT,
+    created_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP
+);
+
 -- =====================================================
 -- DEFAULT DATA
 -- =====================================================
