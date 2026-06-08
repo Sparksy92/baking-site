@@ -157,24 +157,24 @@
 - [x] **Auto-publish toggle** — platform `auto_publish=true` marks drafts as `approved` immediately on create
 - [x] **Config** — `SERP_API_KEY` added to `config.py`
 
-### Sprint 3 — Outbound Publishing: Facebook + Instagram (CURRENT)
-- [ ] **Facebook outbound** — `outbox/{id}/publish` → Graph API `/{page_id}/feed`, store `platform_post_id`
-- [ ] **Instagram outbound** — 2-step Graph API: create media container → publish container
-- [ ] **Image attach** — use blog `featured_image_url` for outbound posts; skip if missing (Instagram requires image)
-- [ ] **Publish result tracking** — store `platform_post_id` in `social_posts`, update `status='published'`, log `error_message`
-- [ ] **Retry on failure** — mark as `failed`, surface in outbox UI with error, allow manual retry button
-- [ ] **Tests** — `test_social_publish.py` (10 tests, all Graph API calls mocked)
+### Sprint 3 — Outbound Publishing: Facebook + Instagram ✅ COMPLETE
+- [x] **Facebook outbound** — `outbox/{id}/publish` → Graph API `/{page_id}/feed`, store `platform_post_id`
+- [x] **Instagram outbound** — 2-step Graph API: create media container → publish container
+- [x] **Image attach** — use blog `featured_image_url` for outbound posts; skip if missing (Instagram requires image)
+- [x] **Publish result tracking** — store `platform_post_id` in `social_posts`, update `status='published'`, log `error_message`
+- [x] **Retry on failure** — mark as `failed`, surface in outbox UI with error, allow manual retry button
+- [x] **Exponential backoff retry** — 5min → 15min → 1hr (max 3 retries) + `/outbox/{id}/retry` endpoint
+- [x] **Platform-native preview** — character counter, hashtag count, truncation warnings per platform
+- [x] **Tests** — `test_social_publish.py` (14 tests, all Graph API calls mocked)
 
-### Sprint 4 — Platform Expansion + Video
+### Sprint 4 — Platform Expansion + Video (FUTURE — Post-Merge)
 - [ ] **LinkedIn outbound** — OAuth PKCE flow, post via `ugcPosts` API, store `platform_post_id`
 - [ ] **TikTok outbound** — pending app review; admin shows live review status; Content Posting API on approval
 - [ ] **X / Twitter** — gated behind `X_API_KEY`; admin shows $100/mo cost warning before enable
 - [ ] **Video upload from phone** — admin video upload field on blog/page; attached to `social_posts.video_url`; outbound to Facebook, Instagram Reels, TikTok via upload APIs
-- [ ] **Scheduling** — `scheduled_at` field on outbox, APScheduler background worker publishes at correct time
-- [ ] **Platform-native preview** — character counter (X 280), hashtag count, truncation warnings per platform
-- [ ] **Tests** — `test_scheduling.py`, `test_linkedin.py`, `test_tiktok.py`, `test_video_upload.py`
+- [ ] **Tests** — `test_linkedin.py`, `test_tiktok.py`, `test_video_upload.py`
 
-### Sprint 5 — Intelligence + Engagement Layer
+### Sprint 5 — Intelligence + Engagement Layer (FUTURE — Post-Merge)
 - [ ] **Engagement pull** — likes, reach, comments from Meta/LinkedIn webhooks stored against `social_posts`
 - [ ] **Reply from outbox** — brand-persona AI drafts reply to comments; admin approves; posts reply via platform API (Gary Vee play)
 - [ ] **AI image generation** — DALL-E 3 prompt generated alongside blog; admin can regenerate + attach as featured image
