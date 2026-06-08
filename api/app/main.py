@@ -52,7 +52,8 @@ from app.routes.admin import (
     store_credit as admin_store_credit,
     social as admin_social,
 )
-from app.routes import agent_api
+from app.routes import agent_api, content_library, linkinbio, social_inbox, platform_variations, rss
+from app.services.rss_service import check_all_feeds
 
 logger = logging.getLogger(__name__)
 
@@ -120,10 +121,23 @@ async def lifespan(app: FastAPI):
                 logger.error(f"Background engagement sync error: {e}", exc_info=True)
             await asyncio.sleep(14400)
 
+    async def _background_rss_check():
+        """Check RSS feeds every 15 minutes."""
+        await asyncio.sleep(120)
+        while True:
+            try:
+                result = await check_all_feeds()
+                if result.get("total_posts_created", 0) > 0:
+                    logger.info(f"RSS auto-publish: {result['total_posts_created']} posts created")
+            except Exception as e:
+                logger.error(f"Background RSS check error: {e}", exc_info=True)
+            await asyncio.sleep(900)  # 15 minutes
+
     sync_task = asyncio.ensure_future(_background_social_sync())
     token_task = asyncio.ensure_future(_background_token_refresh())
     scheduler_task = asyncio.ensure_future(_background_scheduler())
     engagement_task = asyncio.ensure_future(_background_engagement_sync())
+    rss_task = asyncio.ensure_future(_background_rss_check())
 
     await init_db()
     logger.info("Database initialized")
@@ -132,6 +146,7 @@ async def lifespan(app: FastAPI):
     token_task.cancel()
     scheduler_task.cancel()
     engagement_task.cancel()
+    rss_task.cancel()
     logger.info("Shutting down")
 
 
@@ -238,6 +253,14 @@ def create_app() -> FastAPI:
     app.include_router(admin_webhooks.router, prefix="/api")
     app.include_router(admin_store_credit.router, prefix="/api")
     app.include_router(admin_social.router, prefix="/api")
+
+    # ── Competitive Gap Features ────────────────────────────────
+    app.include_router(content_library.router, prefix="/api")
+    app.include_router(linkinbio.router, prefix="/api")
+    app.include_router(linkinbio.public_router)  # Public /l/{slug} routes
+    app.include_router(social_inbox.router, prefix="/api")
+    app.include_router(platform_variations.router, prefix="/api")
+    app.include_router(rss.router, prefix="/api")
 
     # ── Agent API (AI integration boundary) ─────────────────────
     app.include_router(agent_api.router)
