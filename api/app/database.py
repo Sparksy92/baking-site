@@ -151,10 +151,10 @@ class PostgresConnection:
         await self.conn.execute(script)
 
     async def commit(self):
-        await self.execute("COMMIT")
+        pass  # asyncpg pool connections use autocommit outside explicit transactions
 
     async def rollback(self):
-        await self.execute("ROLLBACK")
+        pass  # asyncpg pool connections use autocommit outside explicit transactions
         
     async def close(self):
         pass
