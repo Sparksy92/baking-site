@@ -35,6 +35,7 @@ async def list_products(
     tag: str | None = None,
     featured: bool | None = None,
     search: str | None = None,
+    q: str | None = None,
     sort: str | None = None,
     page: int = Query(default=1, ge=1),
     limit: int = Query(default=24, ge=1, le=100),
@@ -69,9 +70,10 @@ async def list_products(
         )""")
         params.append(tag)
 
-    if search:
+    search_term = q or search
+    if search_term:
         conditions.append("(p.name LIKE ? OR p.description LIKE ?)")
-        term = f"%{search}%"
+        term = f"%{search_term}%"
         params.extend([term, term])
 
     where = " AND ".join(conditions)
