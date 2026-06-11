@@ -135,7 +135,7 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
   if (!user) return null;
 
   return (
-    <div className="flex h-screen bg-gray-50">
+    <div className="admin-surface flex h-screen bg-gray-50">
       <aside className="w-56 bg-white border-r border-gray-200 flex flex-col">
         <div className="p-4 border-b border-gray-100">
           <h1 className="font-bold text-brand text-sm">Admin Panel</h1>

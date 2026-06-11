@@ -45,6 +45,19 @@ a, button, input, select, textarea {
   outline-color: #B85C38;
 }
 
+.admin-surface {
+  color: #111827;
+}
+
+.admin-surface :is(input:not([type="checkbox"]):not([type="radio"]):not([type="color"]):not([type="file"]), select, textarea, .ProseMirror) {
+  background-color: #fff;
+  color: #111827;
+}
+
+.admin-surface :is(input, textarea)::placeholder {
+  color: #9ca3af;
+}
+
 @keyframes slide-in {
   from { opacity: 0; transform: translateX(100%); }
   to { opacity: 1; transform: translateX(0); }
