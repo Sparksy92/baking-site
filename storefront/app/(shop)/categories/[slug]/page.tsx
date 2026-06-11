@@ -1,5 +1,6 @@
 import type { Metadata } from 'next';
-import { apiFetch, type ProductListItem, type Category } from '@/lib/api';
+import { Suspense } from 'react';
+import { apiFetch, type ProductListItem } from '@/lib/api';
 import { brandName, siteUrl } from '@/lib/format';
 
 import { ProductCard } from '@/components/ProductCard';
@@ -9,17 +10,7 @@ import { SortSelect } from '@/components/SortSelect';
 import { CheckCircle2, Compass, PackageCheck } from 'lucide-react';
 import { brandConfig } from '@/config/brand.config';
 
-export const revalidate = 3600;
-export const dynamicParams = true;
-
-export async function generateStaticParams() {
-  try {
-    const categories = await apiFetch<Category[]>('/api/categories');
-    return categories.map((c) => ({ slug: c.slug }));
-  } catch {
-    return [];
-  }
-}
+export const dynamic = 'force-dynamic';
 
 interface CategoryData {
   id: number;
@@ -158,7 +149,9 @@ export default async function CategoryPage({ params, searchParams }: Props) {
             <span className="hidden sm:inline-flex rounded-full bg-cream px-4 py-2 text-xs font-black uppercase tracking-[0.16em] text-muted-earth border border-sand">
               {brandConfig.trustIndicators[1]?.label ?? brandConfig.metadata.tagline}
             </span>
-            <SortSelect />
+            <Suspense>
+              <SortSelect />
+            </Suspense>
           </div>
         </div>
 
