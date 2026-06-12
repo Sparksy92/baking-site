@@ -24,6 +24,7 @@ type NavSection = {
 const CORE_NAV: NavItem[] = [
   { label: 'Dashboard',   to: '/admin',            icon: LayoutDashboard },
   { label: 'Orders',      to: '/admin/orders',     icon: ShoppingCart },
+  { label: 'Customers',   to: '/admin/customers',  icon: Users },
   { label: 'Products',    to: '/admin/products',   icon: Package },
   { label: 'Collections', to: '/admin/collections',icon: Layers },
   { label: 'Categories',  to: '/admin/categories', icon: FolderOpen },
@@ -135,7 +136,7 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
   if (!user) return null;
 
   return (
-    <div className="flex h-screen bg-gray-50">
+    <div className="admin-surface flex h-screen bg-gray-50">
       <aside className="w-56 bg-white border-r border-gray-200 flex flex-col">
         <div className="p-4 border-b border-gray-100">
           <h1 className="font-bold text-brand text-sm">Admin Panel</h1>

@@ -52,6 +52,7 @@ from app.routes.admin import (
     webhooks as admin_webhooks,
     redirects as admin_redirects,
     store_credit as admin_store_credit,
+    customers as admin_customers,
     social as admin_social,
 )
 from app.routes import agent_api, content_library, linkinbio, social_inbox, platform_variations, rss
@@ -245,6 +246,7 @@ def create_app() -> FastAPI:
     app.include_router(admin_redirects.router, prefix="/api")
     app.include_router(admin_categories.router, prefix="/api")
     app.include_router(admin_orders.router, prefix="/api")
+    app.include_router(admin_customers.router, prefix="/api")
     app.include_router(admin_settings.router, prefix="/api")
     app.include_router(admin_promos.router, prefix="/api")
     app.include_router(admin_newsletter.router, prefix="/api")

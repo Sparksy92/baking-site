@@ -1,4 +1,5 @@
 import type { Metadata } from 'next';
+import { Suspense } from 'react';
 import { apiFetch, type ProductListItem } from '@/lib/api';
 import { brandName, siteUrl } from '@/lib/format';
 import { JsonLd } from '@/components/JsonLd';
@@ -7,17 +8,7 @@ import { Pagination } from '@/components/Pagination';
 import { SortSelect } from '@/components/SortSelect';
 import { Compass, Tag } from 'lucide-react';
 
-export const revalidate = 3600;
-export const dynamicParams = true;
-
-export async function generateStaticParams() {
-  try {
-    const tags = await apiFetch<{ id: number; slug: string }[]>('/api/tags');
-    return tags.map((t) => ({ slug: t.slug }));
-  } catch {
-    return [];
-  }
-}
+export const dynamic = 'force-dynamic';
 
 const PRODUCTS_PER_PAGE = 24;
 
@@ -86,7 +77,9 @@ export default async function TagPage({ params, searchParams }: Props) {
               <Compass size={13} className="text-terracotta" aria-hidden="true" />
               {name}
             </span>
-            <SortSelect />
+            <Suspense>
+              <SortSelect />
+            </Suspense>
           </div>
         </div>
 

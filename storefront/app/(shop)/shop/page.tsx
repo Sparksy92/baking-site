@@ -14,12 +14,13 @@ function ShopContent() {
   const [category, setCategory] = useState<string | null>(null);
   const searchParams = useSearchParams();
 
+  const searchParamsString = searchParams.toString();
   useEffect(() => {
     const cat = searchParams.get('category');
     setCategory(cat);
     setSort('');
     fetchProducts(cat, '');
-  }, [searchParams]);
+  }, [searchParamsString]);
 
   async function fetchProducts(cat: string | null, sortBy: string) {
     setLoading(true);

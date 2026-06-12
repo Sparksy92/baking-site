@@ -1,4 +1,5 @@
 import type { Metadata } from 'next';
+import { Suspense } from 'react';
 import { notFound } from 'next/navigation';
 import { apiFetch, type ProductListItem, type Collection } from '@/lib/api';
 import { brandName, siteUrl } from '@/lib/format';
@@ -8,17 +9,7 @@ import { Pagination } from '@/components/Pagination';
 import { SortSelect } from '@/components/SortSelect';
 import { SlidersHorizontal } from 'lucide-react';
 
-export const revalidate = 3600;
-export const dynamicParams = true;
-
-export async function generateStaticParams() {
-  try {
-    const collections = await apiFetch<Collection[]>('/api/collections');
-    return collections.map((c) => ({ slug: c.slug }));
-  } catch {
-    return [];
-  }
-}
+export const dynamic = 'force-dynamic';
 
 const PRODUCTS_PER_PAGE = 24;
 
@@ -132,7 +123,9 @@ export default async function CollectionPage({ params, searchParams }: Props) {
               <SlidersHorizontal size={16} /> Filters
             </button>
             <div className="h-6 w-[1px] bg-gray-200"></div>
-            <SortSelect />
+            <Suspense>
+              <SortSelect />
+            </Suspense>
           </div>
         </div>
 

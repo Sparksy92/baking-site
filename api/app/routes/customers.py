@@ -1,7 +1,7 @@
 from __future__ import annotations
 
 import logging
-from datetime import datetime, timedelta, timezone
+from datetime import datetime, timezone
 
 from fastapi import APIRouter, Depends, HTTPException, Response, status
 from app.database import PostgresConnection
@@ -13,7 +13,6 @@ from app.customer_auth import (
     get_current_customer,
     hash_password,
     verify_password,
-    generate_reset_token,
 )
 from app.database import get_db
 from app.models.schemas import (
@@ -28,6 +27,7 @@ from app.models.schemas import (
     AddressUpdate,
     AddressResponse,
 )
+from app.services.customer_password_service import create_and_send_password_reset
 
 logger = logging.getLogger(__name__)
 
@@ -54,17 +54,41 @@ async def register(
         )
 
     pw_hash = hash_password(body.password)
+    email = body.email.lower()
+    marketing_status = "subscribed" if body.accepts_email_marketing else "non_subscribed"
+    consented_at = datetime.now(timezone.utc).isoformat() if body.accepts_email_marketing else None
     cursor = await db.execute(
-        """INSERT INTO customers (email, password_hash, first_name, last_name, phone)
-           VALUES (?, ?, ?, ?, ?)""",
-        (body.email.lower(), pw_hash, body.first_name, body.last_name, body.phone),
+        """INSERT INTO customers (
+               email, password_hash, first_name, last_name, phone,
+               customer_type, marketing_email_status, marketing_email_source,
+               marketing_email_consented_at, created_source
+           )
+           VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)""",
+        (
+            email, pw_hash, body.first_name, body.last_name, body.phone,
+            "registered", marketing_status, "account_register", consented_at, "account",
+        ),
     )
-    await db.commit()
     customer_id = cursor.lastrowid
+
+    if body.accepts_email_marketing:
+        await db.execute(
+            """INSERT INTO newsletter_subscribers (email, is_active, source)
+               VALUES (?, 1, ?)
+               ON CONFLICT (email) DO UPDATE SET is_active = 1, source = EXCLUDED.source""",
+            (email, "account_register"),
+        )
+        await db.execute(
+            """INSERT INTO customer_consent_events (customer_id, email, status, source)
+               VALUES (?, ?, ?, ?)""",
+            (customer_id, email, "subscribed", "account_register"),
+        )
+
+    await db.commit()
 
     # Auto-login after registration
     settings = get_settings()
-    token = create_customer_token(customer_id, body.email.lower(), body.first_name, settings)
+    token = create_customer_token(customer_id, email, body.first_name, settings)
     response.set_cookie(
         key=CUSTOMER_COOKIE_NAME,
         value=token,
@@ -77,7 +101,7 @@ async def register(
 
     return CustomerResponse(
         id=customer_id,
-        email=body.email.lower(),
+        email=email,
         first_name=body.first_name,
         last_name=body.last_name,
         phone=body.phone,
@@ -218,7 +242,7 @@ async def forgot_password(
 ):
     """Request a password reset email."""
     cursor = await db.execute(
-        "SELECT id, first_name FROM customers WHERE LOWER(email) = LOWER(?) AND is_active = 1",
+        "SELECT id, email, first_name FROM customers WHERE LOWER(email) = LOWER(?) AND is_active = 1",
         (body.email,),
     )
     customer = await cursor.fetchone()
@@ -227,25 +251,14 @@ async def forgot_password(
     if not customer:
         return {"detail": "If an account exists with that email, a reset link has been sent."}
 
-    token = generate_reset_token()
-    expires = datetime.now(timezone.utc) + timedelta(hours=1)
-    await db.execute(
-        "UPDATE customers SET password_reset_token = ?, password_reset_expires = ? WHERE id = ?",
-        (token, expires.isoformat(), customer["id"]),
+    await create_and_send_password_reset(
+        db,
+        customer_id=customer["id"],
+        email=customer["email"],
+        first_name=customer["first_name"],
+        source="storefront",
     )
     await db.commit()
-
-    # Send reset email
-    try:
-        from app.services.email_service import send_password_reset
-        settings = get_settings()
-        await send_password_reset(
-            email=body.email,
-            first_name=customer["first_name"],
-            reset_url=f"{settings.store_domain}/account/reset-password?token={token}",
-        )
-    except Exception:
-        logger.exception("Failed to send password reset email to %s", body.email)
 
     return {"detail": "If an account exists with that email, a reset link has been sent."}
 
