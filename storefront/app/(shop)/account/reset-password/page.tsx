@@ -9,6 +9,7 @@ export default function ResetPasswordPage() {
   const searchParams = useSearchParams();
   const token = searchParams.get('token') || '';
   const [password, setPassword] = useState('');
+  const [confirmPassword, setConfirmPassword] = useState('');
   const [done, setDone] = useState(false);
   const [error, setError] = useState('');
   const [loading, setLoading] = useState(false);
@@ -16,6 +17,10 @@ export default function ResetPasswordPage() {
   async function handleSubmit(e: React.FormEvent) {
     e.preventDefault();
     setError('');
+    if (password !== confirmPassword) {
+      setError('Passwords do not match.');
+      return;
+    }
     setLoading(true);
     try {
       await api.post('/api/customers/reset-password', { token, new_password: password });
@@ -52,6 +57,10 @@ export default function ResetPasswordPage() {
             <label className="block text-sm font-medium text-gray-700 mb-1">New password</label>
             <input type="password" value={password} onChange={(e) => setPassword(e.target.value)} required minLength={8} className={inputClass} autoComplete="new-password" />
             <p className="mt-1 text-xs text-gray-500">Minimum 8 characters</p>
+          </div>
+          <div>
+            <label className="block text-sm font-medium text-gray-700 mb-1">Confirm new password</label>
+            <input type="password" value={confirmPassword} onChange={(e) => setConfirmPassword(e.target.value)} required minLength={8} className={inputClass} autoComplete="new-password" />
           </div>
           {error && <p className="text-sm text-red-600">{error}</p>}
           <button type="submit" disabled={loading} className="w-full py-3 bg-brand text-white font-medium rounded-lg hover:bg-brand/90 disabled:opacity-50">

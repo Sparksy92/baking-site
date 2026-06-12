@@ -19,6 +19,45 @@ async def test_register_creates_customer(client: AsyncClient):
     assert data["first_name"] == "Jane"
     assert "id" in data
 
+    from app.database import db_connection
+    async with db_connection() as db:
+        cursor = await db.execute("SELECT marketing_email_status FROM customers WHERE id = ?", (data["id"],))
+        customer = await cursor.fetchone()
+    assert customer["marketing_email_status"] == "non_subscribed"
+
+
+@pytest.mark.asyncio
+async def test_register_with_email_marketing_opt_in_records_consent(client: AsyncClient):
+    resp = await client.post("/api/customers/register", json={
+        "email": "optin@example.com",
+        "password": "SecurePass1",
+        "first_name": "Opt",
+        "last_name": "In",
+        "accepts_email_marketing": True,
+    })
+    assert resp.status_code == 201
+    customer_id = resp.json()["id"]
+
+    from app.database import db_connection
+    async with db_connection() as db:
+        cursor = await db.execute(
+            "SELECT marketing_email_status, marketing_email_source, marketing_email_consented_at FROM customers WHERE id = ?",
+            (customer_id,),
+        )
+        customer = await cursor.fetchone()
+        cursor = await db.execute("SELECT is_active, source FROM newsletter_subscribers WHERE email = ?", ("optin@example.com",))
+        subscriber = await cursor.fetchone()
+        cursor = await db.execute("SELECT status, source FROM customer_consent_events WHERE customer_id = ?", (customer_id,))
+        consent = await cursor.fetchone()
+
+    assert customer["marketing_email_status"] == "subscribed"
+    assert customer["marketing_email_source"] == "account_register"
+    assert customer["marketing_email_consented_at"]
+    assert subscriber["is_active"] == 1
+    assert subscriber["source"] == "account_register"
+    assert consent["status"] == "subscribed"
+    assert consent["source"] == "account_register"
+
 
 @pytest.mark.asyncio
 async def test_register_auto_login_sets_cookie(client: AsyncClient):

@@ -24,6 +24,7 @@ type NavSection = {
 const CORE_NAV: NavItem[] = [
   { label: 'Dashboard',   to: '/admin',            icon: LayoutDashboard },
   { label: 'Orders',      to: '/admin/orders',     icon: ShoppingCart },
+  { label: 'Customers',   to: '/admin/customers',  icon: Users },
   { label: 'Products',    to: '/admin/products',   icon: Package },
   { label: 'Collections', to: '/admin/collections',icon: Layers },
   { label: 'Categories',  to: '/admin/categories', icon: FolderOpen },

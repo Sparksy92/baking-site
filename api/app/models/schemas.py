@@ -397,6 +397,7 @@ class CustomerRegister(BaseModel):
     first_name: str = Field(min_length=1, max_length=100)
     last_name: str = Field(min_length=1, max_length=100)
     phone: str | None = None
+    accepts_email_marketing: bool = False
 
 
 class CustomerLogin(BaseModel):
