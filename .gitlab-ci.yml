@@ -126,7 +126,16 @@ test:api:
     # Wait for PostgreSQL to be ready
     - |
       for i in {1..60}; do
-        if python -c "import asyncpg, asyncio; conn = asyncio.run(asyncpg.connect('postgresql://ecommerce:ecommerce_password@postgres:5432/ecommerce_test')); asyncio.run(conn.close())" 2>/dev/null; then
+        if python <<'PY' 2>/dev/null; then
+      import asyncio
+      import asyncpg
+
+      async def main():
+          conn = await asyncpg.connect("postgresql://ecommerce:ecommerce_password@postgres:5432/ecommerce_test")
+          await conn.close()
+
+      asyncio.run(main())
+      PY
           echo "PostgreSQL is ready"
           exit 0
         fi
@@ -139,6 +148,7 @@ test:api:
       exit 1
   script:
     - source .venv/bin/activate
+    - mkdir -p ../reports
     - python -m pytest tests/ -v --tb=short --junitxml=../reports/api-test-results.xml
   artifacts:
     when: always
