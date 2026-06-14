@@ -1,6 +1,6 @@
-# Clothing Ecommerce Baseline
+# Cedar & Sage Homestead Website
 
-A lightweight, white-label ecommerce platform purpose-built for **clothing and apparel brands**. Designed for Indigenous streetwear, small-batch drops, and culture-forward fashion brands.
+A warm, professional baking, desserts, pantry goods, and handmade homestead care website converted from the Clothing Ecommerce Baseline. Built for request-based orders, small-batch management, and total admin self-service.
 
 ## Architecture
 
