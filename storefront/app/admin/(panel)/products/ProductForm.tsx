@@ -3,9 +3,10 @@
 import { useEffect, useState } from 'react';
 import { useRouter } from 'next/navigation';
 import dynamic from 'next/dynamic';
-import { ArrowLeft, Sparkles, Loader2 } from 'lucide-react';
+import { ArrowLeft, Sparkles, Loader2, Upload, FolderOpen, ChevronDown, ChevronUp, Image, Trash2 } from 'lucide-react';
 import { api, type Category } from '@/lib/api';
 import { addToast } from '@/lib/toast';
+import MediaLibraryModal from '@/components/admin/MediaLibraryModal';
 
 const RichTextEditor = dynamic(() => import('@/components/admin/RichTextEditor'), { ssr: false });
 
@@ -34,6 +35,51 @@ export default function ProductForm({ productId }: Props) {
   const [categories, setCategories] = useState<Category[]>([]);
   const [saving, setSaving] = useState(false);
   const [loading, setLoading] = useState(!isNew);
+
+  const [isLibraryOpen, setIsLibraryOpen] = useState(false);
+  const [isUploading, setIsUploading] = useState(false);
+  const [showAdvancedUrl, setShowAdvancedUrl] = useState(false);
+
+  async function handleFormFileUpload(e: React.ChangeEvent<HTMLInputElement>) {
+    const file = e.target.files?.[0];
+    if (!file) return;
+
+    if (file.size > 4 * 1024 * 1024) {
+      addToast('File size exceeds 4 MB limit.', 'error');
+      return;
+    }
+
+    const allowedTypes = ['image/jpeg', 'image/png', 'image/webp'];
+    if (!allowedTypes.includes(file.type)) {
+      addToast('Only JPEG, PNG, and WebP images are allowed.', 'error');
+      return;
+    }
+
+    setIsUploading(true);
+    const formData = new FormData();
+    formData.append('file', file);
+
+    try {
+      const res = await fetch('/api/admin/media/upload', {
+        method: 'POST',
+        body: formData,
+      });
+
+      if (!res.ok) {
+        const errData = await res.json().catch(() => ({}));
+        throw new Error(errData.detail || 'Upload failed');
+      }
+
+      const data = await res.json();
+      setImageUrl(data.url);
+      addToast('Image uploaded and applied successfully', 'success');
+    } catch (err: any) {
+      console.error(err);
+      addToast(err.message || 'Failed to upload image', 'error');
+    } finally {
+      setIsUploading(false);
+    }
+  }
 
   useEffect(() => {
     api.get<Category[]>('/api/categories')
@@ -256,15 +302,86 @@ export default function ProductForm({ productId }: Props) {
         <div className="bg-white rounded-2xl border border-gray-100 p-6 shadow-sm space-y-5">
           <h2 className="text-sm font-bold uppercase tracking-wider text-gray-400 border-b border-gray-50 pb-2 mb-4">Media &amp; Sorting</h2>
 
-          <div>
-            <label className={labelClass}>Image URL</label>
-            <input
-              type="url"
-              value={imageUrl}
-              onChange={(e) => setImageUrl(e.target.value)}
-              placeholder="e.g. https://images.unsplash.com/photo-..."
-              className={inputClass}
-            />
+          <div className="space-y-4">
+            <label className={labelClass}>Product Image</label>
+            
+            {/* Image Preview Block */}
+            {imageUrl ? (
+              <div className="relative w-48 h-48 rounded-xl border border-gray-200 overflow-hidden bg-gray-50 group shadow-sm flex items-center justify-center">
+                {/* eslint-disable-next-line @next/next/no-img-element */}
+                <img
+                  src={imageUrl}
+                  alt="Product preview"
+                  className="object-cover w-full h-full"
+                />
+                <button
+                  type="button"
+                  onClick={() => setImageUrl('')}
+                  className="absolute inset-0 bg-black/55 flex items-center justify-center text-white opacity-0 group-hover:opacity-100 transition-opacity font-semibold text-xs gap-1.5"
+                >
+                  <Trash2 size={14} />
+                  <span>Remove Image</span>
+                </button>
+              </div>
+            ) : (
+              <div className="w-48 h-48 rounded-xl border-2 border-dashed border-gray-200 flex flex-col items-center justify-center bg-gray-50/50 text-gray-400 gap-1.5 p-4 text-center">
+                <Image size={24} className="text-gray-300" />
+                <span className="text-xs font-semibold">No Image Selected</span>
+                <span className="text-[10px] text-gray-400">Select one below</span>
+              </div>
+            )}
+
+            {/* Selector Actions */}
+            <div className="flex flex-wrap items-center gap-3">
+              <label className="flex items-center gap-2 px-4 py-2 bg-brand text-white font-bold text-xs rounded-xl hover:bg-brand/90 cursor-pointer shadow-sm transition-colors disabled:opacity-50">
+                {isUploading ? (
+                  <>
+                    <Loader2 className="w-4 h-4 animate-spin" />
+                    <span>Uploading...</span>
+                  </>
+                ) : (
+                  <>
+                    <Upload size={14} />
+                    <span>Upload New</span>
+                  </>
+                )}
+                <input type="file" accept="image/jpeg,image/png,image/webp" onChange={handleFormFileUpload} disabled={isUploading} className="hidden" />
+              </label>
+
+              <button
+                type="button"
+                onClick={() => setIsLibraryOpen(true)}
+                className="flex items-center gap-2 px-4 py-2 border border-gray-200 text-gray-700 font-bold text-xs rounded-xl hover:bg-gray-50 transition-colors shadow-sm bg-white"
+              >
+                <FolderOpen size={14} className="text-gray-400" />
+                <span>Choose from Library</span>
+              </button>
+            </div>
+
+            {/* Collapsed Advanced input */}
+            <div className="pt-2">
+              <button
+                type="button"
+                onClick={() => setShowAdvancedUrl(!showAdvancedUrl)}
+                className="flex items-center gap-1.5 text-xs font-bold text-gray-500 hover:text-gray-900 transition-colors"
+              >
+                {showAdvancedUrl ? <ChevronUp size={14} /> : <ChevronDown size={14} />}
+                <span>Advanced: paste image URL</span>
+              </button>
+
+              {showAdvancedUrl && (
+                <div className="mt-3">
+                  <input
+                    type="url"
+                    value={imageUrl}
+                    onChange={(e) => setImageUrl(e.target.value)}
+                    placeholder="e.g. https://images.unsplash.com/photo-..."
+                    className={inputClass}
+                  />
+                  <p className="text-[10px] text-gray-400 mt-1">Direct HTTPS link to external image file.</p>
+                </div>
+              )}
+            </div>
           </div>
 
           <div className="grid grid-cols-1 md:grid-cols-2 gap-5">
@@ -349,6 +466,12 @@ export default function ProductForm({ productId }: Props) {
           </button>
         </div>
       </form>
+
+      <MediaLibraryModal
+        isOpen={isLibraryOpen}
+        onClose={() => setIsLibraryOpen(false)}
+        onSelect={(url) => setImageUrl(url)}
+      />
     </div>
   );
 }

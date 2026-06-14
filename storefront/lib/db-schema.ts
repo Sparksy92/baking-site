@@ -48,6 +48,19 @@ CREATE TABLE IF NOT EXISTS site_settings (
     key VARCHAR(255) PRIMARY KEY,
     value TEXT
 );
+
+CREATE TABLE IF NOT EXISTS media_assets (
+    id SERIAL PRIMARY KEY,
+    url TEXT NOT NULL,
+    pathname TEXT,
+    filename TEXT,
+    alt_text TEXT,
+    content_type TEXT,
+    size_bytes INTEGER,
+    source TEXT DEFAULT 'vercel_blob',
+    created_at TIMESTAMPTZ DEFAULT NOW(),
+    updated_at TIMESTAMPTZ DEFAULT NOW()
+);
 `;
 
 export const SEED_SQL = `-- Seed default Cedar & Sage categories
