@@ -25,13 +25,13 @@ describe('formatCents', () => {
 
 describe('brandName', () => {
   it('returns brand config name', () => {
-    expect(brandName()).toBe('Terra Supply Co.');
+    expect(brandName()).toBe('Cedar & Sage Homestead');
   });
 });
 
 describe('brandTagline', () => {
   it('returns brand config tagline', () => {
-    expect(brandTagline()).toBe('Built for the Long Haul.');
+    expect(brandTagline()).toBe('Fresh baking, pantry goods & handmade homestead care');
   });
 });
 

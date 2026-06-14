@@ -1,27 +1,27 @@
 import { BrandConfig } from '../types/brand';
 
 export const brandConfig: BrandConfig = {
-  id: 'terra-supply-co',
+  id: 'cedar-and-sage-homestead',
   metadata: {
-    name: 'Terra Supply Co.',
-    tagline: 'Built for the Long Haul.',
-    description: 'Durable, ethically made clothing for people who live and work outdoors. No fluff, no fast fashion.',
-    siteName: 'Terra Supply Co.',
+    name: 'Cedar & Sage Homestead',
+    tagline: 'Fresh baking, pantry goods & handmade homestead care',
+    description: 'Homemade fresh baking, desserts, pantry goods, jams, pickled goods, handmade tallow lotions, lip balms, salves, and herbal oils.',
+    siteName: 'Cedar & Sage Homestead',
     baseUrl: 'https://yourdomain.com',
     locale: 'en-CA',
     defaultRegion: 'ca',
   },
   colors: {
-    primary: '#5C3D2E', // earth brown
-    secondary: '#6B7F5E', // sage green
-    accent: '#B85C38', // terracotta
-    background: '#FBF7F4', // warm cream
-    surface: '#F5EDE8', // warm white
-    text: '#3D2E1F', // deep brown
-    textMuted: '#8B7B6B', // muted earth
-    border: '#E8DDD3', // sand
+    primary: '#6F7D5C', // sage green
+    secondary: '#C8A2A8', // dusty rose
+    accent: '#C8A2A8', // dusty rose
+    background: '#FAF7F2', // warm cream
+    surface: '#F5EFE6', // soft cream-white
+    text: '#2B2522', // deep brown/charcoal
+    textMuted: '#6B605A', // muted brown
+    border: '#E3DDD3', // soft sand border
     error: '#C53030',
-    success: '#6B7F5E', // sage
+    success: '#6F7D5C', // sage
     warning: '#D4A574', // warm amber
   },
   fonts: {
@@ -47,36 +47,37 @@ export const brandConfig: BrandConfig = {
   },
   navigation: {
     mainLinks: [
+      { label: 'Home', href: '/' },
       { label: 'Shop', href: '/shop' },
-      { label: 'New Arrivals', href: '/collections/new-arrivals' },
-      { label: 'Categories', href: '/categories' },
-      { label: 'Blog', href: '/blog' },
+      { label: 'Oven Fund', href: '/oven-fund' },
       { label: 'About', href: '/about' },
+      { label: 'Contact', href: '/contact' },
     ],
     footerColumns: [
       {
         title: 'Shop',
         links: [
           { label: 'All Products', href: '/shop' },
-          { label: 'New Arrivals', href: '/collections/new-arrivals' },
-          { label: 'Categories', href: '/categories' },
+          { label: 'Baked Fresh', href: '/shop?category=baked-fresh' },
+          { label: 'Pantry Goods', href: '/shop?category=pantry' },
+          { label: 'Home & Body', href: '/shop?category=home-body' },
         ],
       },
       {
-        title: 'Company',
+        title: 'Homestead',
         links: [
+          { label: 'Oven Fund', href: '/oven-fund' },
           { label: 'Our Story', href: '/about' },
-          { label: 'Blog', href: '/blog' },
           { label: 'Contact', href: '/contact' },
+          { label: 'Order Info', href: '/order-info' },
           { label: 'FAQ', href: '/faq' },
-          { label: 'Track Order', href: '/order-lookup' },
         ],
       },
       {
         title: 'Policies',
         links: [
-          { label: 'Shipping', href: '/shipping-policy' },
-          { label: 'Returns & Exchanges', href: '/return-policy' },
+          { label: 'Pickup & Delivery', href: '/shipping-policy' },
+          { label: 'Return Policy', href: '/return-policy' },
           { label: 'Privacy Policy', href: '/privacy-policy' },
           { label: 'Terms of Service', href: '/terms-of-service' },
         ],
@@ -84,51 +85,51 @@ export const brandConfig: BrandConfig = {
     ],
   },
   content: {
-    copyright: '© {year} Terra Supply Co. All rights reserved.',
+    copyright: '© {year} Cedar & Sage Homestead. All rights reserved.',
     poweredBy: '',
     pages: {},
   },
   announcementBar: {
     enabled: true,
-    text: 'Free shipping on orders over $75 — Built to last, made to matter.',
+    text: 'Fresh weekly baking preorders — Local pickup & custom requests welcome!',
   },
   trustIndicators: [
-    { label: 'Ethically Made', icon: 'leaf', description: 'Responsible sourcing, fair wages, lower footprint.' },
-    { label: 'Built to Last', icon: 'shield', description: 'No fast fashion. Every piece is meant to go the distance.' },
-    { label: 'Free Returns', icon: 'refresh-cw', description: '60-day hassle-free returns on everything we sell.' },
-    { label: 'Ships from Canada', icon: 'truck', description: 'Fast domestic shipping, carbon offset on every order.' },
+    { label: 'Small Batch', icon: 'leaf', description: 'Every item is handmade in small batches in our homestead kitchen.' },
+    { label: 'Homemade', icon: 'heart-handshake', description: 'Baked fresh with quality ingredients and traditional methods.' },
+    { label: 'Local Pickup', icon: 'truck', description: 'Freshly made for local pickup and delivery requests.' },
+    { label: 'Homestead Care', icon: 'shield', description: '100% natural, hand-rendered tallow and herbal care products.' },
   ],
   socialLinks: [],
   seo: {
-    abbreviation: 'TERRA',
+    abbreviation: 'CSH',
     currency: 'CAD',
     twitterHandle: '',
     googleVerification: '',
     defaultOgImage: '/images/brand/og-default.jpg',
-    blogSectionName: 'Field Notes',
-    blogPostLabel: 'Field Note',
+    blogSectionName: 'Homestead Notes',
+    blogPostLabel: 'Homestead Note',
     heroStats: [
-      { value: '60-day', label: 'Free returns' },
-      { value: '$75+', label: 'Free shipping' },
-      { value: '5yr', label: 'Craftsmanship guarantee' },
+      { value: '100%', label: 'Small batch' },
+      { value: 'Fresh', label: 'Baked to order' },
+      { value: 'Local', label: 'Homestead made' },
     ],
   },
   newsletter: {
     enabled: true,
-    heading: 'Less noise. More good stuff.',
-    description: 'New drops, field notes, and occasional deals. Never spam — we hate it too.',
+    heading: 'Fresh from the Oven.',
+    description: 'Get notified about our weekly baking menu, preorder schedules, and homestead recipes. No spam, just warm bread.',
     placeholder: 'your@email.com',
     buttonLabel: 'Subscribe',
   },
   // localBusiness: {
-  //   type: 'ClothingStore',          // schema.org type — change per fork
-  //   streetAddress: '123 Main St',
-  //   addressLocality: 'Toronto',
+  //   type: 'Bakery',          // schema.org type
+  //   streetAddress: '123 Homestead Rd',
+  //   addressLocality: 'Homestead County',
   //   addressRegion: 'ON',
-  //   postalCode: 'M5V 1A1',
+  //   postalCode: 'K0L 1L0',
   //   addressCountry: 'CA',
-  //   telephone: '+1-416-555-0100',
-  //   openingHours: ['Mo-Fr 10:00-18:00', 'Sa 10:00-16:00'],
+  //   telephone: '+1-555-0100',
+  //   openingHours: ['Mo-Fr 08:00-17:00'],
   //   priceRange: '$$',
   // },
 };

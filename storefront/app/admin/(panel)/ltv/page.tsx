@@ -27,7 +27,7 @@ interface LTVReport {
   customers: LTVCustomer[];
 }
 
-function StatCard({ icon: Icon, label, value }: { icon: React.ElementType; label: string; value: string }) {
+function StatCard({ icon: Icon, label, value }: { icon: any; label: string; value: string }) {
   return (
     <div className="bg-white rounded-xl border border-gray-200 p-5 flex items-center gap-4">
       <div className="w-10 h-10 rounded-lg bg-brand/10 flex items-center justify-center flex-shrink-0">
