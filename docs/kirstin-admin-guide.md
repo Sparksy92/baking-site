@@ -136,3 +136,7 @@ When a customer requests custom orders, preorders, or quote-only items, it lands
 - If customers report stripe payments are not completing or webhook integration fails.
 - If you need custom email template layouts modified.
 - If you want to configure automated SMS notifications.
+
+---
+
+*(Screenshots to be added after final admin styling is complete)*

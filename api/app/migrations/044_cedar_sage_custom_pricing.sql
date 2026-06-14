@@ -29,7 +29,7 @@ CREATE TABLE IF NOT EXISTS order_requests (
     status TEXT NOT NULL DEFAULT 'new' CONSTRAINT chk_order_requests_status CHECK (status IN ('new', 'reviewed', 'waiting_on_customer', 'confirmed', 'completed', 'cancelled')),
     admin_notes TEXT,
     created_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP,
-    updated_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP;
+    updated_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP
 );
 
 -- Index for order_requests on status and created_at

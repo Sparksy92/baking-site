@@ -1,10 +1,24 @@
+'use client';
+
+import { useState, useEffect } from 'react';
+import { api, type PublicSettings } from '@/lib/api';
 import { Flame, Landmark, Heart, ArrowLeft } from 'lucide-react';
 import Link from 'next/link';
 
 export default function OvenFundPage() {
-  const goal = 2500;
-  const raised = 1620;
-  const percentage = Math.round((raised / goal) * 100);
+  const [settings, setSettings] = useState<PublicSettings | null>(null);
+
+  useEffect(() => {
+    api.get<PublicSettings>('/api/settings/public')
+      .then(setSettings)
+      .catch(() => {});
+  }, []);
+
+  const goal = Number(settings?.oven_fund_goal) || 2500;
+  const raised = Number(settings?.oven_fund_current_amount) || 1620;
+  const percentage = Math.min(100, Math.round((raised / goal) * 100));
+  const description = settings?.oven_fund_description || 'Our current home kitchen limits us to baking just two loaves of sourdough at a time. Meeting this goal allows us to install a multi-deck stone baking oven, increasing our capacity to 12 loaves per bake, and bringing sourdough to more families every weekend.';
+
 
   const tiers = [
     {
@@ -81,7 +95,7 @@ export default function OvenFundPage() {
           </div>
 
           <p className="text-muted-earth text-sm leading-relaxed">
-            Our current home kitchen limits us to baking just two loaves of sourdough at a time. Meeting this goal allows us to install a multi-deck stone baking oven, increasing our capacity to 12 loaves per bake, and bringing sourdough to more families every weekend.
+            {description}
           </p>
         </div>
 

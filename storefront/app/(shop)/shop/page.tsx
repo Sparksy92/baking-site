@@ -73,6 +73,18 @@ function ShopContent() {
       {/* Product Grid */}
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-10">
         <div className="border-t border-sand pt-8">
+          {/* Homestead Ordering Notice */}
+          <div className="bg-brand/5 border border-brand/20 rounded-2xl p-5 mb-8 text-sm text-muted-earth space-y-2">
+            <h3 className="font-bold text-earth">🌾 Homestead Selections &amp; Ordering Notes</h3>
+            <ul className="list-disc list-inside space-y-1 text-xs">
+              <li>Some prices are placeholder starting rates and will be finalized after your request is reviewed.</li>
+              <li>Sourdough is prepared by preorder and is typically baked on weekends.</li>
+              <li>Custom cakes, cheesecakes, and custom desserts require a quote request.</li>
+              <li>Order requests are not guaranteed until Kirstin confirms availability.</li>
+              <li>E-transfer details and pickup/delivery logistics will be finalized upon request review.</li>
+            </ul>
+          </div>
+
           {/* Controls */}
           <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4 mb-8">
             <p className="text-base text-muted-earth">

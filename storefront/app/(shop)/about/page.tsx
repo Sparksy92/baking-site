@@ -1,83 +1,63 @@
-import type { Metadata } from 'next';
-import { brandName, brandTagline, siteUrl } from '@/lib/format';
-import { JsonLd } from '@/components/JsonLd';
-import { brandConfig } from '@/config/brand.config';
+'use client';
 
-export function generateMetadata(): Metadata {
-  return {
-    title: 'Our Story',
-    description: `Learn about ${brandName()} — ${brandTagline() || 'our story and mission'}.`,
-    alternates: { canonical: `${siteUrl()}/about` },
-  };
-}
+import { useState, useEffect } from 'react';
+import { api, type PublicSettings } from '@/lib/api';
+import { brandName, brandTagline } from '@/lib/format';
+import { Flame } from 'lucide-react';
 
 export default function AboutPage() {
-  const name = brandName();
-  const tagline = brandTagline();
-  const url = `${siteUrl()}/about`;
+  const [settings, setSettings] = useState<PublicSettings | null>(null);
+
+  useEffect(() => {
+    api.get<PublicSettings>('/api/settings/public')
+      .then(setSettings)
+      .catch(() => {});
+  }, []);
+
+  const name = settings?.brand_name || brandName() || 'Cedar & Sage Homestead';
+  const tagline = settings?.brand_tagline || brandTagline() || 'Fresh baking, pantry goods & handmade homestead care';
+  const aboutText = settings?.about_content || 'Cedar & Sage Homestead is a small-batch homestead kitchen offering fresh baking, pantry goods, and handmade home and body products. Every request is handled with care, and many items are prepared by preorder so they can be made fresh.';
 
   return (
-    <div className="bg-white min-h-screen">
-      <JsonLd data={{
-        '@context': 'https://schema.org',
-        '@type': 'AboutPage',
-        name: `About ${name}`,
-        description: tagline || brandConfig.metadata.description,
-        url,
-        isPartOf: { '@type': 'WebSite', url: siteUrl(), name },
-        breadcrumb: {
-          '@type': 'BreadcrumbList',
-          itemListElement: [
-            { '@type': 'ListItem', position: 1, name: 'Home', item: siteUrl() },
-            { '@type': 'ListItem', position: 2, name: 'About', item: url },
-          ],
-        },
-      }} />
+    <div className="bg-cream min-h-screen">
       {/* Hero */}
-      <div className="relative bg-gray-900 text-white py-24 sm:py-32 overflow-hidden">
-        <div className="absolute inset-0 bg-brand/20 mix-blend-multiply"></div>
-        <div className="absolute inset-0 bg-gradient-to-t from-gray-900 to-transparent opacity-80"></div>
+      <div className="relative bg-earth text-white py-20 sm:py-28 overflow-hidden border-b border-sand/30">
+        <div className="absolute inset-0 bg-brand/10 mix-blend-multiply"></div>
+        <div className="absolute inset-0 bg-[radial-gradient(ellipse_at_top_right,rgba(200,162,168,0.12),transparent_50%)]" aria-hidden="true" />
         <div className="relative max-w-4xl mx-auto px-4 text-center z-10">
-          <h1 className="text-5xl md:text-7xl font-black tracking-tight mb-6">{name}</h1>
-          {tagline && <p className="text-xl md:text-2xl text-gray-300 font-light max-w-2xl mx-auto">{tagline}</p>}
+          <h1 className="text-4xl md:text-5xl font-black tracking-tight mb-4">{name}</h1>
+          <p className="text-lg text-white/80 font-light max-w-xl mx-auto">{tagline}</p>
         </div>
       </div>
 
-      <div className="max-w-4xl mx-auto px-4 py-16 sm:py-24 space-y-20">
+      <div className="max-w-4xl mx-auto px-4 py-16 sm:py-24 space-y-16">
         
         {/* Story Section */}
         <section className="flex flex-col md:flex-row gap-12 items-center">
           <div className="flex-1 space-y-6">
-            <h2 className="text-3xl font-bold text-gray-900">Our Story</h2>
+            <h2 className="text-3xl font-black text-earth tracking-tight">Our Story</h2>
             <div className="w-12 h-1 bg-brand rounded-full"></div>
-            <p className="text-lg text-gray-600 leading-relaxed">
-              {name} was born from a simple idea: culture should be lived, not archived. We create streetwear that carries the stories, symbols, and strength of Indigenous identity — designed to be worn every day, in every space.
+            <p className="text-base text-muted-earth leading-relaxed whitespace-pre-line">
+              {aboutText}
             </p>
           </div>
-          <div className="flex-1 w-full aspect-square bg-gray-100 rounded-3xl overflow-hidden relative border border-gray-200">
-             <div className="absolute inset-0 flex items-center justify-center text-gray-400 font-medium">Brand Image</div>
-          </div>
-        </section>
-
-        {/* Stand For Section */}
-        <section className="flex flex-col md:flex-row-reverse gap-12 items-center">
-          <div className="flex-1 space-y-6">
-            <h2 className="text-3xl font-bold text-gray-900">What We Stand For</h2>
-            <div className="w-12 h-1 bg-brand rounded-full"></div>
-            <p className="text-lg text-gray-600 leading-relaxed">
-              Every piece in our collection is a statement. We believe in visibility, in representation, and in the power of clothing to spark conversation and connection. Our designs draw from tradition while looking forward — modern fits, quality materials, and art that means something.
-            </p>
-          </div>
-          <div className="flex-1 w-full aspect-square bg-gray-100 rounded-3xl overflow-hidden relative border border-gray-200">
-             <div className="absolute inset-0 flex items-center justify-center text-gray-400 font-medium">Editorial Image</div>
+          <div className="flex-1 w-full aspect-square bg-white border border-sand/60 rounded-[2.5rem] overflow-hidden relative shadow-sm">
+             <div className="absolute inset-0 flex flex-col items-center justify-center text-muted-earth font-medium p-8 text-center bg-warm">
+               <span className="text-5xl mb-4">🌻</span>
+               <h3 className="font-bold text-earth text-lg mb-2">Homestead Kitchen</h3>
+               <p className="text-xs text-muted-earth">Baking fresh in small batches with wholesome ingredients.</p>
+             </div>
           </div>
         </section>
 
         {/* Quality & Craft */}
-        <section className="bg-gray-50 rounded-3xl p-8 sm:p-12 text-center border border-gray-100">
-          <h2 className="text-3xl font-bold text-gray-900 mb-6">Quality &amp; Craft</h2>
-          <p className="text-lg text-gray-600 leading-relaxed max-w-2xl mx-auto">
-            We source premium fabrics and work with trusted manufacturers to ensure every garment meets our standards. From the weight of the cotton to the vibrancy of the print — every detail matters. We stand behind what we make.
+        <section className="bg-white rounded-3xl p-8 sm:p-12 text-center border border-sand/50 shadow-sm">
+          <div className="w-12 h-12 rounded-full bg-brand/10 text-brand flex items-center justify-center mx-auto mb-4">
+            <Flame size={24} />
+          </div>
+          <h2 className="text-2xl font-black text-earth tracking-tight mb-4">Small Batch &amp; Freshly Prepared</h2>
+          <p className="text-base text-muted-earth leading-relaxed max-w-2xl mx-auto">
+            Because everything is prepared in our home kitchen, orders are made by request. This guarantees that your bread is baked fresh on the day of pickup, and your pantry goods are crafted in peak seasonal batches.
           </p>
         </section>
 
@@ -85,3 +65,4 @@ export default function AboutPage() {
     </div>
   );
 }
+
