@@ -39,8 +39,22 @@ export async function initDatabase(force: boolean = false) {
       const res = await p.query("SELECT EXISTS (SELECT FROM pg_tables WHERE schemaname = 'public' AND tablename = 'site_settings')");
       const exists = res.rows[0]?.exists;
       if (exists) {
-        console.log('Database already initialized. site_settings table exists.');
-        return { success: true, message: 'Database already initialized.' };
+        console.log('Database already initialized. site_settings table exists. Ensuring media_assets table exists...');
+        await p.query(`
+          CREATE TABLE IF NOT EXISTS media_assets (
+              id SERIAL PRIMARY KEY,
+              url TEXT NOT NULL,
+              pathname TEXT,
+              filename TEXT,
+              alt_text TEXT,
+              content_type TEXT,
+              size_bytes INTEGER,
+              source TEXT DEFAULT 'vercel_blob',
+              created_at TIMESTAMPTZ DEFAULT NOW(),
+              updated_at TIMESTAMPTZ DEFAULT NOW()
+          );
+        `);
+        return { success: true, message: 'Database already initialized. Verified media_assets table exists.' };
       }
     } catch (err) {
       console.log('Error checking table existence, proceeding with init:', err);

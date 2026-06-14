@@ -25,6 +25,7 @@ const CORE_NAV: NavItem[] = [
   { label: 'Dashboard',      to: '/admin',            icon: LayoutDashboard },
   { label: 'Order Requests', to: '/admin/order-requests', icon: Inbox },
   { label: 'Menu Items',     to: '/admin/products',   icon: Package },
+  { label: 'Media',          to: '/admin/media',      icon: FolderOpen },
   { label: 'Settings',       to: '/admin/settings',   icon: Settings },
 ];
 
