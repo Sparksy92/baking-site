@@ -1,13 +1,29 @@
 import { NextResponse, NextRequest } from 'next/server';
-import { createSession, verifyPassword } from '@/lib/auth';
+import { createSession, verifyPassword, DEFAULT_PASSWORD_HASH } from '@/lib/auth';
+
+export const runtime = 'nodejs';
+export const dynamic = 'force-dynamic';
+
+function isProduction(): boolean {
+  return process.env.NODE_ENV === 'production' || process.env.DEV_MODE === 'false';
+}
 
 export async function POST(req: NextRequest) {
   try {
     const { username, password } = await req.json();
     
     const adminEmail = process.env.ADMIN_EMAIL || 'admin@cedarandsagehomestead.ca';
-    // Default fallback hash is pbkdf2 hash of 'admin123' with salt 'cedar-salt-homestead'
-    const expectedHash = process.env.ADMIN_PASSWORD_HASH || 'b1a20bf155239e240212f45ec926719cd227eb0d507119ecb001a1db6c1bf9eb9d5929532ea4a5690bfa3fcd6d8174f84a4a581458dc6b4b455b5f2cd796f6e5';
+    const expectedHash = process.env.ADMIN_PASSWORD_HASH || DEFAULT_PASSWORD_HASH;
+
+    // Strict Production Check: Block default fallback credentials
+    if (expectedHash === DEFAULT_PASSWORD_HASH) {
+      if (isProduction()) {
+        console.error('CRITICAL: Access blocked. Default admin password hash is not allowed in production.');
+        return NextResponse.json({ detail: 'Server configuration error: Fallback credentials are not permitted in production.' }, { status: 500 });
+      } else {
+        console.warn('WARNING: Using default admin password hash. Configure ADMIN_PASSWORD_HASH for production.');
+      }
+    }
 
     if ((username === adminEmail || username === 'admin') && verifyPassword(password, expectedHash)) {
       const user = { email: adminEmail, username: 'Admin', role: 'admin' };

@@ -1,6 +1,9 @@
 import { NextResponse, NextRequest } from 'next/server';
 import { getProductBySlug } from '@/lib/db-service';
 
+export const runtime = 'nodejs';
+export const dynamic = 'force-dynamic';
+
 export async function GET(
   req: NextRequest,
   { params }: { params: Promise<{ slug: string }> }

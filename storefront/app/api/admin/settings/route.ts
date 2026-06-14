@@ -2,6 +2,9 @@ import { NextResponse, NextRequest } from 'next/server';
 import { getSessionUser } from '@/lib/auth';
 import { query } from '@/lib/db';
 
+export const runtime = 'nodejs';
+export const dynamic = 'force-dynamic';
+
 export async function GET() {
   const user = await getSessionUser();
   if (!user || user.role !== 'admin') {

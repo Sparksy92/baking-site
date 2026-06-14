@@ -1,7 +1,7 @@
 import type { Metadata } from 'next';
 import { notFound } from 'next/navigation';
 import { apiFetch } from '@/lib/api-server';
-import { type Product, type ProductListItem } from '@/lib/api';
+import { type Product } from '@/lib/api';
 import { brandName, siteUrl } from '@/lib/format';
 import { brandConfig } from '@/config/brand.config';
 import { JsonLd } from '@/components/JsonLd';
@@ -10,17 +10,8 @@ import { RecentlyViewed } from '@/components/RecentlyViewed';
 import { ProductInteractive } from './ProductInteractive';
 import { ProductReviews } from '@/components/product/ProductReviews';
 
-export const revalidate = 3600; // re-generate at most once per hour
-export const dynamicParams = true; // new products added after build still work
-
-export async function generateStaticParams() {
-  try {
-    const data = await apiFetch<{ products: ProductListItem[] }>('/api/products?limit=200');
-    return data.products.map((p) => ({ slug: p.slug }));
-  } catch {
-    return [];
-  }
-}
+export const runtime = 'nodejs';
+export const dynamic = 'force-dynamic';
 
 interface Props {
   params: Promise<{ slug: string }>;
@@ -43,7 +34,7 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
         title,
         description,
         url: canonicalUrl,
-        type: 'website' as const, // og:type 'product' is not a valid Next.js OpenGraph type literal; 'website' is correct here — the Product schema handles the product signal
+        type: 'website' as const,
         images: image ? [{ url: image, alt: product.name }] : [],
       },
       alternates: { canonical: canonicalUrl },
@@ -66,33 +57,33 @@ export default async function ProductPage({ params }: Props) {
   return (
     <div className="bg-cream">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-10 md:py-16">
-      <JsonLd data={{
-        '@context': 'https://schema.org',
-        '@type': 'BreadcrumbList',
-        itemListElement: [
-          { '@type': 'ListItem', position: 1, name: 'Home', item: siteUrl() },
-          { '@type': 'ListItem', position: 2, name: product.name, item: `${siteUrl()}/product/${slug}` },
-        ],
-      }} />
-      <JsonLd data={{
-        '@context': 'https://schema.org',
-        '@type': 'Product',
-        name: product.name,
-        description: product.description,
-        image: product.images.map((img) => img.url),
-        brand: { '@type': 'Brand', name: brandName() },
-        url: `${siteUrl()}/product/${slug}`,
-        offers: product.variants.map((v) => ({
-          '@type': 'Offer',
-          price: (v.price_cents / 100).toFixed(2),
-          priceCurrency: brandConfig.seo.currency,
-          availability: v.stock_quantity > 0
-            ? 'https://schema.org/InStock'
-            : 'https://schema.org/OutOfStock',
-          sku: v.sku || undefined,
-          itemCondition: 'https://schema.org/NewCondition',
-        })),
-      }} />
+        <JsonLd data={{
+          '@context': 'https://schema.org',
+          '@type': 'BreadcrumbList',
+          itemListElement: [
+            { '@type': 'ListItem', position: 1, name: 'Home', item: siteUrl() },
+            { '@type': 'ListItem', position: 2, name: product.name, item: `${siteUrl()}/product/${slug}` },
+          ],
+        }} />
+        <JsonLd data={{
+          '@context': 'https://schema.org',
+          '@type': 'Product',
+          name: product.name,
+          description: product.description,
+          image: product.images.map((img) => img.url),
+          brand: { '@type': 'Brand', name: brandName() },
+          url: `${siteUrl()}/product/${slug}`,
+          offers: product.variants.map((v) => ({
+            '@type': 'Offer',
+            price: (v.price_cents / 100).toFixed(2),
+            priceCurrency: brandConfig.seo.currency,
+            availability: product.availability_status !== 'sold_out'
+              ? 'https://schema.org/InStock'
+              : 'https://schema.org/OutOfStock',
+            sku: v.sku || undefined,
+            itemCondition: 'https://schema.org/NewCondition',
+          })),
+        }} />
 
         <ProductInteractive product={product} />
 
@@ -111,7 +102,7 @@ async function RelatedProducts({ categorySlug, currentSlug }: { categorySlug: st
   if (!categorySlug) return null;
 
   try {
-    const data = await apiFetch<{ products: ProductListItem[] }>(
+    const data = await apiFetch<{ products: any[] }>(
       `/api/products?category=${encodeURIComponent(categorySlug)}&limit=5`
     );
     const related = data.products.filter((p) => p.slug !== currentSlug).slice(0, 4);

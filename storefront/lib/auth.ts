@@ -3,8 +3,26 @@ import { cookies } from 'next/headers';
 
 const SESSION_COOKIE_NAME = 'admin_session';
 
+export const DEFAULT_SESSION_SECRET = 'fallback-secret-use-a-real-one-in-production-12345';
+export const DEFAULT_PASSWORD_HASH = 'b1a20bf155239e240212f45ec926719cd227eb0d507119ecb001a1db6c1bf9eb9d5929532ea4a5690bfa3fcd6d8174f84a4a581458dc6b4b455b5f2cd796f6e5';
+
+function isProduction(): boolean {
+  return process.env.NODE_ENV === 'production' || process.env.DEV_MODE === 'false';
+}
+
 function getSessionSecret(): string {
-  return process.env.ADMIN_SESSION_SECRET || 'fallback-secret-use-a-real-one-in-production-12345';
+  const secret = process.env.ADMIN_SESSION_SECRET;
+  
+  if (!secret || secret === DEFAULT_SESSION_SECRET) {
+    if (isProduction()) {
+      throw new Error('CRITICAL: Fallback ADMIN_SESSION_SECRET is in use in production mode. Deployment blocked for safety.');
+    } else {
+      console.warn('WARNING: Fallback ADMIN_SESSION_SECRET is in use. This must be changed in production!');
+    }
+    return DEFAULT_SESSION_SECRET;
+  }
+  
+  return secret;
 }
 
 export function signPayload(payload: any): string {
@@ -24,7 +42,10 @@ export function verifySignature(sessionToken: string): any | null {
     const data = Buffer.from(dataBase64, 'base64').toString('utf8');
     const expectedSignature = crypto.createHmac('sha256', secret).update(data).digest('base64');
     
-    if (signature === expectedSignature) {
+    const signatureBuffer = Buffer.from(signature, 'utf8');
+    const expectedBuffer = Buffer.from(expectedSignature, 'utf8');
+    
+    if (signatureBuffer.length === expectedBuffer.length && crypto.timingSafeEqual(signatureBuffer, expectedBuffer)) {
       return JSON.parse(data);
     }
   } catch {}
@@ -67,10 +88,18 @@ export async function destroySession() {
 
 // Password hashing utility using pbkdf2
 export function hashPassword(password: string): string {
-  const salt = 'cedar-salt-homestead'; // Fixed salt for simplicity, or we can use pbkdf2 with a random salt if needed
+  const salt = 'cedar-salt-homestead';
   return crypto.pbkdf2Sync(password, salt, 1000, 64, 'sha512').toString('hex');
 }
 
 export function verifyPassword(password: string, expectedHash: string): boolean {
-  return hashPassword(password) === expectedHash;
+  const inputHash = hashPassword(password);
+  const inputBuffer = Buffer.from(inputHash, 'hex');
+  const expectedBuffer = Buffer.from(expectedHash, 'hex');
+  
+  if (inputBuffer.length !== expectedBuffer.length) {
+    return false;
+  }
+  
+  return crypto.timingSafeEqual(inputBuffer, expectedBuffer);
 }
