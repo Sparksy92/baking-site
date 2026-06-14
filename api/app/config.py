@@ -114,6 +114,11 @@ class Settings(BaseSettings):
     # ── App version ──────────────────────────────────────────────
     app_version: str = "0.1.0"
 
+    # ── Render Hardening Settings ────────────────────────────────
+    upload_storage_root: str = "./data/uploads"
+    enable_background_workers: bool = False
+    cors_allowed_origins: str = ""
+
     model_config = {
         "env_file": os.environ.get("ENV_FILE", "../.env"),
         "env_file_encoding": "utf-8",
@@ -122,7 +127,31 @@ class Settings(BaseSettings):
 
     @property
     def uploads_dir(self) -> Path:
-        return Path("./data/uploads/products")
+        return Path(self.upload_storage_root) / "products"
+
+    @property
+    def parsed_cors_origins(self) -> list[str]:
+        origins = []
+        
+        def normalize(url: str) -> str:
+            val = url.strip()
+            if val.endswith("/"):
+                val = val[:-1].strip()
+            return val
+
+        if self.cors_allowed_origins:
+            for part in self.cors_allowed_origins.split(","):
+                norm = normalize(part)
+                if norm and norm != "*" and norm not in origins:
+                    origins.append(norm)
+
+        if self.store_domain:
+            norm_store = normalize(self.store_domain)
+            if norm_store and norm_store != "*" and norm_store not in origins:
+                origins.append(norm_store)
+
+        return origins
+
 
 
 @lru_cache
