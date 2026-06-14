@@ -25,7 +25,7 @@ This report documents the results of the Launch-Readiness Self-Service Acceptanc
 | 15 | **Confirm notes and status persist** | **PASS** | Reloaded page; request displays under the "Reviewed" tab with the saved admin notes intact. |
 | 16 | **Update pickup/payment instructions in settings** | **PASS** | Navigated to `/admin/settings`, updated instructions textareas, and saved. |
 | 17 | **Confirm public page reflects the change** | **PASS** | The updated settings load dynamically on `/order-info` and `/faq` without requiring code builds. |
-| 18 | **Confirm `/oven-fund` loads** | **PASS** | Oven Fund MVP page compiles and displays the goal progress bar and donation instructions. |
+| 18 | **Confirm `/oven-fund` loads** | **PASS** | Oven Fund page compiles, displaying the dynamic progress bar (with $2,500 goal, $1,620 raised) and manual donation details. |
 | 19 | **Confirm homepage category links work** | **PASS** | Diorama 3D objects and fallback cards correctly navigate to filtered shop routes (e.g. `/shop?category=baked-fresh`). |
 | 20 | **Confirm mobile homepage works** | **PASS** | Verified that rotation swipes, bottom sheets, close buttons, and responsive layouts function on mobile viewports. |
 

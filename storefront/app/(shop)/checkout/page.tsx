@@ -29,7 +29,13 @@ export default function CheckoutPage() {
   const [province, setProvince] = useState('');
   const [postal, setPostal] = useState('');
   const [notes, setNotes] = useState('');
-  const [paymentMethod, setPaymentMethod] = useState<'stripe' | 'etransfer'>('stripe');
+  const [paymentMethod, setPaymentMethod] = useState<'stripe' | 'etransfer'>('etransfer');
+  
+  // Homestead Fields
+  const [desiredDate, setDesiredDate] = useState('');
+  const [pickupOrDelivery, setPickupOrDelivery] = useState('pickup');
+  const [preferredContact, setPreferredContact] = useState('email');
+  const [allergyNotes, setAllergyNotes] = useState('');
   
   // Promo State
   const [promoCode, setPromoCode] = useState('');
@@ -139,6 +145,18 @@ export default function CheckoutPage() {
     setError('');
     setLoading(true);
     try {
+      let combinedNotes = notes.trim();
+      const extraDetails = [
+        desiredDate ? `Desired Date: ${desiredDate}` : null,
+        `Preferred Delivery: ${pickupOrDelivery === 'pickup' ? 'Homestead Pickup' : 'Local Delivery'}`,
+        `Preferred Contact: ${preferredContact}`,
+        allergyNotes ? `Allergy Concerns: ${allergyNotes}` : null
+      ].filter(Boolean).join('\n');
+
+      if (extraDetails) {
+        combinedNotes = combinedNotes ? `${combinedNotes}\n\n-- Homestead Order Details --\n${extraDetails}` : extraDetails;
+      }
+
       const resp = await api.post<CheckoutResponse>('/api/checkout', {
         customer_name: name.trim(),
         customer_email: email.trim(),
@@ -153,7 +171,7 @@ export default function CheckoutPage() {
         },
         items: items.map((i) => ({ variant_id: i.variantId, quantity: i.quantity })),
         promo_code: promoApplied?.code || null,
-        customer_notes: notes.trim() || null,
+        customer_notes: combinedNotes || null,
         payment_method: paymentMethod,
       });
       sessionStorage.setItem('pending_order', JSON.stringify({
@@ -314,6 +332,59 @@ export default function CheckoutPage() {
                     <input id="checkout-phone" type="tel" value={phone} onChange={(e) => setPhone(e.target.value)} 
                       className="w-full px-4 py-3 rounded-xl border border-gray-200 focus:border-brand focus:ring-1 focus:ring-brand outline-none transition-all" 
                       placeholder="(555) 555-5555" autoComplete="tel" />
+                  </div>
+                </div>
+              </section>
+
+              {/* Homestead Options */}
+              <section className="bg-white p-6 sm:p-8 rounded-2xl shadow-sm border border-gray-100 space-y-6">
+                <h2 className="text-xl font-bold text-gray-900">Homestead Order Details</h2>
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 sm:gap-6">
+                  <div>
+                    <label htmlFor="checkout-desired-date" className="block text-sm font-semibold text-gray-700 mb-1.5">Desired Date Needed</label>
+                    <input 
+                      id="checkout-desired-date" 
+                      type="date" 
+                      value={desiredDate} 
+                      onChange={(e) => setDesiredDate(e.target.value)} 
+                      className="w-full px-4 py-3 rounded-xl border border-gray-200 focus:border-brand focus:ring-1 focus:ring-brand outline-none transition-all text-sm" 
+                    />
+                  </div>
+                  <div>
+                    <label htmlFor="checkout-delivery-choice" className="block text-sm font-semibold text-gray-700 mb-1.5">Pickup or Local Delivery?</label>
+                    <select 
+                      id="checkout-delivery-choice" 
+                      value={pickupOrDelivery} 
+                      onChange={(e) => setPickupOrDelivery(e.target.value)} 
+                      className="w-full px-4 py-3 rounded-xl border border-gray-200 focus:border-brand focus:ring-1 focus:ring-brand outline-none transition-all bg-white text-sm"
+                    >
+                      <option value="pickup">Homestead Pickup (Confirm details post-request)</option>
+                      <option value="delivery">Local Delivery (Confirmed by request)</option>
+                    </select>
+                  </div>
+                  <div className="col-span-full sm:col-span-1">
+                    <label htmlFor="checkout-contact-choice" className="block text-sm font-semibold text-gray-700 mb-1.5">Preferred Contact Method</label>
+                    <select 
+                      id="checkout-contact-choice" 
+                      value={preferredContact} 
+                      onChange={(e) => setPreferredContact(e.target.value)} 
+                      className="w-full px-4 py-3 rounded-xl border border-gray-200 focus:border-brand focus:ring-1 focus:ring-brand outline-none transition-all bg-white text-sm"
+                    >
+                      <option value="email">Email</option>
+                      <option value="phone">Phone Call</option>
+                      <option value="text">SMS / Text Message</option>
+                    </select>
+                  </div>
+                  <div className="col-span-full">
+                    <label htmlFor="checkout-allergies" className="block text-sm font-semibold text-gray-700 mb-1.5">Allergy / Dietary Concerns <span className="text-gray-400 font-normal">(optional)</span></label>
+                    <textarea 
+                      id="checkout-allergies"
+                      value={allergyNotes} 
+                      onChange={(e) => setAllergyNotes(e.target.value)} 
+                      rows={2} 
+                      placeholder="Please note any gluten, dairy, nut, or other allergies..."
+                      className="w-full px-4 py-3 rounded-xl border border-gray-200 focus:border-brand focus:ring-1 focus:ring-brand outline-none transition-all resize-none text-sm" 
+                    />
                   </div>
                 </div>
               </section>
