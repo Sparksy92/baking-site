@@ -1,11 +1,15 @@
 'use client';
 
-import { useState } from 'react';
+import { Suspense, useState, useEffect } from 'react';
+import { useSearchParams } from 'next/navigation';
 import { api } from '@/lib/api';
-import { ArrowRight, Sparkles, CheckCircle } from 'lucide-react';
+import { ArrowRight, Sparkles, CheckCircle, Loader2 } from 'lucide-react';
 import Link from 'next/link';
 
-export default function CustomOrdersPage() {
+function CustomOrdersForm() {
+  const searchParams = useSearchParams();
+  const itemSlug = searchParams.get('item');
+
   const [name, setName] = useState('');
   const [email, setEmail] = useState('');
   const [phone, setPhone] = useState('');
@@ -19,6 +23,22 @@ export default function CustomOrdersPage() {
   const [submitting, setSubmitting] = useState(false);
   const [success, setSuccess] = useState(false);
   const [error, setError] = useState('');
+
+  // Prefill the item description if the item query parameter is present
+  useEffect(() => {
+    if (itemSlug) {
+      setCustomDescription(`I would like to request: ${itemSlug}`);
+      api.get<any>(`/api/products/${itemSlug}`)
+        .then((product) => {
+          if (product && product.name) {
+            setCustomDescription(`I would like to request: ${product.name}`);
+          }
+        })
+        .catch(() => {
+          // Fallback to original slug if fetch fails
+        });
+    }
+  }, [itemSlug]);
 
   async function handleSubmit(e: React.FormEvent) {
     e.preventDefault();
@@ -276,5 +296,17 @@ export default function CustomOrdersPage() {
         </form>
       </div>
     </div>
+  );
+}
+
+export default function CustomOrdersPage() {
+  return (
+    <Suspense fallback={
+      <div className="bg-cream min-h-screen py-20 flex items-center justify-center">
+        <Loader2 className="w-8 h-8 animate-spin text-brand" />
+      </div>
+    }>
+      <CustomOrdersForm />
+    </Suspense>
   );
 }

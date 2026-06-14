@@ -60,6 +60,7 @@ export async function apiFetch<T>(path: string): Promise<T> {
   return res.json();
 }
 
+
 // ── Types ───────────────────────────────────────────────────
 
 export interface Category {

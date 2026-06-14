@@ -25,7 +25,7 @@ export function Footer() {
             )}
             <div className="h-px w-10 bg-terracotta/60" />
             <p className="text-xs text-white/35 leading-relaxed">
-              Durable, ethically made clothing<br />for people who actually go outside.
+              Fresh Weekly Baking &amp;<br />Handmade Homestead Goods.
             </p>
           </div>
 

@@ -1,5 +1,6 @@
 import type { MetadataRoute } from 'next';
-import { apiFetch, type ProductListItem, type Collection } from '@/lib/api';
+import { apiFetch } from '@/lib/api-server';
+import { type ProductListItem, type Collection } from '@/lib/api';
 import { siteUrl } from '@/lib/format';
 
 interface CategoryItem { slug: string; }

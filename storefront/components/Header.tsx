@@ -3,27 +3,20 @@
 import { useState, useEffect } from 'react';
 import Link from 'next/link';
 import { usePathname, useSearchParams } from 'next/navigation';
-import { ShoppingBag, Search, Menu, X, User, ArrowRight } from 'lucide-react';
-import { useCart } from '@/lib/cart';
-import { useCustomer } from '@/lib/customer';
+import { Menu, X, ArrowRight } from 'lucide-react';
 import { api, type PublicSettings } from '@/lib/api';
-import { brandName, formatCents } from '@/lib/format';
+import { brandName } from '@/lib/format';
 import { brandConfig } from '@/config/brand.config';
 
 export function Header() {
-  const { count, subtotal } = useCart();
-  const { customer } = useCustomer();
   const pathname = usePathname();
   const searchParams = useSearchParams();
   const fullPath = searchParams.toString() ? `${pathname}?${searchParams.toString()}` : pathname;
-  const isCheckout = ['/cart', '/checkout'].includes(pathname);
   const [mobileOpen, setMobileOpen] = useState(false);
   const [announcement, setAnnouncement] = useState('');
-  const [mounted, setMounted] = useState(false);
   const [scrolled, setScrolled] = useState(false);
 
   useEffect(() => {
-    setMounted(true);
     api.get<PublicSettings>('/api/settings/public')
       .then((s) => { if (s.store_announcement) setAnnouncement(s.store_announcement); })
       .catch(() => {});
@@ -84,32 +77,6 @@ export function Header() {
 
           {/* Actions */}
           <div className="flex items-center gap-1">
-            <Link
-              href="/search"
-              className="w-9 h-9 flex items-center justify-center rounded-full text-earth/60 hover:bg-sand/70 hover:text-terracotta transition-all duration-200"
-              aria-label="Search"
-            >
-              <Search size={18} />
-            </Link>
-            <Link
-              href={mounted && customer ? '/account' : '/account/login'}
-              className="w-9 h-9 flex items-center justify-center rounded-full text-earth/60 hover:bg-sand/70 hover:text-terracotta transition-all duration-200"
-              aria-label="Account"
-            >
-              <User size={18} />
-            </Link>
-            <Link
-              href="/cart"
-              className="relative w-9 h-9 flex items-center justify-center rounded-full text-earth/60 hover:bg-sand/70 hover:text-terracotta transition-all duration-200"
-              aria-label="Cart"
-            >
-              <ShoppingBag size={18} />
-              {mounted && count > 0 && (
-                <span className="absolute -top-0.5 -right-0.5 bg-terracotta text-white text-[9px] font-black rounded-full min-w-[17px] h-[17px] flex items-center justify-center px-0.5 ring-2 ring-cream">
-                  {count > 9 ? '9+' : count}
-                </span>
-              )}
-            </Link>
 
             {/* Mobile hamburger */}
             <button
@@ -158,24 +125,6 @@ export function Header() {
           </nav>
         </div>
       </header>
-
-      {/* Floating cart bar — mobile only */}
-      {mounted && count > 0 && !isCheckout && (
-        <div className="fixed bottom-0 left-0 right-0 z-50 p-3 bg-cream/95 backdrop-blur-2xl border-t border-sand/70 md:hidden">
-          <Link
-            href="/cart"
-            className="flex items-center justify-between bg-earth text-white rounded-2xl px-5 py-3.5 shadow-earth hover:bg-deep transition-colors duration-200"
-          >
-            <div className="flex items-center gap-3">
-              <span className="bg-terracotta rounded-full w-7 h-7 flex items-center justify-center text-xs font-black">
-                {count}
-              </span>
-              <span className="font-bold text-sm">View Cart</span>
-            </div>
-            <span className="font-black text-sm">{formatCents(subtotal)}</span>
-          </Link>
-        </div>
-      )}
     </>
   );
 }

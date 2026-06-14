@@ -36,6 +36,7 @@ export default function AdminSettings() {
   const [settings, setSettings] = useState<{ key: string; value: string }[]>([]);
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
+  const [dbLoading, setDbLoading] = useState(false);
 
   useEffect(() => {
     api.get<{ key: string; value: string }[]>('/api/admin/settings')
@@ -67,6 +68,33 @@ export default function AdminSettings() {
     }
   }
 
+  async function handleDbSetup(force: boolean = false) {
+    if (force && !confirm('Are you sure you want to re-run database setup? This will re-apply default tables and seed items.')) {
+      return;
+    }
+    setDbLoading(true);
+    try {
+      const res = await api.post<{ success: boolean; message: string }>('/api/admin/db/setup', { force });
+      addToast(res.message || 'Database setup completed', 'success');
+      
+      // Reload settings if database was forced reset
+      if (force) {
+        const data = await api.get<{ key: string; value: string }[]>('/api/admin/settings');
+        const dbMap = new Map(data.map(s => [s.key, s.value]));
+        const fullSettings = Object.keys(settingsMeta).map(key => ({
+          key,
+          value: dbMap.get(key) || ''
+        }));
+        setSettings(fullSettings);
+      }
+    } catch (err: any) {
+      console.error(err);
+      addToast(err.message || 'Failed to initialize database', 'error');
+    } finally {
+      setDbLoading(false);
+    }
+  }
+
   if (loading) return <div className="text-gray-400">Loading...</div>;
 
   const settingsBySection = SECTION_ORDER.map((section) => ({
@@ -75,8 +103,11 @@ export default function AdminSettings() {
   }));
 
   return (
-    <div className="max-w-2xl space-y-8">
-      <h1 className="text-2xl font-bold text-gray-900">Settings</h1>
+    <div className="max-w-2xl space-y-8 pb-12">
+      <div className="flex items-center justify-between">
+        <h1 className="text-2xl font-bold text-gray-900">Settings</h1>
+      </div>
+
       {settingsBySection.map(({ section, items }) => (
         <div key={section} className="bg-white rounded-xl border border-gray-200 p-6">
           <h2 className="text-sm font-semibold text-gray-500 uppercase tracking-wider mb-5">{section}</h2>
@@ -114,9 +145,36 @@ export default function AdminSettings() {
           </div>
         </div>
       ))}
-      <button onClick={handleSave} disabled={saving} className="bg-brand text-white px-6 py-2.5 rounded-lg font-medium text-sm hover:bg-brand/90 disabled:opacity-50">
-        {saving ? 'Saving...' : 'Save Settings'}
-      </button>
+
+      <div className="flex items-center justify-between">
+        <button onClick={handleSave} disabled={saving} className="bg-brand text-white px-6 py-2.5 rounded-lg font-medium text-sm hover:bg-brand/90 disabled:opacity-50 transition-colors shadow-sm">
+          {saving ? 'Saving...' : 'Save Settings'}
+        </button>
+      </div>
+
+      {/* Database Maintenance Section */}
+      <div className="bg-white rounded-xl border border-gray-200 p-6">
+        <h2 className="text-sm font-semibold text-gray-500 uppercase tracking-wider mb-3">Database Maintenance</h2>
+        <p className="text-xs text-gray-500 mb-4 leading-relaxed">
+          Initialize database tables, default categories, site settings, and menu items. Safe setup will skip initialization if the database is already configured. Re-run setup will safely re-apply schema definitions and missing seed values.
+        </p>
+        <div className="flex flex-wrap items-center gap-3">
+          <button
+            onClick={() => handleDbSetup(false)}
+            disabled={dbLoading}
+            className="bg-brand text-white px-5 py-2.5 rounded-lg font-semibold text-xs hover:bg-brand/90 disabled:opacity-50 transition-colors"
+          >
+            {dbLoading ? 'Processing...' : 'Run Setup (Safe)'}
+          </button>
+          <button
+            onClick={() => handleDbSetup(true)}
+            disabled={dbLoading}
+            className="border border-brand/20 text-brand bg-brand/5 hover:bg-brand/10 px-5 py-2.5 rounded-lg font-semibold text-xs disabled:opacity-50 transition-colors"
+          >
+            {dbLoading ? 'Processing...' : 'Re-run Setup'}
+          </button>
+        </div>
+      </div>
     </div>
   );
 }

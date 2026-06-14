@@ -130,10 +130,10 @@ export default function AdminDashboard() {
       <div className="mt-6 bg-white rounded-xl border border-gray-200 p-5">
         <h2 className="font-semibold text-gray-900 mb-3">Quick Links</h2>
         <div className="flex flex-wrap gap-3">
-          <a href="/admin/products/new" className="px-3 py-1.5 text-sm bg-gray-100 rounded-lg hover:bg-gray-200 text-gray-700">+ New Product</a>
-          <a href="/admin/orders" className="px-3 py-1.5 text-sm bg-gray-100 rounded-lg hover:bg-gray-200 text-gray-700">View Orders</a>
-          <a href="/admin/collections" className="px-3 py-1.5 text-sm bg-gray-100 rounded-lg hover:bg-gray-200 text-gray-700">Collections</a>
-          <a href="/admin/categories" className="px-3 py-1.5 text-sm bg-gray-100 rounded-lg hover:bg-gray-200 text-gray-700">Categories</a>
+          <a href="/admin/products/new" className="px-3 py-1.5 text-sm bg-gray-100 rounded-lg hover:bg-gray-200 text-gray-700">+ New Menu Item</a>
+          <a href="/admin/products" className="px-3 py-1.5 text-sm bg-gray-100 rounded-lg hover:bg-gray-200 text-gray-700">Manage Menu</a>
+          <a href="/admin/order-requests" className="px-3 py-1.5 text-sm bg-gray-100 rounded-lg hover:bg-gray-200 text-gray-700">Order Requests</a>
+          <a href="/admin/settings" className="px-3 py-1.5 text-sm bg-gray-100 rounded-lg hover:bg-gray-200 text-gray-700">Settings</a>
         </div>
       </div>
     </div>
