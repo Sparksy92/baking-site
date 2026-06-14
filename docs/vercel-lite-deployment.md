@@ -16,7 +16,7 @@ Because Vercel runs in a serverless environment, the database is not auto-initia
 4. Go to **Settings** (`/admin/settings`).
 5. Scroll down to the **Database Maintenance** section:
    - Click **Run Setup (Safe)** to create the tables and seed default categories/items.
-   - If you ever need to reset the storefront back to the original seed data, click **Force Re-initialize** (this will drop existing tables and reset all configurations).
+   - If you need to re-apply default schemas or missing seed values, click **Re-run Setup**.
 
 ### Alternative Flow: Neon Console SQL Manual Setup (Fallback)
 

@@ -69,7 +69,7 @@ export default function AdminSettings() {
   }
 
   async function handleDbSetup(force: boolean = false) {
-    if (force && !confirm('Are you sure you want to re-initialize the database? This will reset all categories, menu items, and settings to defaults.')) {
+    if (force && !confirm('Are you sure you want to re-run database setup? This will re-apply default tables and seed items.')) {
       return;
     }
     setDbLoading(true);
@@ -156,7 +156,7 @@ export default function AdminSettings() {
       <div className="bg-white rounded-xl border border-gray-200 p-6">
         <h2 className="text-sm font-semibold text-gray-500 uppercase tracking-wider mb-3">Database Maintenance</h2>
         <p className="text-xs text-gray-500 mb-4 leading-relaxed">
-          Initialize database tables, default categories, site settings, and menu items. If tables are already present, safe setup will skip them. Force re-initialize will drop and recreate all default data.
+          Initialize database tables, default categories, site settings, and menu items. Safe setup will skip initialization if the database is already configured. Re-run setup will safely re-apply schema definitions and missing seed values.
         </p>
         <div className="flex flex-wrap items-center gap-3">
           <button
@@ -169,9 +169,9 @@ export default function AdminSettings() {
           <button
             onClick={() => handleDbSetup(true)}
             disabled={dbLoading}
-            className="border border-red-200 text-red-700 bg-red-50 hover:bg-red-100 px-5 py-2.5 rounded-lg font-semibold text-xs disabled:opacity-50 transition-colors"
+            className="border border-brand/20 text-brand bg-brand/5 hover:bg-brand/10 px-5 py-2.5 rounded-lg font-semibold text-xs disabled:opacity-50 transition-colors"
           >
-            {dbLoading ? 'Processing...' : 'Force Re-initialize'}
+            {dbLoading ? 'Processing...' : 'Re-run Setup'}
           </button>
         </div>
       </div>
