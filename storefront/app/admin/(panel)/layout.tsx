@@ -93,7 +93,7 @@ function readOpenSections(): Record<string, boolean> {
 function NavLink({ item, pathname, newRequestsCount = null }: { item: NavItem; pathname: string; newRequestsCount?: number | null }) {
   const isExactParent = item.to === '/admin' || item.to === '/admin/social';
   const active = isExactParent ? pathname === item.to : pathname.startsWith(item.to);
-  const Icon = item.icon;
+  const Icon = item.icon as any;
   return (
     <Link
       href={item.to}
@@ -165,7 +165,7 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
 
           {SECTIONS.map((section) => {
             const isOpen = !!openSections[section.id];
-            const SectionIcon = section.icon;
+            const SectionIcon = section.icon as any;
             const hasActive = section.items.some((i) => pathname.startsWith(i.to));
             return (
               <div key={section.id} className="pt-1">

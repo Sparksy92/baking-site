@@ -472,7 +472,7 @@ function QuickActionCard({
   href, 
   color 
 }: { 
-  icon: React.ElementType; 
+  icon: any; 
   label: string; 
   value: number; 
   href: string;

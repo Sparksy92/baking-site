@@ -32,7 +32,7 @@ const HASHTAG_MODE_LABELS: Record<string, string> = {
 
 type SaveState = Record<string, boolean>;
 
-const STATUS_META: Record<Platform['setup_status'], { label: string; icon: React.ElementType; color: string }> = {
+const STATUS_META: Record<Platform['setup_status'], { label: string; icon: any; color: string }> = {
   active:          { label: 'Active',           icon: CheckCircle,  color: 'text-green-600' },
   pending_review:  { label: 'Pending Review',   icon: Clock,        color: 'text-yellow-600' },
   not_configured:  { label: 'Not Configured',   icon: XCircle,      color: 'text-gray-400' },
