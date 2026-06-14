@@ -23,61 +23,12 @@ type NavSection = {
 
 const CORE_NAV: NavItem[] = [
   { label: 'Dashboard',      to: '/admin',            icon: LayoutDashboard },
-  { label: 'Orders',         to: '/admin/orders',     icon: ShoppingCart },
   { label: 'Order Requests', to: '/admin/order-requests', icon: Inbox },
-  { label: 'Customers',      to: '/admin/customers',  icon: Users },
-  { label: 'Products',       to: '/admin/products',   icon: Package },
-  { label: 'Collections',    to: '/admin/collections',icon: Layers },
-  { label: 'Categories',     to: '/admin/categories', icon: FolderOpen },
-  { label: 'Returns',        to: '/admin/returns',    icon: RotateCcw },
-  { label: 'Pages',          to: '/admin/pages',      icon: FileText },
+  { label: 'Menu Items',     to: '/admin/products',   icon: Package },
   { label: 'Settings',       to: '/admin/settings',   icon: Settings },
 ];
 
-const SECTIONS: NavSection[] = [
-  {
-    id: 'marketing',
-    label: 'Marketing',
-    icon: Megaphone,
-    items: [
-      { label: 'Promos',      to: '/admin/promos',      icon: Tag },
-      { label: 'Gift Cards',  to: '/admin/gift-cards',  icon: Gift },
-      { label: 'Loyalty',     to: '/admin/loyalty',     icon: Star },
-      { label: 'Store Credit',to: '/admin/store-credit',icon: CreditCard },
-      { label: 'Segments',    to: '/admin/segments',    icon: Users },
-      { label: 'Newsletter',  to: '/admin/newsletter',  icon: Mail },
-      { label: 'Analytics',   to: '/admin/analytics',   icon: BarChart3 },
-      { label: 'LTV Report',  to: '/admin/ltv',          icon: TrendingUp },
-    ],
-  },
-  {
-    id: 'social',
-    label: 'Social & AI',
-    icon: Share2,
-    items: [
-      { label: 'Dashboard',      to: '/admin/social',           icon: LayoutDashboard },
-      { label: 'Outbox',         to: '/admin/social/outbox',    icon: Inbox },
-      { label: 'Crisis Alerts',  to: '/admin/social/crisis',    icon: AlertTriangle },
-      { label: 'Strategy',       to: '/admin/social/strategy',  icon: TrendingUp },
-      { label: 'A/B Tests',      to: '/admin/social/ab-tests',  icon: BarChart3 },
-      { label: 'Brand Persona',  to: '/admin/social/persona',   icon: Bot },
-      { label: 'Platforms',      to: '/admin/social/platforms', icon: Share2 },
-    ],
-  },
-  {
-    id: 'advanced',
-    label: 'Advanced',
-    icon: Wrench,
-    items: [
-      { label: 'Bundles',     to: '/admin/bundles',     icon: PackageOpen },
-      { label: 'Tags',        to: '/admin/tags',        icon: Tags },
-      { label: 'Size Guides', to: '/admin/size-guides', icon: Ruler },
-      { label: 'Redirects',   to: '/admin/redirects',   icon: ArrowLeftRight },
-      { label: 'Webhooks',    to: '/admin/webhooks',    icon: Webhook },
-      { label: 'Staff',       to: '/admin/staff',       icon: Shield },
-    ],
-  },
-];
+const SECTIONS: NavSection[] = [];
 
 const LS_KEY = 'admin_nav_open_sections';
 

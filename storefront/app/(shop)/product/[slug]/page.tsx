@@ -1,6 +1,7 @@
 import type { Metadata } from 'next';
 import { notFound } from 'next/navigation';
-import { apiFetch, type Product, type ProductListItem } from '@/lib/api';
+import { apiFetch } from '@/lib/api-server';
+import { type Product, type ProductListItem } from '@/lib/api';
 import { brandName, siteUrl } from '@/lib/format';
 import { brandConfig } from '@/config/brand.config';
 import { JsonLd } from '@/components/JsonLd';
