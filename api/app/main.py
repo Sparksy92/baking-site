@@ -79,6 +79,11 @@ async def lifespan(app: FastAPI):
             "CUSTOMER_JWT_SECRET is set to the default value. "
             "Generate a real secret: openssl rand -base64 32"
         )
+    if not settings.dev_mode and ("localhost" in settings.store_domain or "127.0.0.1" in settings.store_domain):
+        raise RuntimeError(
+            f"STORE_DOMAIN is set to a localhost URL ('{settings.store_domain}') while DEV_MODE is false (production). "
+            "Please configure a valid production storefront domain."
+        )
     
     async def _background_social_sync():
         while True:
@@ -153,7 +158,7 @@ async def lifespan(app: FastAPI):
     logger.info("Database initialized")
 
     background_tasks = []
-    if "pytest" not in sys.modules:
+    if "pytest" not in sys.modules and settings.enable_background_workers:
         background_tasks = [
             asyncio.ensure_future(_background_social_sync()),
             asyncio.ensure_future(_background_token_refresh()),
@@ -190,10 +195,10 @@ def create_app() -> FastAPI:
     # ── Middleware ──────────────────────────────────────────────
     app.add_middleware(
         CORSMiddleware,
-        allow_origins=[app_settings.store_domain],
+        allow_origins=app_settings.parsed_cors_origins,
         allow_credentials=True,
         allow_methods=["GET", "POST", "PATCH", "DELETE", "PUT"],
-        allow_headers=["Content-Type"],
+        allow_headers=["Content-Type", "Authorization"],
     )
     # app.add_middleware(RateLimitMiddleware)  # Disabled for local testing
     app.add_middleware(RequestIdMiddleware)
