@@ -182,6 +182,15 @@ export interface PublicSettings {
   analytics_id: string;
   etransfer_email: string;
   payment_method?: 'stripe' | 'etransfer';
+  about_content: string;
+  faq_content: string;
+  pickup_instructions: string;
+  payment_instructions: string;
+  allergy_disclaimer: string;
+  preorder_instructions: string;
+  oven_fund_goal: string;
+  oven_fund_current_amount: string;
+  oven_fund_description: string;
 }
 
 export interface CheckoutResponse {

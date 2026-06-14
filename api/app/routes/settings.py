@@ -34,4 +34,13 @@ async def get_public_settings(db: PostgresConnection = Depends(get_db)):
         blog_section_name=store_settings.get("blog_section_name", ""),
         brand_abbreviation=store_settings.get("brand_abbreviation", ""),
         store_domain=store_settings.get("store_domain", "") or settings.store_domain,
+        about_content=store_settings.get("about_content", ""),
+        faq_content=store_settings.get("faq_content", ""),
+        pickup_instructions=store_settings.get("pickup_instructions", ""),
+        payment_instructions=store_settings.get("payment_instructions", ""),
+        allergy_disclaimer=store_settings.get("allergy_disclaimer", ""),
+        preorder_instructions=store_settings.get("preorder_instructions", ""),
+        oven_fund_goal=store_settings.get("oven_fund_goal", ""),
+        oven_fund_current_amount=store_settings.get("oven_fund_current_amount", ""),
+        oven_fund_description=store_settings.get("oven_fund_description", ""),
     )

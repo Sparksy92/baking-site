@@ -407,6 +407,15 @@ class PublicSettingsResponse(BaseModel):
     blog_section_name: str = ""
     brand_abbreviation: str = ""
     store_domain: str = ""
+    about_content: str = ""
+    faq_content: str = ""
+    pickup_instructions: str = ""
+    payment_instructions: str = ""
+    allergy_disclaimer: str = ""
+    preorder_instructions: str = ""
+    oven_fund_goal: str = ""
+    oven_fund_current_amount: str = ""
+    oven_fund_description: str = ""
 
 # ── Contact ────────────────────────────────────────────────────
 
