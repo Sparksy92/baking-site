@@ -1,4 +1,4 @@
-﻿# Cedar & Sage Homestead Conversion Plan
+# Cedar & Sage Homestead Conversion Plan
 
 ## Project Goal
 
@@ -259,3 +259,33 @@ The build is not complete until:
 * Email alert is attempted.
 * Backend rejects invalid checkout attempts.
 * No old hardcoded menu prices appear.
+
+## Phase 2 Implementation Notes
+
+* **Actual migration filename used**: `api/app/migrations/044_cedar_sage_custom_pricing.sql`
+* **Backend routes created**:
+  * Public:
+    * `POST /api/order-requests` - Create order requests, attempt email notifications
+  * Admin:
+    * `GET /api/admin/order-requests` - List order requests with filters and pagination
+    * `GET /api/admin/order-requests/{id}` - Retrieve details of a single request
+    * `PATCH /api/admin/order-requests/{id}` - Update request status and admin notes
+* **Admin fields added**:
+  * Pricing Mode (fixed, starting_at, quote_only, seasonal, unavailable)
+  * Availability Status (available, sold_out, preorder_only, weekend_only, seasonal, quote_only, unavailable, hidden)
+  * Lead Time Days (numeric)
+  * Preorder-Only flag (boolean)
+  * Weekend-Only flag (boolean)
+  * Quote-Only flag (boolean)
+  * Allergy Notes (text)
+  * Pickup Notes (text)
+* **Checkout protection implemented**:
+  * Backend: Enforced in `api/app/services/order_service.py` to prevent checking out if a product/variant is zero-priced, quote-only, seasonal, unavailable, or hidden.
+  * Frontend: Hide buy buttons/cart actions and display a custom order request CTA pointing to `/custom-orders` on custom or quote-only products.
+* **Tests added**:
+  * Backend: `api/tests/test_cedar_sage_custom_pricing.py` (checks checkout protections, public order submission, email resilience, admin list/update, and authentication security).
+  * Frontend: `storefront/__tests__/lib/format.test.ts` (verifies `formatCents(0)` returns "Price to be confirmed").
+* **Deferred items**:
+  * Public site redesign polish (e.g. customized styling of general storefront, theme changes) is deferred to Phase 3.
+  * Calendar-based scheduling, automated delivery radius verification, and custom cake constructor are deferred.
+

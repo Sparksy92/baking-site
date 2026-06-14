@@ -265,3 +265,71 @@ async def send_back_in_stock_notification(
     })
 
     logger.info("Back-in-stock notification sent to %s for %s", email, product_name)
+
+
+async def send_order_request_notification(request_data: dict) -> None:
+    """Send order request notification email to administrator (Kirstin)."""
+    settings = get_settings()
+    if not settings.resend_api_key:
+        logger.warning("RESEND_API_KEY not set — skipping order request notification email")
+        return
+
+    _init_resend()
+
+    # Destination is CONTACT_EMAIL or falls back to settings.email_from
+    to_email = settings.contact_email or settings.email_from
+    if not to_email:
+        logger.warning("No contact email or email_from configured - skipping order request notification email")
+        return
+
+    items_html = ""
+    for item in request_data.get("requested_items") or []:
+        option_str = f" ({item.get('option')})" if item.get("option") else ""
+        notes_str = f"<br/><small>Notes: {item.get('notes')}</small>" if item.get("notes") else ""
+        items_html += f"<li>{item.get('quantity')}x {item.get('product_name')}{option_str}{notes_str}</li>"
+
+    desired_date_str = str(request_data.get("desired_date")) if request_data.get("desired_date") else "Not specified"
+    allergy_notes = request_data.get("allergy_notes") or "None"
+    special_instructions = request_data.get("special_instructions") or "None"
+
+    admin_link = f"{settings.store_domain}/admin/order-requests"
+
+    html = f"""
+    <h2>New Order Request Received</h2>
+    <p><strong>Customer Details:</strong></p>
+    <ul>
+        <li><strong>Name:</strong> {request_data.get('customer_name')}</li>
+        <li><strong>Email:</strong> {request_data.get('customer_email')}</li>
+        <li><strong>Phone:</strong> {request_data.get('customer_phone') or 'Not provided'}</li>
+        <li><strong>Preferred Contact:</strong> {request_data.get('preferred_contact_method')}</li>
+    </ul>
+
+    <p><strong>Order Details:</strong></p>
+    <ul>
+        <li><strong>Desired Date:</strong> {desired_date_str}</li>
+        <li><strong>Pickup/Delivery:</strong> {request_data.get('pickup_or_delivery', 'pickup').capitalize()}</li>
+        <li><strong>Allergy Notes:</strong> {allergy_notes}</li>
+        <li><strong>Special Instructions:</strong> {special_instructions}</li>
+    </ul>
+
+    <p><strong>Requested Items:</strong></p>
+    <ul>
+        {items_html}
+    </ul>
+
+    <p style="margin-top:24px">
+        <a href="{admin_link}" style="display:inline-block;padding:12px 24px;background:#6F7D5C;color:#fff;text-decoration:none;border-radius:6px;font-weight:bold">
+            View in Admin Inbox (Request ID: {request_data.get('id')})
+        </a>
+    </p>
+    """
+
+    resend.Emails.send({
+        "from": settings.email_from,
+        "to": to_email,
+        "subject": f"New Custom Order Request from {request_data.get('customer_name')}",
+        "html": html,
+    })
+
+    logger.info("Order request notification email sent to %s for request ID %s", to_email, request_data.get("id"))
+

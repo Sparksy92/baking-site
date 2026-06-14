@@ -45,13 +45,16 @@ async def create_product(
     """Create a new product."""
     try:
         cursor = await db.execute(
-            """INSERT INTO products (name, slug, description, category_id, is_active, is_featured, sort_order, weight_g, meta_title, meta_description, noindex, canonical_url, og_image_url, allow_preorder, available_at)
-               VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)""",
+            """INSERT INTO products (name, slug, description, category_id, is_active, is_featured, sort_order, weight_g, meta_title, meta_description, noindex, canonical_url, og_image_url, allow_preorder, available_at, pricing_mode, availability_status, lead_time_days, is_preorder_only, is_weekend_only, is_quote_only, allergy_notes, pickup_notes)
+               VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)""",
             (body.name, body.slug, body.description, body.category_id,
              body.is_active, body.is_featured, body.sort_order, body.weight_g,
              body.meta_title, body.meta_description,
              body.noindex, body.canonical_url, body.og_image_url,
-             body.allow_preorder, body.available_at),
+             body.allow_preorder, body.available_at,
+             body.pricing_mode, body.availability_status, body.lead_time_days,
+             body.is_preorder_only, body.is_weekend_only, body.is_quote_only,
+             body.allergy_notes, body.pickup_notes),
         )
         new_id = cursor.lastrowid
         await db.commit()

@@ -1,6 +1,9 @@
 import { brandConfig } from '../config/brand.config';
 
 export function formatCents(cents: number): string {
+  if (cents <= 0) {
+    return 'Price to be confirmed';
+  }
   return `$${(cents / 100).toFixed(2)}`;
 }
 

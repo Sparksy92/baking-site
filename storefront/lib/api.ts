@@ -126,6 +126,14 @@ export interface Product {
   variants: Variant[];
   images: ProductImage[];
   tags: ProductTag[];
+  pricing_mode?: string;
+  availability_status?: string;
+  lead_time_days?: number;
+  is_preorder_only?: boolean;
+  is_weekend_only?: boolean;
+  is_quote_only?: boolean;
+  allergy_notes?: string | null;
+  pickup_notes?: string | null;
 }
 
 export interface ProductListItem {
@@ -141,6 +149,11 @@ export interface ProductListItem {
   max_price_cents: number | null;
   compare_at_price_cents: number | null;
   total_stock: number;
+  pricing_mode?: string;
+  availability_status?: string;
+  is_preorder_only?: boolean;
+  is_weekend_only?: boolean;
+  is_quote_only?: boolean;
 }
 
 export interface Collection {

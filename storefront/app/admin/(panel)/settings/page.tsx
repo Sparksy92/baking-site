@@ -22,9 +22,15 @@ const settingsMeta: Record<string, SettingMeta> = {
   shipping_flat_rate_cents:     { section: 'Store',                     label: 'Flat Rate Shipping (cents)',   hint: 'e.g. 1200 = $12.00', type: 'number' },
   shipping_free_threshold_cents:{ section: 'Store',                     label: 'Free Shipping Threshold (cents)', hint: 'e.g. 7500 = $75.00', type: 'number' },
   tax_rate:                     { section: 'Store',                     label: 'Tax Rate',                     hint: 'e.g. 0.13 = 13% HST', type: 'number' },
+  about_content:                { section: 'Homestead Content',         label: 'About Us Content',             hint: 'About page biography/intro copy.', type: 'textarea' },
+  faq_content:                  { section: 'Homestead Content',         label: 'FAQ Copy',                     hint: 'Plain text FAQ question/answer copy.', type: 'textarea' },
+  pickup_instructions:          { section: 'Homestead Content',         label: 'Pickup Instructions',          hint: 'Instructions for customer custom order pickups.', type: 'textarea' },
+  payment_instructions:         { section: 'Homestead Content',         label: 'Payment Instructions',         hint: 'Instructions on e-Transfer details and prepayment terms.', type: 'textarea' },
+  allergy_disclaimer:           { section: 'Homestead Content',         label: 'Allergy Disclaimer',           hint: 'Disclaimer text regarding cross-contamination.', type: 'textarea' },
+  preorder_instructions:        { section: 'Homestead Content',         label: 'Preorder Instructions',        hint: 'Information regarding lead times and ordering cycles.', type: 'textarea' },
 };
 
-const SECTION_ORDER = ['Brand Identity', 'SEO Defaults', 'Analytics & Verification', 'Store'];
+const SECTION_ORDER = ['Brand Identity', 'SEO Defaults', 'Analytics & Verification', 'Store', 'Homestead Content'];
 
 export default function AdminSettings() {
   const [settings, setSettings] = useState<{ key: string; value: string }[]>([]);
@@ -82,13 +88,23 @@ export default function AdminSettings() {
                   <label htmlFor={`setting-${s.key}`} className="text-sm font-medium text-gray-700 block mb-1">
                     {meta?.label ?? s.key}
                   </label>
-                  <input
-                    id={`setting-${s.key}`}
-                    type={meta?.type ?? 'text'}
-                    value={s.value}
-                    onChange={(e) => handleChange(s.key, e.target.value)}
-                    className="w-full px-4 py-2.5 rounded-lg border border-gray-200 focus:border-brand outline-none text-sm"
-                  />
+                  {meta?.type === 'textarea' ? (
+                    <textarea
+                      id={`setting-${s.key}`}
+                      value={s.value}
+                      onChange={(e) => handleChange(s.key, e.target.value)}
+                      rows={5}
+                      className="w-full px-4 py-2.5 rounded-lg border border-gray-200 focus:border-brand outline-none text-sm resize-none"
+                    />
+                  ) : (
+                    <input
+                      id={`setting-${s.key}`}
+                      type={meta?.type ?? 'text'}
+                      value={s.value}
+                      onChange={(e) => handleChange(s.key, e.target.value)}
+                      className="w-full px-4 py-2.5 rounded-lg border border-gray-200 focus:border-brand outline-none text-sm"
+                    />
+                  )}
                   {meta?.hint && (
                     <p className="mt-1 text-xs text-gray-400">{meta.hint}</p>
                   )}
