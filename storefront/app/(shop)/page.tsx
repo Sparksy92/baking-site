@@ -1,3 +1,4 @@
+import type { Metadata } from 'next';
 import Link from 'next/link';
 import Image from 'next/image';
 import dynamic from 'next/dynamic';
@@ -10,6 +11,11 @@ import { brandConfig } from '@/config/brand.config';
 import { ArrowRight, Leaf, HeartHandshake, Truck, Shield, HelpCircle } from 'lucide-react';
 
 import HomesteadDiorama from '@/components/home/HomesteadDiorama';
+
+export const metadata: Metadata = {
+  title: 'Cedar & Sage Homestead | Fresh Baking & Homestead Goods',
+  description: 'Fresh breads, sourdough preorders, desserts, pantry goods, and handmade homestead care products from Cedar & Sage Homestead.',
+};
 
 export default async function Home() {
   const prodData = await apiFetch<{ products: ProductListItem[] }>('/api/products?featured=true&limit=8').catch(() => ({ products: [] }));
