@@ -1,5 +1,5 @@
 import Link from 'next/link';
-import { Home, Search, HelpCircle } from 'lucide-react';
+import { Home, ShoppingBag, HelpCircle } from 'lucide-react';
 import { brandName } from '@/lib/format';
 
 export default function NotFound() {
@@ -29,11 +29,11 @@ export default function NotFound() {
           Back to Home
         </Link>
         <Link 
-          href="/search" 
+          href="/shop" 
           className="flex items-center gap-2 px-8 py-4 bg-white text-gray-900 border border-gray-200 font-bold rounded-2xl hover:bg-gray-50 hover:border-gray-300 transition-all w-full sm:w-auto justify-center shadow-sm"
         >
-          <Search size={18} />
-          Search {brandName()}
+          <ShoppingBag size={18} />
+          Browse Menu
         </Link>
       </div>
 

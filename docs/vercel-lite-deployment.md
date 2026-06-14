@@ -4,13 +4,27 @@ This guide details the deployment of the simplified, serverless Next.js-only Ced
 
 ---
 
-## 1. Database Setup (Neon Postgres)
+## 1. Database Setup & Initialization Flow
 
-1. Create a free account at [neon.tech](https://neon.tech) and initialize a new project named `cedar-sage-db`.
-2. Retrieve your connection string from the Neon dashboard (make sure the `Pooled` connection toggle is enabled for serverless compatibility, e.g. using `sslmode=require`).
-3. Set this connection string as the `DATABASE_URL` environment variable.
-4. Execute the schema migration and seeding script. 
-   - Note: The Vercel-Lite codebase contains a self-healing database layer (`storefront/lib/db.ts`). Upon the **first request** to any API endpoint (such as visiting the shop or public about page), the application will automatically detect the missing tables, execute `storefront/db/schema.sql`, and seed the database with the Cedar & Sage products from `storefront/db/seed.sql`.
+Because Vercel runs in a serverless environment, the database is not auto-initialized on the first query. Instead, you can initialize the database tables and default menu items directly from the Admin Panel or via the Neon SQL console.
+
+### Recommended Flow: Admin Panel Setup
+
+1. **Deploy to Vercel first** (see section 2 below) with your environment variables (including `DATABASE_URL`).
+2. Navigate to `/admin/login` on your deployed Vercel domain.
+3. Log in with your configured `ADMIN_EMAIL` and administrator password.
+4. Go to **Settings** (`/admin/settings`).
+5. Scroll down to the **Database Maintenance** section:
+   - Click **Run Setup (Safe)** to create the tables and seed default categories/items.
+   - If you ever need to reset the storefront back to the original seed data, click **Force Re-initialize** (this will drop existing tables and reset all configurations).
+
+### Alternative Flow: Neon Console SQL Manual Setup (Fallback)
+
+If you prefer to initialize the database manually before your first login:
+1. Open your project on the [Neon Console](https://neon.tech).
+2. Go to the **SQL Editor** tab.
+3. Copy the schema definitions from [schema.sql](file:///c:/Projects/cedar-and-sage/storefront/db/schema.sql) and execute them.
+4. Copy the default values from [seed.sql](file:///c:/Projects/cedar-and-sage/storefront/db/seed.sql) and execute them.
 
 ---
 
@@ -20,11 +34,11 @@ This guide details the deployment of the simplified, serverless Next.js-only Ced
 2. Create a new project pointing to the repo, and configure these **Project Settings**:
    - **Framework Preset**: `Next.js`
    - **Root Directory**: `storefront`
-   - **Build Command**: `npm install && npm run build`
+   - **Build Command**: `npm run build`
    - **Output Directory**: `.next`
 3. Add the following **Environment Variables** in the Vercel project settings:
    - `DATABASE_URL`: Your Neon Postgres connection string.
-   - `ADMIN_SESSION_SECRET`: A secure random string of at least 32 characters (e.g. `openssl rand -base64 32`).
+   - `ADMIN_SESSION_SECRET`: A secure random string of at least 32 characters (e.g. run `openssl rand -base64 32` to generate).
    - `ADMIN_EMAIL`: The login email for the admin panel (e.g. `hello@cedarandsagehomestead.ca`).
    - `ADMIN_PASSWORD_HASH`: The PBKDF2 hash of your desired administrator password (see generation instructions below).
    - `CONTACT_EMAIL`: The email address where order notifications will be sent (e.g. `hello@cedarandsagehomestead.ca`).
@@ -47,7 +61,8 @@ node -e "console.log(require('crypto').pbkdf2Sync('YOUR_PASSWORD_HERE', 'cedar-s
 
 Copy the printed 128-character hex string and paste it as the value for `ADMIN_PASSWORD_HASH` in your Vercel environment variables.
 
-*(The default hash in `.env.example` corresponds to the password `admin123`).*
+> [!WARNING]
+> Do not deploy with the default development password. The default hash in `.env.example` is for development use only and will block logins in production.
 
 ---
 
@@ -77,6 +92,7 @@ Copy the printed 128-character hex string and paste it as the value for `ADMIN_P
    - Click a request to view details, update the status (`new`, `reviewed`, `quoted`, `accepted`, `completed`, `cancelled`), and append private admin notes.
 5. **Settings Editor** (`/admin/settings`):
    - Edit the brand identity, Oven Fund amounts, and instructions (payment/pickup/preorder/allergy copy). Click **Save Settings** to persist to Neon.
+   - Maintain and run database setup using the **Database Maintenance** panel at the bottom.
 
 ---
 

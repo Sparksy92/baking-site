@@ -3,7 +3,7 @@
 import { useState, useEffect } from 'react';
 import Link from 'next/link';
 import { usePathname, useSearchParams } from 'next/navigation';
-import { Search, Menu, X, ArrowRight } from 'lucide-react';
+import { Menu, X, ArrowRight } from 'lucide-react';
 import { api, type PublicSettings } from '@/lib/api';
 import { brandName } from '@/lib/format';
 import { brandConfig } from '@/config/brand.config';
@@ -77,13 +77,6 @@ export function Header() {
 
           {/* Actions */}
           <div className="flex items-center gap-1">
-            <Link
-              href="/search"
-              className="w-9 h-9 flex items-center justify-center rounded-full text-earth/60 hover:bg-sand/70 hover:text-terracotta transition-all duration-200"
-              aria-label="Search"
-            >
-              <Search size={18} />
-            </Link>
 
             {/* Mobile hamburger */}
             <button

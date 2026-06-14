@@ -1,6 +1,5 @@
 import { Pool, QueryResult, QueryResultRow } from 'pg';
-import fs from 'fs';
-import path from 'path';
+import { SCHEMA_SQL, SEED_SQL } from './db-schema';
 
 let pool: Pool | null = null;
 
@@ -50,38 +49,8 @@ export async function initDatabase(force: boolean = false) {
 
   console.log('Initializing database schema and seed data...');
   
-  const possibleDirs = [
-    path.join(process.cwd(), 'db'),
-    path.join(process.cwd(), 'storefront/db'),
-    path.join(process.cwd(), '.next/server/db'), // fallback for Vercel bundling
-  ];
-  
-  let schemaSql = '';
-  let seedSql = '';
-  let loaded = false;
-  let triedPaths: string[] = [];
-  
-  for (const dir of possibleDirs) {
-    try {
-      const schemaPath = path.join(dir, 'schema.sql');
-      const seedPath = path.join(dir, 'seed.sql');
-      triedPaths.push(schemaPath);
-      if (fs.existsSync(schemaPath) && fs.existsSync(seedPath)) {
-        schemaSql = fs.readFileSync(schemaPath, 'utf8');
-        seedSql = fs.readFileSync(seedPath, 'utf8');
-        loaded = true;
-        break;
-      }
-    } catch {}
-  }
-  
-  if (!loaded) {
-    throw new Error(`Could not locate schema.sql and seed.sql files. Tried paths: ${triedPaths.join(', ')}`);
-  }
-  
-  // Split statements by semicolon if needed, or run as a single query since pg allows multiple statements in one query string
-  await p.query(schemaSql);
-  await p.query(seedSql);
+  await p.query(SCHEMA_SQL);
+  await p.query(SEED_SQL);
   console.log('Database initialized successfully.');
   return { success: true, message: 'Database initialized successfully.' };
 }

@@ -3,8 +3,8 @@ import { brandName, siteUrl } from '@/lib/format';
 
 export function generateMetadata(): Metadata {
   return {
-    title: 'Shipping Policy',
-    description: `Shipping information and delivery policy for ${brandName()}.`,
+    title: 'Pickup & Delivery Policy',
+    description: `Pickup and delivery information for ${brandName()}.`,
     alternates: { canonical: `${siteUrl()}/shipping-policy` },
   };
 }
@@ -14,33 +14,42 @@ export default function ShippingPolicyPage() {
 
   return (
     <div className="max-w-3xl mx-auto px-4 py-12">
-      <h1 className="text-3xl font-bold text-gray-900 mb-2">Shipping Policy</h1>
-      <p className="text-sm text-gray-400 mb-8">Last updated: January 2025</p>
+      <h1 className="text-3xl font-black text-earth tracking-tight mb-2">Pickup &amp; Delivery Policy</h1>
+      <p className="text-sm text-muted-earth mb-8">Last updated: June 2026</p>
 
-      <div className="prose prose-gray max-w-none space-y-6 text-gray-600 text-sm leading-relaxed">
-        <section>
-          <h2 className="text-lg font-semibold text-gray-900">Domestic Shipping (Canada)</h2>
-          <p>We ship across Canada. Orders are typically processed within 1–3 business days. Standard delivery takes 5–10 business days depending on your location. Free shipping is available on orders over the qualifying threshold — see checkout for details.</p>
+      <div className="prose prose-gray max-w-none space-y-6 text-muted-earth text-sm leading-relaxed">
+        <section className="space-y-2">
+          <h2 className="text-lg font-bold text-earth">Local Pickup (Homestead)</h2>
+          <p>
+            Because we bake everything fresh in small batches, all items are prepared to order. Pickups are available at our homestead (pickup address and instructions are provided upon request review and payment confirmation).
+          </p>
+          <p>
+            Please specify your desired pickup day and time window when submitting your order request. Fresh items are placed in our sanitized homestead pickup cabinet at your scheduled window.
+          </p>
         </section>
 
-        <section>
-          <h2 className="text-lg font-semibold text-gray-900">Shipping Rates</h2>
-          <p>A flat-rate shipping fee applies to orders below the free shipping threshold. The exact rate and threshold are displayed at checkout. Shipping costs are non-refundable.</p>
+        <section className="space-y-2">
+          <h2 className="text-lg font-bold text-earth">Local Delivery</h2>
+          <p>
+            We offer local delivery within our community boundaries. When submitting your order request, you can select the delivery option and provide your address. 
+          </p>
+          <p>
+            A flat-rate delivery fee (e.g. $5.00 for orders over $30.00) will be added to your total, subject to confirmation by Kirstin during the order review process.
+          </p>
         </section>
 
-        <section>
-          <h2 className="text-lg font-semibold text-gray-900">Order Tracking</h2>
-          <p>Once your order ships, you will receive an email with a tracking number. You can also track your order on our website using the order number and email address associated with your purchase.</p>
+        <section className="space-y-2">
+          <h2 className="text-lg font-bold text-earth">Order Confirmation &amp; Scheduling</h2>
+          <p>
+            After submitting a request, Kirstin will review the availability of ingredients and scheduling. We will send you an email confirmation with your total, E-transfer instructions, and pickup/delivery logistics within 24 hours. Prepayment via E-transfer is required to secure your baking slot.
+          </p>
         </section>
 
-        <section>
-          <h2 className="text-lg font-semibold text-gray-900">Remote &amp; Northern Communities</h2>
-          <p>We are committed to serving all communities across Canada. Delivery to remote and northern areas may take additional time. If there are any concerns about delivery to your area, please contact us before placing your order.</p>
-        </section>
-
-        <section>
-          <h2 className="text-lg font-semibold text-gray-900">Lost or Damaged Packages</h2>
-          <p>If your package is lost or arrives damaged, please contact us within 14 days of the expected delivery date. We will work with the carrier to resolve the issue or arrange a replacement.</p>
+        <section className="space-y-2">
+          <h2 className="text-lg font-bold text-earth">Lead Times</h2>
+          <p>
+            Different items require different lead times (for example, wild-fermented sourdough takes up to 3 days to feed, cold-ferment, and bake). Sourdough preorders typically close Wednesday at 5:00 PM for weekend pickup. Please refer to individual menu items for required lead times.
+          </p>
         </section>
       </div>
     </div>

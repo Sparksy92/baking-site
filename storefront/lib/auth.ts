@@ -6,8 +6,36 @@ const SESSION_COOKIE_NAME = 'admin_session';
 export const DEFAULT_SESSION_SECRET = 'fallback-secret-use-a-real-one-in-production-12345';
 export const DEFAULT_PASSWORD_HASH = 'b1a20bf155239e240212f45ec926719cd227eb0d507119ecb001a1db6c1bf9eb9d5929532ea4a5690bfa3fcd6d8174f84a4a581458dc6b4b455b5f2cd796f6e5';
 
-function isProduction(): boolean {
+export function isProduction(): boolean {
   return process.env.NODE_ENV === 'production' || process.env.DEV_MODE === 'false';
+}
+
+export function validateProductionConfig(): { isValid: boolean; error?: string } {
+  if (!isProduction()) {
+    return { isValid: true };
+  }
+
+  const email = process.env.ADMIN_EMAIL;
+  const hash = process.env.ADMIN_PASSWORD_HASH;
+  const secret = process.env.ADMIN_SESSION_SECRET;
+
+  if (!email || email.trim() === '') {
+    return { isValid: false, error: 'ADMIN_EMAIL environment variable is missing in production.' };
+  }
+  if (!hash || hash.trim() === '') {
+    return { isValid: false, error: 'ADMIN_PASSWORD_HASH environment variable is missing in production.' };
+  }
+  if (hash === DEFAULT_PASSWORD_HASH) {
+    return { isValid: false, error: 'ADMIN_PASSWORD_HASH cannot use the default development hash in production.' };
+  }
+  if (!secret || secret.trim() === '') {
+    return { isValid: false, error: 'ADMIN_SESSION_SECRET environment variable is missing in production.' };
+  }
+  if (secret === DEFAULT_SESSION_SECRET) {
+    return { isValid: false, error: 'ADMIN_SESSION_SECRET cannot use the default development secret in production.' };
+  }
+
+  return { isValid: true };
 }
 
 function getSessionSecret(): string {

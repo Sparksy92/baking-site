@@ -1,6 +1,7 @@
 import { describe, it, expect } from 'vitest';
-import { hashPassword, verifyPassword, signPayload, verifySignature } from '../../lib/auth';
+import { hashPassword, verifyPassword, signPayload, verifySignature, validateProductionConfig, DEFAULT_PASSWORD_HASH, DEFAULT_SESSION_SECRET } from '../../lib/auth';
 import { formatCents } from '../../lib/format';
+import { SCHEMA_SQL, SEED_SQL } from '../../lib/db-schema';
 
 describe('Vercel-Lite Admin Auth Helper', () => {
   it('should hash and verify passwords using pbkdf2Sync', () => {
@@ -30,6 +31,63 @@ describe('Vercel-Lite Admin Auth Helper', () => {
     
     const tampered = sessionToken + 'tampered';
     expect(verifySignature(tampered)).toBeNull();
+  });
+
+  it('should validate production auth config correctly', () => {
+    // Save original env variables
+    const originalEnv = { ...process.env };
+    
+    try {
+      // Set to production mode
+      process.env.NODE_ENV = 'production';
+      process.env.DEV_MODE = 'false';
+      
+      // 1. Missing ADMIN_EMAIL
+      process.env.ADMIN_EMAIL = '';
+      process.env.ADMIN_PASSWORD_HASH = 'somehash';
+      process.env.ADMIN_SESSION_SECRET = 'somesecret';
+      const check1 = validateProductionConfig();
+      expect(check1.isValid).toBe(false);
+      expect(check1.error).toContain('ADMIN_EMAIL');
+
+      // 2. Missing ADMIN_PASSWORD_HASH
+      process.env.ADMIN_EMAIL = 'admin@test.com';
+      process.env.ADMIN_PASSWORD_HASH = '';
+      const check2 = validateProductionConfig();
+      expect(check2.isValid).toBe(false);
+      expect(check2.error).toContain('ADMIN_PASSWORD_HASH');
+
+      // 3. Default password hash
+      process.env.ADMIN_PASSWORD_HASH = DEFAULT_PASSWORD_HASH;
+      const check3 = validateProductionConfig();
+      expect(check3.isValid).toBe(false);
+      expect(check3.error).toContain('default development hash');
+
+      // 4. Default session secret
+      process.env.ADMIN_PASSWORD_HASH = 'validhash';
+      process.env.ADMIN_SESSION_SECRET = DEFAULT_SESSION_SECRET;
+      const check4 = validateProductionConfig();
+      expect(check4.isValid).toBe(false);
+      expect(check4.error).toContain('default development secret');
+
+      // 5. Valid config
+      process.env.ADMIN_SESSION_SECRET = 'my-super-secure-session-secret-key-32-chars';
+      const check5 = validateProductionConfig();
+      expect(check5.isValid).toBe(true);
+    } finally {
+      // Restore env
+      Object.keys(originalEnv).forEach((k) => {
+        process.env[k] = originalEnv[k];
+      });
+    }
+  });
+});
+
+describe('Vercel-Lite DB Schema Constants', () => {
+  it('should export non-empty SQL strings for schema and seed', () => {
+    expect(SCHEMA_SQL).toContain('CREATE TABLE IF NOT EXISTS');
+    expect(SEED_SQL).toContain('INSERT INTO categories');
+    expect(SEED_SQL).toContain('INSERT INTO menu_items');
   });
 });
 
