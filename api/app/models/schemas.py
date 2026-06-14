@@ -1,6 +1,6 @@
 from __future__ import annotations
 
-from datetime import datetime
+from datetime import datetime, date
 from typing import Literal
 
 from pydantic import BaseModel, EmailStr, Field
@@ -120,6 +120,14 @@ class ProductResponse(BaseModel):
     variants: list[VariantResponse] = []
     images: list[ImageResponse] = []
     tags: list[TagResponse] = []
+    pricing_mode: str = "fixed"
+    availability_status: str = "available"
+    lead_time_days: int = 0
+    is_preorder_only: bool = False
+    is_weekend_only: bool = False
+    is_quote_only: bool = False
+    allergy_notes: str | None = None
+    pickup_notes: str | None = None
 
 
 class ProductListItem(BaseModel):
@@ -135,6 +143,11 @@ class ProductListItem(BaseModel):
     max_price_cents: int | None = None
     compare_at_price_cents: int | None = None
     total_stock: int = 0
+    pricing_mode: str = "fixed"
+    availability_status: str = "available"
+    is_preorder_only: bool = False
+    is_weekend_only: bool = False
+    is_quote_only: bool = False
 
 
 class ProductCreate(BaseModel):
@@ -153,6 +166,14 @@ class ProductCreate(BaseModel):
     og_image_url: str | None = None
     allow_preorder: bool = False
     available_at: datetime | None = None
+    pricing_mode: str = "fixed"
+    availability_status: str = "available"
+    lead_time_days: int = 0
+    is_preorder_only: bool = False
+    is_weekend_only: bool = False
+    is_quote_only: bool = False
+    allergy_notes: str | None = None
+    pickup_notes: str | None = None
 
 
 class ProductUpdate(BaseModel):
@@ -171,6 +192,14 @@ class ProductUpdate(BaseModel):
     og_image_url: str | None = None
     allow_preorder: bool | None = None
     available_at: datetime | None = None
+    pricing_mode: str | None = None
+    availability_status: str | None = None
+    lead_time_days: int | None = None
+    is_preorder_only: bool | None = None
+    is_weekend_only: bool | None = None
+    is_quote_only: bool | None = None
+    allergy_notes: str | None = None
+    pickup_notes: str | None = None
 
 
 class VariantCreate(BaseModel):
@@ -474,3 +503,47 @@ class AddressResponse(BaseModel):
     country: str
     phone: str | None = None
     is_default: bool
+
+
+# ── Order Requests ──────────────────────────────────────────────
+
+class OrderRequestItem(BaseModel):
+    product_id: int | None = None
+    product_name: str
+    option: str | None = None
+    quantity: int = Field(ge=1)
+    notes: str | None = None
+
+
+class OrderRequestCreate(BaseModel):
+    customer_name: str = Field(min_length=1)
+    customer_email: EmailStr
+    customer_phone: str | None = None
+    preferred_contact_method: str = Field(min_length=1)
+    requested_items: list[OrderRequestItem] = Field(min_length=1)
+    desired_date: date | None = None
+    pickup_or_delivery: str = Field(default="pickup")
+    allergy_notes: str | None = None
+    special_instructions: str | None = None
+
+
+class OrderRequestResponse(BaseModel):
+    id: int
+    customer_name: str
+    customer_email: str
+    customer_phone: str | None = None
+    preferred_contact_method: str
+    requested_items: list[OrderRequestItem]
+    desired_date: date | None = None
+    pickup_or_delivery: str
+    allergy_notes: str | None = None
+    special_instructions: str | None = None
+    status: str
+    admin_notes: str | None = None
+    created_at: datetime
+    updated_at: datetime
+
+
+class OrderRequestUpdate(BaseModel):
+    status: Literal["new", "reviewed", "waiting_on_customer", "confirmed", "completed", "cancelled"] | None = None
+    admin_notes: str | None = None

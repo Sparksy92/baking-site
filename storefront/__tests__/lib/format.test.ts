@@ -3,7 +3,7 @@ import { formatCents, brandName, brandTagline, brandLogo, siteUrl } from '@/lib/
 
 describe('formatCents', () => {
   it('formats zero', () => {
-    expect(formatCents(0)).toBe('$0.00');
+    expect(formatCents(0)).toBe('Price to be confirmed');
   });
 
   it('formats whole dollars', () => {

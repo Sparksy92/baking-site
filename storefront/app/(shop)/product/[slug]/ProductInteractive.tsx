@@ -58,6 +58,18 @@ export function ProductInteractive({ product }: { product: Product }) {
   const effectivePrice = selectedVariant?.price_cents
     || product.variants.find((v) => v.price_cents > 0)?.price_cents
     || 0;
+  const isQuoteOrCustom = 
+    effectivePrice === 0 ||
+    product.pricing_mode === 'quote_only' ||
+    product.pricing_mode === 'seasonal' ||
+    product.pricing_mode === 'unavailable' ||
+    product.availability_status === 'sold_out' ||
+    product.availability_status === 'seasonal' ||
+    product.availability_status === 'quote_only' ||
+    product.availability_status === 'unavailable' ||
+    product.availability_status === 'hidden' ||
+    product.is_quote_only === true;
+
   const lowStock = selectedVariant && selectedVariant.stock_quantity > 0 && selectedVariant.stock_quantity <= 3 && !isScheduled;
 
   function formatDropDate(d: Date) {
@@ -265,72 +277,86 @@ export function ProductInteractive({ product }: { product: Product }) {
           </div>
         )}
 
-        {/* Add to cart */}
-        <div className="mt-6 space-y-3">
-          {isAvailableForCart || canPreorder ? (
-            <button
-              onClick={handleAddToCart}
-              disabled={!isAvailableForCart && !canPreorder}
-              className={`w-full flex items-center justify-center gap-3 py-4 rounded-2xl font-bold text-base transition-all duration-300 ${
-                added
-                  ? 'bg-sage text-white scale-[0.99]'
-                  : 'bg-terracotta text-white hover:bg-earth hover:scale-[1.01] active:scale-[0.98] shadow-earth-sm hover:shadow-earth'
-              }`}
+        {/* Add to cart / Quote Request CTA */}
+        {isQuoteOrCustom ? (
+          <div className="mt-6 space-y-3">
+            <Link
+              href="/custom-orders"
+              className="w-full flex items-center justify-center gap-3 py-4 rounded-2xl font-bold text-base transition-all duration-300 bg-brand text-white hover:bg-earth hover:scale-[1.01] active:scale-[0.98] shadow-earth-sm hover:shadow-earth"
             >
-              {added ? (
-                <>
-                  <Check size={20} strokeWidth={2.5} />
-                  Added to Cart
-                </>
-              ) : canPreorder ? (
-                <>
-                  <ShoppingBag size={20} />
-                  Pre-order Now
-                </>
-              ) : (
-                <>
-                  <ShoppingBag size={20} />
-                  Add to Cart
-                </>
-              )}
-            </button>
-          ) : isScheduled ? (
-            <button
-              disabled
-              className="w-full flex items-center justify-center gap-3 py-4 rounded-2xl font-bold text-base transition-all duration-300 bg-sand text-muted-earth/50 cursor-not-allowed"
-            >
-              Coming Soon
-            </button>
-          ) : selectedVariant ? (
-            <NotifyMeButton variantId={selectedVariant.id} productName={product.name} />
-          ) : (
-            <button
-              disabled
-              className="w-full flex items-center justify-center gap-3 py-4 rounded-2xl font-bold text-base transition-all duration-300 bg-sand text-muted-earth/50 cursor-not-allowed"
-            >
-              Sold Out
-            </button>
-          )}
+              Request Custom Order / Quote
+            </Link>
+            <p className="text-center text-xs text-muted-earth mt-2">
+              This item is a quote-only or custom item and cannot be checked out instantly. Please submit an inquiry above!
+            </p>
+          </div>
+        ) : (
+          <div className="mt-6 space-y-3">
+            {isAvailableForCart || canPreorder ? (
+              <button
+                onClick={handleAddToCart}
+                disabled={!isAvailableForCart && !canPreorder}
+                className={`w-full flex items-center justify-center gap-3 py-4 rounded-2xl font-bold text-base transition-all duration-300 ${
+                  added
+                    ? 'bg-sage text-white scale-[0.99]'
+                    : 'bg-terracotta text-white hover:bg-earth hover:scale-[1.01] active:scale-[0.98] shadow-earth-sm hover:shadow-earth'
+                }`}
+              >
+                {added ? (
+                  <>
+                    <Check size={20} strokeWidth={2.5} />
+                    Added to Cart
+                  </>
+                ) : canPreorder ? (
+                  <>
+                    <ShoppingBag size={20} />
+                    Pre-order Now
+                  </>
+                ) : (
+                  <>
+                    <ShoppingBag size={20} />
+                    Add to Cart
+                  </>
+                )}
+              </button>
+            ) : isScheduled ? (
+              <button
+                disabled
+                className="w-full flex items-center justify-center gap-3 py-4 rounded-2xl font-bold text-base transition-all duration-300 bg-sand text-muted-earth/50 cursor-not-allowed"
+              >
+                Coming Soon
+              </button>
+            ) : selectedVariant ? (
+              <NotifyMeButton variantId={selectedVariant.id} productName={product.name} />
+            ) : (
+              <button
+                disabled
+                className="w-full flex items-center justify-center gap-3 py-4 rounded-2xl font-bold text-base transition-all duration-300 bg-sand text-muted-earth/50 cursor-not-allowed"
+              >
+                Sold Out
+              </button>
+            )}
 
-          <Link
-            href="/cart"
-            className="block w-full py-3.5 rounded-2xl border-2 border-earth text-earth font-bold text-base text-center hover:bg-earth hover:text-white transition-all duration-200 active:scale-[0.98]"
-          >
-            View Cart
-          </Link>
+            <Link
+              href="/cart"
+              className="block w-full py-3.5 rounded-2xl border-2 border-earth text-earth font-bold text-base text-center hover:bg-earth hover:text-white transition-all duration-200 active:scale-[0.98]"
+            >
+              View Cart
+            </Link>
 
-          {inStock && selectedVariant && (
-            <ExpressCheckout
-              mode="buy-now"
-              variantId={selectedVariant.id}
-              productName={product.name}
-              variantSize={selectedVariant.size}
-              variantColor={selectedVariant.color}
-              unitPriceCents={effectivePrice}
-              imageUrl={product.images[0]?.url ?? null}
-            />
-          )}
-        </div>
+            {inStock && selectedVariant && (
+              <ExpressCheckout
+                mode="buy-now"
+                variantId={selectedVariant.id}
+                productName={product.name}
+                variantSize={selectedVariant.size}
+                variantColor={selectedVariant.color}
+                unitPriceCents={effectivePrice}
+                imageUrl={product.images[0]?.url ?? null}
+              />
+            )}
+          </div>
+        )}
 
         {/* Trust micro-strip */}
         <div className="mt-6 grid grid-cols-3 gap-2">

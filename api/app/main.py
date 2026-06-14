@@ -19,7 +19,7 @@ from app.services.publish_retry_service import run_pending_retries
 from app.middleware.logging import setup_logging
 from app.middleware.rate_limit import RateLimitMiddleware
 from app.middleware.request_id import RequestIdMiddleware
-from app.routes import health, products, settings, auth, checkout, webhooks, promos, newsletter, customers, contact, shipping, wishlist, reviews, related_products, back_in_stock, cart, pages, size_guides, gift_cards, loyalty, bundles, sitemap, events, returns, social_proof, store_credit
+from app.routes import health, products, settings, auth, checkout, webhooks, promos, newsletter, customers, contact, shipping, wishlist, reviews, related_products, back_in_stock, cart, pages, size_guides, gift_cards, loyalty, bundles, sitemap, events, returns, social_proof, store_credit, order_requests
 from app.routes.admin import (
     products as admin_products,
     collections as admin_collections,
@@ -54,6 +54,7 @@ from app.routes.admin import (
     store_credit as admin_store_credit,
     customers as admin_customers,
     social as admin_social,
+    order_requests as admin_order_requests,
 )
 from app.routes import agent_api, content_library, linkinbio, social_inbox, platform_variations, rss
 from app.services.rss_service import check_all_feeds
@@ -217,6 +218,7 @@ def create_app() -> FastAPI:
     app.include_router(customers.router, prefix="/api")
     app.include_router(wishlist.router, prefix="/api")
     app.include_router(reviews.router, prefix="/api")
+    app.include_router(order_requests.router, prefix="/api")
 
     # ── Cart & Notifications ─────────────────────────────────────
     app.include_router(cart.router, prefix="/api")
@@ -273,6 +275,7 @@ def create_app() -> FastAPI:
     app.include_router(admin_webhooks.router, prefix="/api")
     app.include_router(admin_store_credit.router, prefix="/api")
     app.include_router(admin_social.router, prefix="/api")
+    app.include_router(admin_order_requests.router, prefix="/api")
 
     # ── Competitive Gap Features ────────────────────────────────
     app.include_router(content_library.router, prefix="/api")

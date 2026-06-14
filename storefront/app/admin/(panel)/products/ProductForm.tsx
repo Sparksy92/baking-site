@@ -36,6 +36,14 @@ export default function ProductForm({ productId }: Props) {
   const [ogImageUrl, setOgImageUrl] = useState('');
   const [allowPreorder, setAllowPreorder] = useState(false);
   const [availableAt, setAvailableAt] = useState('');
+  const [pricingMode, setPricingMode] = useState('fixed');
+  const [availabilityStatus, setAvailabilityStatus] = useState('available');
+  const [leadTimeDays, setLeadTimeDays] = useState(0);
+  const [isPreorderOnly, setIsPreorderOnly] = useState(false);
+  const [isWeekendOnly, setIsWeekendOnly] = useState(false);
+  const [isQuoteOnly, setIsQuoteOnly] = useState(false);
+  const [allergyNotes, setAllergyNotes] = useState('');
+  const [pickupNotes, setPickupNotes] = useState('');
   const [categories, setCategories] = useState<Category[]>([]);
   const [variants, setVariants] = useState<Variant[]>([]);
   const [images, setImages] = useState<ProductImage[]>([]);
@@ -67,6 +75,14 @@ export default function ProductForm({ productId }: Props) {
           setOgImageUrl(p.og_image_url || '');
           setAllowPreorder(p.allow_preorder ?? false);
           setAvailableAt(p.available_at ? p.available_at.slice(0, 16) : '');
+          setPricingMode(p.pricing_mode || 'fixed');
+          setAvailabilityStatus(p.availability_status || 'available');
+          setLeadTimeDays(p.lead_time_days ?? 0);
+          setIsPreorderOnly(p.is_preorder_only ?? false);
+          setIsWeekendOnly(p.is_weekend_only ?? false);
+          setIsQuoteOnly(p.is_quote_only ?? false);
+          setAllergyNotes(p.allergy_notes || '');
+          setPickupNotes(p.pickup_notes || '');
           setVariants(p.variants);
           setImages(p.images);
           setTags(p.tags ?? []);
@@ -94,6 +110,14 @@ export default function ProductForm({ productId }: Props) {
         og_image_url: ogImageUrl || null,
         allow_preorder: allowPreorder,
         available_at: availableAt ? new Date(availableAt).toISOString() : null,
+        pricing_mode: pricingMode,
+        availability_status: availabilityStatus,
+        lead_time_days: leadTimeDays,
+        is_preorder_only: isPreorderOnly,
+        is_weekend_only: isWeekendOnly,
+        is_quote_only: isQuoteOnly,
+        allergy_notes: allergyNotes || null,
+        pickup_notes: pickupNotes || null,
       };
       if (isNew) {
         const created = await api.post<{ id: number }>('/api/admin/products', body);
@@ -215,6 +239,69 @@ export default function ProductForm({ productId }: Props) {
           </div>
         </div>
 
+        {/* Homestead Pricing & Availability */}
+        <div className="bg-white rounded-xl border border-gray-200 p-6 space-y-4">
+          <h2 className="font-semibold text-gray-900">Homestead Pricing &amp; Availability</h2>
+          
+          <div className="grid grid-cols-2 gap-4">
+            <div>
+              <label className="text-sm font-medium text-gray-700 block mb-1">Pricing Mode</label>
+              <select value={pricingMode} onChange={(e) => setPricingMode(e.target.value)} className={inputClass}>
+                <option value="fixed">Fixed Price</option>
+                <option value="starting_at">Starting At Price</option>
+                <option value="quote_only">Quote Only (Custom Order)</option>
+                <option value="seasonal">Seasonal</option>
+                <option value="unavailable">Unavailable</option>
+              </select>
+            </div>
+            
+            <div>
+              <label className="text-sm font-medium text-gray-700 block mb-1">Availability Status</label>
+              <select value={availabilityStatus} onChange={(e) => setAvailabilityStatus(e.target.value)} className={inputClass}>
+                <option value="available">Available</option>
+                <option value="sold_out">Sold Out</option>
+                <option value="preorder_only">Preorder Only</option>
+                <option value="weekend_only">Weekend Only</option>
+                <option value="seasonal">Seasonal</option>
+                <option value="quote_only">Quote Only</option>
+                <option value="unavailable">Unavailable</option>
+                <option value="hidden">Hidden</option>
+              </select>
+            </div>
+          </div>
+
+          <div>
+            <label className="text-sm font-medium text-gray-700 block mb-1">Lead Time (Days)</label>
+            <input type="number" min={0} value={leadTimeDays} onChange={(e) => setLeadTimeDays(Number(e.target.value))} className={inputClass} />
+            <p className="text-xs text-gray-400 mt-1">Minimum number of days required notice for baking/preparation.</p>
+          </div>
+
+          <div className="flex flex-wrap gap-6">
+            <label className="flex items-center gap-2 text-sm cursor-pointer select-none">
+              <input type="checkbox" checked={isQuoteOnly} onChange={(e) => setIsQuoteOnly(e.target.checked)} className="w-4 h-4 rounded border-gray-300 text-brand" />
+              <span>Quote-only Item (Forces custom quote request)</span>
+            </label>
+            <label className="flex items-center gap-2 text-sm cursor-pointer select-none">
+              <input type="checkbox" checked={isPreorderOnly} onChange={(e) => setIsPreorderOnly(e.target.checked)} className="w-4 h-4 rounded border-gray-300 text-brand" />
+              <span>Preorder-only Item</span>
+            </label>
+            <label className="flex items-center gap-2 text-sm cursor-pointer select-none">
+              <input type="checkbox" checked={isWeekendOnly} onChange={(e) => setIsWeekendOnly(e.target.checked)} className="w-4 h-4 rounded border-gray-300 text-brand" />
+              <span>Weekend-only Item</span>
+            </label>
+          </div>
+
+          <div>
+            <label className="text-sm font-medium text-gray-700 block mb-1">Allergy Notes</label>
+            <textarea value={allergyNotes} onChange={(e) => setAllergyNotes(e.target.value)} placeholder="e.g. Contains gluten, dairy. Processed in a facility that handles nuts." rows={2} className={`${inputClass} resize-none`} />
+          </div>
+
+          <div>
+            <label className="text-sm font-medium text-gray-700 block mb-1">Pickup Notes</label>
+            <textarea value={pickupNotes} onChange={(e) => setPickupNotes(e.target.value)} placeholder="e.g. Pickup available Saturdays 10am-2pm at the Homestead. Please bring a container." rows={2} className={`${inputClass} resize-none`} />
+          </div>
+        </div>
+
         {/* Pre-order / Scheduled Drop */}
         <div className="bg-white rounded-xl border border-gray-200 p-6 space-y-4">
           <h2 className="font-semibold text-gray-900">Pre-order &amp; Scheduled Drop</h2>
@@ -272,27 +359,27 @@ export default function ProductForm({ productId }: Props) {
         {!isNew && (
           <div className="bg-white rounded-xl border border-gray-200 p-6">
             <div className="flex items-center justify-between mb-4">
-              <h2 className="font-semibold text-gray-900">Variants</h2>
-              <button type="button" onClick={addVariant} className="text-sm text-accent hover:underline">+ Add Single Variant</button>
+              <h2 className="font-semibold text-gray-900">Options</h2>
+              <button type="button" onClick={addVariant} className="text-sm text-accent hover:underline">+ Add Single Option</button>
             </div>
             <div className="mb-4">
               <VariantMatrixBuilder productId={productId!} existingVariants={variants} onVariantsCreated={(created) => setVariants((prev) => [...prev, ...created])} />
             </div>
             {variants.length > 0 && (
               <div className="flex gap-2 text-xs text-gray-400 mb-2">
-                <span className="flex-1">Size</span>
-                <span className="flex-1">Color</span>
+                <span className="flex-1">Batch Size</span>
+                <span className="flex-1">Flavour</span>
                 <span className="w-8">Hex</span>
                 <span className="w-24">Price ($)</span>
-                <span className="w-20">Stock</span>
+                <span className="w-20">Availability</span>
                 <span className="w-8"></span>
               </div>
             )}
             <div className="space-y-2">
               {variants.map((v) => (
                 <div key={v.id} className="flex gap-2 items-center">
-                  <input value={v.size} onChange={(e) => updateVariantLocal(v.id, { size: e.target.value })} onBlur={(e) => saveVariant(v.id, { size: e.target.value })} placeholder="Size" className="flex-1 px-3 py-2 border border-gray-200 rounded-lg text-sm" />
-                  <input value={v.color} onChange={(e) => updateVariantLocal(v.id, { color: e.target.value })} onBlur={(e) => saveVariant(v.id, { color: e.target.value })} placeholder="Color" className="flex-1 px-3 py-2 border border-gray-200 rounded-lg text-sm" />
+                  <input value={v.size} onChange={(e) => updateVariantLocal(v.id, { size: e.target.value })} onBlur={(e) => saveVariant(v.id, { size: e.target.value })} placeholder="Batch Size" className="flex-1 px-3 py-2 border border-gray-200 rounded-lg text-sm" />
+                  <input value={v.color} onChange={(e) => updateVariantLocal(v.id, { color: e.target.value })} onBlur={(e) => saveVariant(v.id, { color: e.target.value })} placeholder="Flavour" className="flex-1 px-3 py-2 border border-gray-200 rounded-lg text-sm" />
                   <input
                     type="color"
                     value={v.color_hex || '#000000'}
@@ -313,7 +400,7 @@ export default function ProductForm({ productId }: Props) {
                   <button type="button" onClick={() => deleteVariant(v.id)} className="w-8 text-red-400 hover:text-red-600 flex items-center justify-center"><Trash2 size={16} /></button>
                 </div>
               ))}
-              {variants.length === 0 && <p className="text-sm text-gray-400">No variants yet. Use the matrix builder above to bulk-create all size/color combinations.</p>}
+              {variants.length === 0 && <p className="text-sm text-gray-400">No options yet. Use the matrix builder above to bulk-create all batch size/flavour combinations.</p>}
             </div>
           </div>
         )}

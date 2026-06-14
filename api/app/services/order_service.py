@@ -30,7 +30,9 @@ async def validate_checkout(db: PostgresConnection, body: CheckoutRequest, custo
 
     for item in body.items:
         cursor = await db.execute(
-            """SELECT pv.*, p.name as product_name, p.weight_g
+            """SELECT pv.*, p.name as product_name, p.weight_g,
+                      p.pricing_mode, p.availability_status, p.is_quote_only,
+                      p.is_preorder_only, p.is_weekend_only
                FROM product_variants pv
                JOIN products p ON p.id = pv.product_id
                WHERE pv.id = ? AND pv.is_active = 1 AND p.is_active = 1""",
@@ -40,6 +42,37 @@ async def validate_checkout(db: PostgresConnection, body: CheckoutRequest, custo
 
         if not variant:
             raise CheckoutError(f"Variant {item.variant_id} not found or unavailable")
+
+        variant = dict(variant)
+
+        # Checkout protection checks
+        pricing_mode = variant.get("pricing_mode") or "fixed"
+        availability_status = variant.get("availability_status") or "available"
+        is_quote_only = bool(variant.get("is_quote_only"))
+        is_preorder_only = bool(variant.get("is_preorder_only"))
+        is_weekend_only = bool(variant.get("is_weekend_only"))
+        price_cents = variant.get("price_cents") or 0
+
+        if (
+            price_cents == 0
+            or pricing_mode in ("quote_only", "seasonal", "unavailable")
+            or availability_status in ("sold_out", "seasonal", "quote_only", "unavailable", "hidden")
+            or is_quote_only
+        ):
+            raise CheckoutError(
+                f"Item '{variant['product_name']}' cannot be checked out instantly. Please submit an order request.",
+                status_code=400
+            )
+
+        if (
+            is_preorder_only
+            or is_weekend_only
+            or availability_status in ("preorder_only", "weekend_only")
+        ):
+            raise CheckoutError(
+                f"Item '{variant['product_name']}' is a preorder or weekend-only item and must be requested instead of checked out instantly.",
+                status_code=400
+            )
 
         if variant["stock_quantity"] < item.quantity:
             raise CheckoutError(

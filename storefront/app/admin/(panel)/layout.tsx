@@ -22,15 +22,16 @@ type NavSection = {
 };
 
 const CORE_NAV: NavItem[] = [
-  { label: 'Dashboard',   to: '/admin',            icon: LayoutDashboard },
-  { label: 'Orders',      to: '/admin/orders',     icon: ShoppingCart },
-  { label: 'Customers',   to: '/admin/customers',  icon: Users },
-  { label: 'Products',    to: '/admin/products',   icon: Package },
-  { label: 'Collections', to: '/admin/collections',icon: Layers },
-  { label: 'Categories',  to: '/admin/categories', icon: FolderOpen },
-  { label: 'Returns',     to: '/admin/returns',    icon: RotateCcw },
-  { label: 'Pages',       to: '/admin/pages',      icon: FileText },
-  { label: 'Settings',    to: '/admin/settings',   icon: Settings },
+  { label: 'Dashboard',      to: '/admin',            icon: LayoutDashboard },
+  { label: 'Orders',         to: '/admin/orders',     icon: ShoppingCart },
+  { label: 'Order Requests', to: '/admin/order-requests', icon: Inbox },
+  { label: 'Customers',      to: '/admin/customers',  icon: Users },
+  { label: 'Products',       to: '/admin/products',   icon: Package },
+  { label: 'Collections',    to: '/admin/collections',icon: Layers },
+  { label: 'Categories',     to: '/admin/categories', icon: FolderOpen },
+  { label: 'Returns',        to: '/admin/returns',    icon: RotateCcw },
+  { label: 'Pages',          to: '/admin/pages',      icon: FileText },
+  { label: 'Settings',       to: '/admin/settings',   icon: Settings },
 ];
 
 const SECTIONS: NavSection[] = [
@@ -89,7 +90,7 @@ function readOpenSections(): Record<string, boolean> {
   }
 }
 
-function NavLink({ item, pathname }: { item: NavItem; pathname: string }) {
+function NavLink({ item, pathname, newRequestsCount = null }: { item: NavItem; pathname: string; newRequestsCount?: number | null }) {
   const isExactParent = item.to === '/admin' || item.to === '/admin/social';
   const active = isExactParent ? pathname === item.to : pathname.startsWith(item.to);
   const Icon = item.icon;
@@ -101,7 +102,12 @@ function NavLink({ item, pathname }: { item: NavItem; pathname: string }) {
       }`}
     >
       <Icon size={16} />
-      {item.label}
+      <span className="flex-1">{item.label}</span>
+      {item.label === 'Order Requests' && newRequestsCount !== null && newRequestsCount > 0 && (
+        <span className="bg-rose-500 text-white text-[10px] font-bold px-1.5 py-0.5 rounded-full flex items-center justify-center min-w-5 h-5">
+          {newRequestsCount}
+        </span>
+      )}
     </Link>
   );
 }
@@ -112,6 +118,7 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
   const [user, setUser] = useState<{ username: string; role: string } | null>(null);
   const [loading, setLoading] = useState(true);
   const [openSections, setOpenSections] = useState<Record<string, boolean>>({});
+  const [newRequestsCount, setNewRequestsCount] = useState<number | null>(null);
 
   useEffect(() => {
     setOpenSections(readOpenSections());
@@ -123,6 +130,14 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
       .catch(() => router.push('/admin/login'))
       .finally(() => setLoading(false));
   }, [router]);
+
+  useEffect(() => {
+    if (user) {
+      api.get<{ total: number }>('/api/admin/order-requests?status=new&limit=1')
+        .then((data) => setNewRequestsCount(data.total))
+        .catch(() => {});
+    }
+  }, [user, pathname]); // Re-fetch on pathname changes to refresh when navigating
 
   function toggleSection(id: string) {
     setOpenSections((prev) => {
@@ -145,7 +160,7 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
 
         <nav className="flex-1 p-2 space-y-0.5 overflow-y-auto">
           {CORE_NAV.map((item) => (
-            <NavLink key={item.to} item={item} pathname={pathname} />
+            <NavLink key={item.to} item={item} pathname={pathname} newRequestsCount={newRequestsCount} />
           ))}
 
           {SECTIONS.map((section) => {
