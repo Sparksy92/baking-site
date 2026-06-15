@@ -11,7 +11,7 @@ import { brandName, brandTagline, siteUrl } from '@/lib/format';
 import { brandConfig } from '@/config/brand.config';
 import { ArrowRight, Leaf, HeartHandshake, Truck, Shield, HelpCircle } from 'lucide-react';
 
-import HomesteadDiorama from '@/components/home/HomesteadDiorama';
+import InteractiveKitchenScene from '@/components/home/InteractiveKitchenScene';
 
 export const metadata: Metadata = {
   title: 'Cedar & Sage Homestead | Fresh Baking & Homestead Goods',
@@ -121,9 +121,9 @@ export default async function Home() {
         </div>
       </section>
 
-      {/* 3D Interactive category funnel */}
+      {/* Interactive homestead kitchen scene */}
       <section className="py-16 bg-cream">
-        <HomesteadDiorama />
+        <InteractiveKitchenScene />
       </section>
 
       {/* Order Explanation Teaser */}
