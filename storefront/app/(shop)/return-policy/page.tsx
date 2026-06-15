@@ -1,5 +1,6 @@
 import type { Metadata } from 'next';
 import { brandName, siteUrl } from '@/lib/format';
+import { getPublicSettings } from '@/lib/db-service';
 
 export function generateMetadata(): Metadata {
   return {
@@ -9,8 +10,10 @@ export function generateMetadata(): Metadata {
   };
 }
 
-export default function ReturnPolicyPage() {
-  const name = brandName();
+export default async function ReturnPolicyPage() {
+  const settings = await getPublicSettings().catch(() => null);
+  const name = settings?.brand_name || brandName();
+  const email = settings?.contact_email || 'kirstinsparks@hotmail.com';
 
   return (
     <div className="max-w-3xl mx-auto px-4 py-12">
@@ -51,7 +54,7 @@ export default function ReturnPolicyPage() {
         <section className="space-y-2">
           <h2 className="text-lg font-bold text-earth">Contact Us</h2>
           <p>
-            For any cancellations, changes, or questions about your order, please email us directly at <a href="mailto:hello@cedarandsagehomestead.ca" className="text-terracotta hover:underline">hello@cedarandsagehomestead.ca</a>.
+            For any cancellations, changes, or questions about your order, please email us directly at <a href={`mailto:${email}`} className="text-terracotta hover:underline">{email}</a>.
           </p>
         </section>
       </div>

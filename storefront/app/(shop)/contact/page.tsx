@@ -17,7 +17,7 @@ export default function ContactPage() {
   }, []);
 
   const name = settings?.brand_name || brandName() || 'Cedar & Sage Homestead';
-  const email = settings?.etransfer_email || 'hello@cedarandsagehomestead.ca';
+  const email = settings?.contact_email || settings?.etransfer_email || 'kirstinsparks@hotmail.com';
 
   return (
     <div className="bg-cream min-h-screen py-16 md:py-24">

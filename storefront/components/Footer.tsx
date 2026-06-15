@@ -16,12 +16,12 @@ export function Footer() {
 
           {/* Brand column */}
           <div className="col-span-2 md:col-span-1 space-y-5">
-            <div className="flex items-center gap-2.5">
+            <div className="flex items-center gap-3">
               {/* eslint-disable-next-line @next/next/no-img-element */}
               <img
                 src="/logo.jpg"
                 alt="Logo"
-                className="w-8 h-8 rounded-full object-cover border border-white/10"
+                className="w-14 h-14 rounded-full object-cover border border-white/10"
               />
               <span className="text-xl font-black tracking-tight text-white">{name}</span>
             </div>

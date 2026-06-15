@@ -10,17 +10,17 @@ module.exports = {
   theme: {
     extend: {
       colors: {
-        brand:        '#5C3D2E',
-        accent:       '#B85C38',
-        surface:      '#FBF7F4',
-        earth:        '#5C3D2E',
-        terracotta:   '#B85C38',
+        brand:        '#4A5D4E',
+        accent:       '#C27D38',
+        surface:      '#FDFBF7',
+        earth:        '#354E41',
+        terracotta:   '#C27D38',
         sage:         '#6B7F5E',
         sand:         '#E8DDD3',
-        cream:        '#FBF7F4',
-        warm:         '#F5EDE8',
-        deep:         '#3D2E1F',
-        'muted-earth':'#8B7B6B',
+        cream:        '#FDFBF7',
+        warm:         '#FAF3EC',
+        deep:         '#223229',
+        'muted-earth':'#8C7A6B',
       },
       fontFamily: {
         sans: ['Inter', 'system-ui', '-apple-system', 'sans-serif'],

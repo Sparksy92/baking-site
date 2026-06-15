@@ -182,6 +182,7 @@ export interface PublicSettings {
   currency: string;
   analytics_id: string;
   etransfer_email: string;
+  contact_email: string;
   payment_method?: 'stripe' | 'etransfer';
   about_content: string;
   faq_content: string;

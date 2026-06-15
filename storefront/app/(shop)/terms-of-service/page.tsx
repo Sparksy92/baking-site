@@ -1,5 +1,6 @@
 import type { Metadata } from 'next';
 import { brandName, siteUrl } from '@/lib/format';
+import { getPublicSettings } from '@/lib/db-service';
 
 export function generateMetadata(): Metadata {
   return {
@@ -9,33 +10,34 @@ export function generateMetadata(): Metadata {
   };
 }
 
-export default function TermsOfServicePage() {
-  const name = brandName();
+export default async function TermsOfServicePage() {
+  const settings = await getPublicSettings().catch(() => null);
+  const name = settings?.brand_name || brandName();
 
   return (
     <div className="max-w-3xl mx-auto px-4 py-12">
       <h1 className="text-3xl font-bold text-gray-900 mb-2">Terms of Service</h1>
-      <p className="text-sm text-gray-400 mb-8">Last updated: January 2025</p>
+      <p className="text-sm text-gray-400 mb-8">Last updated: June 2026</p>
 
       <div className="prose prose-gray max-w-none space-y-6 text-gray-600 text-sm leading-relaxed">
         <section>
           <h2 className="text-lg font-semibold text-gray-900">Agreement</h2>
-          <p>By accessing or purchasing from {name}, you agree to these terms. If you do not agree, please do not use our website.</p>
+          <p>By accessing or requesting bakes from {name}, you agree to these terms. If you do not agree, please do not use our website.</p>
         </section>
 
         <section>
           <h2 className="text-lg font-semibold text-gray-900">Products &amp; Pricing</h2>
-          <p>All prices are listed in Canadian dollars (CAD) and include applicable taxes at checkout. We reserve the right to modify prices at any time without prior notice. Product images are for illustration — slight color variations may occur.</p>
+          <p>All prices are listed in Canadian dollars (CAD). We reserve the right to modify prices or adjust quotes at any time. Product images are for illustration — handcrafted items may vary slightly in final appearance.</p>
         </section>
 
         <section>
           <h2 className="text-lg font-semibold text-gray-900">Orders</h2>
-          <p>By placing an order, you are making an offer to purchase. We reserve the right to refuse or cancel any order for reasons including stock availability, pricing errors, or suspected fraud. You will be notified if your order is cancelled.</p>
+          <p>By submitting an order request, you are making an inquiry. We reserve the right to refuse or cancel requests based on capacity, stock availability, or scheduling conflicts. You will be notified if your request is accepted or declined.</p>
         </section>
 
         <section>
           <h2 className="text-lg font-semibold text-gray-900">Payment</h2>
-          <p>All payments are processed securely through Stripe. We accept major credit and debit cards. Your payment information is handled directly by Stripe and never touches our servers.</p>
+          <p>We operate on a pre-payment request model. Once your order request is reviewed and confirmed, payments are made manually via Interac E-transfer or cash/cheque. Payment is required in full to secure your scheduled baking slot.</p>
         </section>
 
         <section>

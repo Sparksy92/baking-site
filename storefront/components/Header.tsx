@@ -50,12 +50,12 @@ export function Header() {
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 h-16 flex items-center justify-between gap-6">
 
           {/* Logo */}
-          <Link href="/" className="flex items-center gap-2.5 flex-shrink-0 group">
+          <Link href="/" className="flex items-center gap-3 flex-shrink-0 group">
             {/* eslint-disable-next-line @next/next/no-img-element */}
             <img
               src="/logo.jpg"
               alt="Logo"
-              className="w-8 h-8 rounded-full object-cover group-hover:scale-105 transition-transform duration-300 border border-sand"
+              className="w-12 h-12 rounded-full object-cover group-hover:scale-105 transition-transform duration-300 border border-sand"
             />
             <span className="text-xl font-black tracking-tight text-earth group-hover:text-terracotta transition-colors duration-300">{brandName()}</span>
           </Link>

@@ -80,7 +80,7 @@ export default function OvenFundPage() {
   return (
     <div className="min-h-screen bg-[#FDFBF7] text-[#2C2623]">
       {/* Header Banner */}
-      <div className="bg-[#4E3629] text-white py-16 sm:py-20 border-b border-[#8C6D58]/30 relative overflow-hidden">
+      <div className="bg-brand text-white py-16 sm:py-20 border-b border-sand/30 relative overflow-hidden">
         <div className="absolute inset-0 bg-[radial-gradient(ellipse_at_top_right,rgba(217,119,6,0.15),transparent_60%)]" aria-hidden="true" />
         <div className="max-w-6xl mx-auto px-4 text-center relative z-10">
           <Link href="/" className="inline-flex items-center gap-1.5 text-xs font-bold text-white/70 hover:text-white mb-6 uppercase tracking-wider transition-colors">
@@ -319,7 +319,7 @@ export default function OvenFundPage() {
             <div className="bg-[#FAF8F5] border border-[#EBE3D5] rounded-2xl p-5">
               <span className="font-bold text-[#4E3629] text-sm block mb-1">💸 Interac E-Transfer</span>
               <p className="text-xs text-[#6B5A50] leading-relaxed">
-                Send your contribution to <span className="font-semibold text-[#8C6D58]">hello@cedarandsagehomestead.ca</span> (please add &quot;Oven Fund&quot; in the transfer notes).
+                Send your contribution to <span className="font-semibold text-[#8C6D58]">{settings?.etransfer_email || 'kirstinsparks@hotmail.com'}</span> (please add &quot;Oven Fund&quot; in the transfer notes).
               </p>
             </div>
             <div className="bg-[#FAF8F5] border border-[#EBE3D5] rounded-2xl p-5">
