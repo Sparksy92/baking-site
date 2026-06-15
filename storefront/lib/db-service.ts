@@ -187,8 +187,13 @@ export async function getPublicSettings(): Promise<PublicSettings> {
     payment_instructions: settingsMap['payment_instructions'] || '',
     allergy_disclaimer: settingsMap['allergy_disclaimer'] || '',
     preorder_instructions: settingsMap['preorder_instructions'] || '',
+    oven_fund_title: settingsMap['oven_fund_title'] || 'Commercial Oven Upgrade Fund — Phase 1',
     oven_fund_goal: settingsMap['oven_fund_goal'] || '2500',
     oven_fund_current_amount: settingsMap['oven_fund_current_amount'] || '0',
-    oven_fund_description: settingsMap['oven_fund_description'] || ''
+    oven_fund_description: settingsMap['oven_fund_description'] || '',
+    oven_fund_title_2: settingsMap['oven_fund_title_2'] || 'Outdoor Wood-Fired Brick Oven',
+    oven_fund_goal_2: settingsMap['oven_fund_goal_2'] || '5000',
+    oven_fund_current_amount_2: settingsMap['oven_fund_current_amount_2'] || '0',
+    oven_fund_description_2: settingsMap['oven_fund_description_2'] || ''
   };
 }

@@ -65,8 +65,13 @@ A: Absolutely! Use the Custom Orders page to request birthday cakes, large bun c
 ('allergy_disclaimer', 'Our products are made in a home kitchen that handles wheat, nuts, dairy, eggs, and soy. While we take every precaution to prevent cross-contamination, we cannot guarantee a completely allergen-free environment.'),
 ('contact_email', 'hello@cedarandsagehomestead.ca'),
 ('etransfer_email', 'payments@cedarandsagehomestead.ca'),
+('oven_fund_title', 'Commercial Oven Upgrade Fund — Phase 1'),
 ('oven_fund_goal', '2500'),
 ('oven_fund_current_amount', '1620'),
-('oven_fund_description', 'We are building a traditional wood-fired brick oven on the homestead! This oven will allow us to bake authentic sourdough boules, crusty flatbreads, and community-sized batches using renewable firewood. Every contribution brings us closer to sharing the warmth of brick-oven baking with our neighbors.'),
+('oven_fund_description', 'Help us prepare for a commercial stone-deck baking oven by funding the first-stage upgrade: electrical preparation, oven stand, baking trays, proofing tools, and the first deposit toward increased baking capacity.'),
+('oven_fund_title_2', 'Outdoor Wood-Fired Brick Oven'),
+('oven_fund_goal_2', '5000'),
+('oven_fund_current_amount_2', '750'),
+('oven_fund_description_2', 'Build a traditional outdoor clay wood-fired brick oven and workbench prep area in the garden for seasonal community baking runs, rustic sourdough, flatbreads, and future workshops.'),
 ('store_announcement', 'Preorders for Saturday sourdough are open! Order by Wednesday 5 PM.')
 ON CONFLICT (key) DO NOTHING;
