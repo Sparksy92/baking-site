@@ -54,9 +54,11 @@ export async function initDatabase(force: boolean = false) {
               updated_at TIMESTAMPTZ DEFAULT NOW()
           );
         `);
-        console.log('Ensuring all multi-goal Oven Fund settings exist in site_settings...');
+        console.log('Ensuring all multi-goal Oven Fund and contact settings exist in site_settings...');
         await p.query(`
           INSERT INTO site_settings (key, value) VALUES
+          ('contact_email', 'kirstinsparks@hotmail.com'),
+          ('etransfer_email', 'kirstinsparks@hotmail.com'),
           ('oven_fund_title', 'Commercial Oven Upgrade Fund — Phase 1'),
           ('oven_fund_goal', '2500'),
           ('oven_fund_current_amount', '1620'),

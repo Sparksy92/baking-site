@@ -112,7 +112,7 @@ export async function POST(req: NextRequest) {
 
     // 3. Send notification email via Resend
     const resendApiKey = process.env.RESEND_API_KEY;
-    const contactEmail = process.env.CONTACT_EMAIL || 'hello@cedarandsagehomestead.ca';
+    const contactEmail = process.env.CONTACT_EMAIL || 'kirstinsparks@hotmail.com';
     const emailFrom = process.env.EMAIL_FROM || 'Cedar & Sage Homestead <orders@cedarandsagehomestead.ca>';
 
     if (resendApiKey) {
