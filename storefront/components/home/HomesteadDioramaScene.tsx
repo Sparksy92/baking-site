@@ -89,17 +89,59 @@ function SceneContent({ selectedId, onSelect, prefersReducedMotion }: HomesteadD
   const controlsRef = useRef<any>(null);
   const [userInteracting, setUserInteracting] = useState(false);
 
+  // Dynamic tabletop material morphing
+  const [targetColor] = useState(() => new THREE.Color('#5c4033'));
+  const [targetRoughness, setTargetRoughness] = useState(0.7);
+  const [targetMetalness, setTargetMetalness] = useState(0.1);
+  const matRef = useRef<THREE.MeshStandardMaterial>(null);
+
+  useEffect(() => {
+    switch (selectedId) {
+      case 'baked-fresh':
+        targetColor.set('#f5f4ef'); // White marble pastry board
+        setTargetRoughness(0.15);
+        setTargetMetalness(0.2);
+        break;
+      case 'pantry':
+        targetColor.set('#3d2518'); // Rustic dark mahogany
+        setTargetRoughness(0.85);
+        setTargetMetalness(0.05);
+        break;
+      case 'home-body':
+        targetColor.set('#2a3336'); // Slate stone slab
+        setTargetRoughness(0.9);
+        setTargetMetalness(0.1);
+        break;
+      case 'oven-fund':
+        targetColor.set('#914b30'); // Terracotta stone/brick
+        setTargetRoughness(0.95);
+        setTargetMetalness(0.0);
+        break;
+      default:
+        targetColor.set('#5c4033'); // Default cedar wood
+        setTargetRoughness(0.7);
+        setTargetMetalness(0.1);
+    }
+  }, [selectedId, targetColor]);
+
   // Auto-rotate the board slowly if not interacting and not prefers reduced motion
+  // Also morph the tabletop material dynamically in the animation frame
   useFrame(() => {
-    if (!boardRef.current) return;
-    
-    // Check if user is actively dragging OrbitControls
-    if (controlsRef.current && controlsRef.current.state !== -1) {
-      setUserInteracting(true);
+    if (boardRef.current) {
+      // Check if user is actively dragging OrbitControls
+      if (controlsRef.current && controlsRef.current.state !== -1) {
+        setUserInteracting(true);
+      }
+
+      if (!prefersReducedMotion && !userInteracting && !selectedId) {
+        boardRef.current.rotation.y += 0.003;
+      }
     }
 
-    if (!prefersReducedMotion && !userInteracting && !selectedId) {
-      boardRef.current.rotation.y += 0.003;
+    if (matRef.current) {
+      matRef.current.color.lerp(targetColor, 0.1);
+      matRef.current.roughness = THREE.MathUtils.lerp(matRef.current.roughness, targetRoughness, 0.1);
+      matRef.current.metalness = THREE.MathUtils.lerp(matRef.current.metalness, targetMetalness, 0.1);
     }
   });
 
@@ -116,22 +158,30 @@ function SceneContent({ selectedId, onSelect, prefersReducedMotion }: HomesteadD
   return (
     <>
       {/* Background Lighting */}
-      <ambientLight intensity={0.8} />
-      <directionalLight position={[5, 10, 5]} intensity={1.0} castShadow />
-      <pointLight position={[-5, 5, -5]} intensity={0.4} />
+      <ambientLight intensity={0.5} color="#f0ebdd" />
+      <directionalLight
+        position={[8, 12, 6]}
+        intensity={1.5}
+        castShadow
+        shadow-mapSize-width={1024}
+        shadow-mapSize-height={1024}
+        shadow-bias={-0.0005}
+        color="#fffaf0"
+      />
+      <pointLight position={[-8, 6, -6]} intensity={0.5} color="#ffe5cc" />
 
       {/* Main Board Group */}
       <group ref={boardRef}>
         {/* Countertop/Rotating Board */}
-        <mesh receiveShadow position={[0, -0.15, 0]} rotation={[0, 0, 0]}>
+        <mesh receiveShadow position={[0, -0.15, 0]}>
           <cylinderGeometry args={[3.2, 3.3, 0.3, 40]} />
-          <meshStandardMaterial color="#4A3728" roughness={0.7} metalness={0.1} />
+          <meshStandardMaterial ref={matRef} color="#5c4033" roughness={0.7} metalness={0.1} />
         </mesh>
         
         {/* Inner decorative board ring */}
         <mesh position={[0, -0.01, 0]}>
           <cylinderGeometry args={[2.9, 2.9, 0.05, 40]} />
-          <meshStandardMaterial color="#36251A" roughness={0.9} />
+          <meshStandardMaterial color="#22140c" roughness={0.9} />
         </mesh>
 
         {/* 1. Baked Fresh */}
@@ -139,27 +189,37 @@ function SceneContent({ selectedId, onSelect, prefersReducedMotion }: HomesteadD
           {/* Cutting Board */}
           <mesh castShadow position={[0, 0.02, 0]}>
             <boxGeometry args={[1.0, 0.04, 0.7]} />
-            <meshStandardMaterial color="#D8B589" roughness={0.8} />
+            <meshStandardMaterial color="#d8b589" roughness={0.8} />
           </mesh>
-          {/* Bread Loaf */}
-          <mesh castShadow position={[0, 0.16, -0.05]} rotation={[0, 0.2, 0]}>
-            <boxGeometry args={[0.5, 0.24, 0.28]} />
-            <meshStandardMaterial color="#B0703C" roughness={0.9} />
+          {/* Sourdough Bread Loaf (Capsule) */}
+          <mesh castShadow position={[0, 0.13, -0.05]} rotation={[0, 0.2, Math.PI / 2]}>
+            <capsuleGeometry args={[0.12, 0.35, 8, 16]} />
+            <meshStandardMaterial color="#b36e33" roughness={0.95} />
           </mesh>
-          {/* Slices decoration */}
-          <mesh position={[-0.32, 0.16, -0.05]}>
-            <boxGeometry args={[0.08, 0.2, 0.24]} />
-            <meshStandardMaterial color="#ECC79E" roughness={0.9} />
+          {/* Scored Bread Crust Mark */}
+          <mesh position={[0.02, 0.23, -0.05]} rotation={[0, 0.2, Math.PI / 2]}>
+            <capsuleGeometry args={[0.015, 0.3, 4, 8]} />
+            <meshStandardMaterial color="#ecc69e" roughness={0.95} />
           </mesh>
           {/* Cinnamon Roll 1 */}
           <mesh castShadow position={[0.2, 0.07, 0.18]}>
             <cylinderGeometry args={[0.12, 0.12, 0.06, 16]} />
-            <meshStandardMaterial color="#DFBA8A" roughness={0.9} />
+            <meshStandardMaterial color="#cca16a" roughness={0.9} />
+          </mesh>
+          {/* Roll 1 Icing */}
+          <mesh position={[0.2, 0.1, 0.18]}>
+            <cylinderGeometry args={[0.1, 0.1, 0.01, 16]} />
+            <meshStandardMaterial color="#fdfdfb" roughness={0.25} />
           </mesh>
           {/* Cinnamon Roll 2 */}
           <mesh castShadow position={[-0.1, 0.07, 0.18]}>
             <cylinderGeometry args={[0.1, 0.1, 0.06, 16]} />
-            <meshStandardMaterial color="#DFBA8A" roughness={0.9} />
+            <meshStandardMaterial color="#cca16a" roughness={0.9} />
+          </mesh>
+          {/* Roll 2 Icing */}
+          <mesh position={[-0.1, 0.1, 0.18]}>
+            <cylinderGeometry args={[0.08, 0.08, 0.01, 16]} />
+            <meshStandardMaterial color="#fdfdfb" roughness={0.25} />
           </mesh>
         </InteractiveObject>
 
@@ -168,39 +228,55 @@ function SceneContent({ selectedId, onSelect, prefersReducedMotion }: HomesteadD
           {/* Crate/Tray */}
           <mesh castShadow position={[0, 0.03, 0]}>
             <boxGeometry args={[0.8, 0.06, 0.8]} />
-            <meshStandardMaterial color="#4A4E4D" roughness={0.9} />
-          </mesh>
-          {/* Jam Jar 1 (Red) */}
-          <mesh castShadow position={[-0.18, 0.2, -0.15]}>
-            <cylinderGeometry args={[0.12, 0.12, 0.28, 16]} />
-            <meshStandardMaterial color="#8B0000" roughness={0.3} metalness={0.2} opacity={0.9} transparent />
-          </mesh>
-          {/* Jam Jar Lid */}
-          <mesh position={[-0.18, 0.35, -0.15]}>
-            <cylinderGeometry args={[0.13, 0.13, 0.04, 16]} />
-            <meshStandardMaterial color="#D3D3D3" roughness={0.5} />
+            <meshStandardMaterial color="#4a4e4d" roughness={0.9} />
           </mesh>
           
-          {/* Mason Jar 2 (Yellow Preserves) */}
-          <mesh castShadow position={[0.18, 0.22, -0.1]}>
-            <cylinderGeometry args={[0.12, 0.12, 0.32, 16]} />
-            <meshStandardMaterial color="#DAA520" roughness={0.3} metalness={0.2} opacity={0.9} transparent />
+          {/* Jam Jar 1 (Glass Outer) */}
+          <mesh castShadow position={[-0.18, 0.18, -0.15]}>
+            <cylinderGeometry args={[0.11, 0.11, 0.28, 16]} />
+            <meshStandardMaterial color="#ffffff" roughness={0.05} metalness={0.9} transparent opacity={0.3} />
+          </mesh>
+          {/* Jam Content Inner */}
+          <mesh position={[-0.18, 0.16, -0.15]}>
+            <cylinderGeometry args={[0.1, 0.1, 0.23, 16]} />
+            <meshStandardMaterial color="#8b0000" roughness={0.7} />
           </mesh>
           {/* Lid */}
-          <mesh position={[0.18, 0.39, -0.1]}>
-            <cylinderGeometry args={[0.13, 0.13, 0.04, 16]} />
-            <meshStandardMaterial color="#8B5A2B" roughness={0.6} />
+          <mesh position={[-0.18, 0.33, -0.15]}>
+            <cylinderGeometry args={[0.12, 0.12, 0.03, 16]} />
+            <meshStandardMaterial color="#b5b5b5" roughness={0.4} metalness={0.7} />
+          </mesh>
+          
+          {/* Mason Jar 2 (Glass Outer) */}
+          <mesh castShadow position={[0.18, 0.2, -0.1]}>
+            <cylinderGeometry args={[0.11, 0.11, 0.32, 16]} />
+            <meshStandardMaterial color="#ffffff" roughness={0.05} metalness={0.9} transparent opacity={0.3} />
+          </mesh>
+          {/* Preserves Content Inner */}
+          <mesh position={[0.18, 0.18, -0.1]}>
+            <cylinderGeometry args={[0.1, 0.1, 0.27, 16]} />
+            <meshStandardMaterial color="#cc9f18" roughness={0.7} />
+          </mesh>
+          {/* Lid */}
+          <mesh position={[0.18, 0.37, -0.1]}>
+            <cylinderGeometry args={[0.12, 0.12, 0.03, 16]} />
+            <meshStandardMaterial color="#875629" roughness={0.5} />
           </mesh>
 
-          {/* Dried Mix Jar 3 (Green) */}
-          <mesh castShadow position={[0, 0.18, 0.18]}>
-            <cylinderGeometry args={[0.1, 0.1, 0.24, 16]} />
-            <meshStandardMaterial color="#6B8E23" roughness={0.3} metalness={0.2} opacity={0.9} transparent />
+          {/* Dried Mix Jar 3 (Glass Outer) */}
+          <mesh castShadow position={[0, 0.16, 0.18]}>
+            <cylinderGeometry args={[0.09, 0.09, 0.24, 16]} />
+            <meshStandardMaterial color="#ffffff" roughness={0.05} metalness={0.9} transparent opacity={0.3} />
+          </mesh>
+          {/* Herbs Content Inner */}
+          <mesh position={[0, 0.14, 0.18]}>
+            <cylinderGeometry args={[0.08, 0.08, 0.19, 16]} />
+            <meshStandardMaterial color="#4f6627" roughness={0.9} />
           </mesh>
           {/* Lid */}
-          <mesh position={[0, 0.31, 0.18]}>
-            <cylinderGeometry args={[0.11, 0.11, 0.04, 16]} />
-            <meshStandardMaterial color="#D3D3D3" roughness={0.5} />
+          <mesh position={[0, 0.29, 0.18]}>
+            <cylinderGeometry args={[0.1, 0.1, 0.03, 16]} />
+            <meshStandardMaterial color="#b5b5b5" roughness={0.4} metalness={0.7} />
           </mesh>
         </InteractiveObject>
 
@@ -211,31 +287,43 @@ function SceneContent({ selectedId, onSelect, prefersReducedMotion }: HomesteadD
             <cylinderGeometry args={[0.48, 0.5, 0.04, 24]} />
             <meshStandardMaterial color="#536872" roughness={0.9} />
           </mesh>
-          {/* Amber Dropper Bottle 1 */}
-          <mesh castShadow position={[-0.16, 0.2, -0.1]}>
-            <cylinderGeometry args={[0.09, 0.09, 0.28, 16]} />
-            <meshStandardMaterial color="#5C4033" roughness={0.2} metalness={0.4} />
+          
+          {/* Amber Glass Dropper Bottle 1 */}
+          <mesh castShadow position={[-0.16, 0.18, -0.1]}>
+            <cylinderGeometry args={[0.08, 0.08, 0.26, 16]} />
+            <meshStandardMaterial color="#4e301e" roughness={0.1} metalness={0.8} transparent opacity={0.65} />
           </mesh>
-          {/* Bottle Top */}
+          {/* Dropper Cap */}
+          <mesh position={[-0.16, 0.32, -0.1]}>
+            <cylinderGeometry args={[0.05, 0.05, 0.04, 12]} />
+            <meshStandardMaterial color="#1f1f1f" roughness={0.8} />
+          </mesh>
+          {/* Dropper Rubber Bulb */}
           <mesh position={[-0.16, 0.36, -0.1]}>
-            <cylinderGeometry args={[0.04, 0.04, 0.06, 12]} />
-            <meshStandardMaterial color="#2B2B2B" roughness={0.9} />
+            <sphereGeometry args={[0.045, 12, 12]} />
+            <meshStandardMaterial color="#111111" roughness={0.9} />
           </mesh>
 
-          {/* Dropper Bottle 2 */}
-          <mesh castShadow position={[0.18, 0.16, -0.15]}>
-            <cylinderGeometry args={[0.08, 0.08, 0.22, 16]} />
-            <meshStandardMaterial color="#5C4033" roughness={0.2} metalness={0.4} />
+          {/* Amber Glass Dropper Bottle 2 */}
+          <mesh castShadow position={[0.18, 0.15, -0.15]}>
+            <cylinderGeometry args={[0.07, 0.07, 0.2, 16]} />
+            <meshStandardMaterial color="#4e301e" roughness={0.1} metalness={0.8} transparent opacity={0.65} />
           </mesh>
+          {/* Dropper Cap */}
+          <mesh position={[0.18, 0.26, -0.15]}>
+            <cylinderGeometry args={[0.045, 0.045, 0.03, 12]} />
+            <meshStandardMaterial color="#1f1f1f" roughness={0.8} />
+          </mesh>
+          {/* Dropper Rubber Bulb */}
           <mesh position={[0.18, 0.29, -0.15]}>
-            <cylinderGeometry args={[0.04, 0.04, 0.05, 12]} />
-            <meshStandardMaterial color="#2B2B2B" roughness={0.9} />
+            <sphereGeometry args={[0.04, 12, 12]} />
+            <meshStandardMaterial color="#111111" roughness={0.9} />
           </mesh>
 
           {/* Salve Tin */}
-          <mesh castShadow position={[0.02, 0.07, 0.18]}>
+          <mesh castShadow position={[0.02, 0.05, 0.18]}>
             <cylinderGeometry args={[0.16, 0.16, 0.08, 20]} />
-            <meshStandardMaterial color="#C0C0C0" roughness={0.3} metalness={0.8} />
+            <meshStandardMaterial color="#d8d8d8" roughness={0.2} metalness={0.95} />
           </mesh>
         </InteractiveObject>
 
@@ -244,17 +332,24 @@ function SceneContent({ selectedId, onSelect, prefersReducedMotion }: HomesteadD
           {/* Brick Stone base */}
           <mesh castShadow position={[0, 0.15, 0]}>
             <boxGeometry args={[0.9, 0.3, 0.9]} />
-            <meshStandardMaterial color="#7F7F7F" roughness={0.9} />
+            <meshStandardMaterial color="#6e6b66" roughness={0.9} />
           </mesh>
           {/* Oven Dome */}
           <mesh castShadow position={[0, 0.45, 0]}>
             <sphereGeometry args={[0.42, 16, 16, 0, Math.PI * 2, 0, Math.PI / 2]} />
-            <meshStandardMaterial color="#A52A2A" roughness={0.8} />
+            <meshStandardMaterial color="#a74e37" roughness={0.9} />
           </mesh>
+          {/* Fire Glow Light inside the oven mouth */}
+          <pointLight position={[0, 0.35, 0.3]} color="#ff7700" intensity={1.5} distance={1.8} decay={2} />
           {/* Oven Arch Mouth */}
-          <mesh position={[0, 0.4, 0.4]} rotation={[0, 0, 0]}>
+          <mesh position={[0, 0.35, 0.4]} rotation={[0, 0, 0]}>
             <boxGeometry args={[0.26, 0.18, 0.05]} />
-            <meshStandardMaterial color="#1A1A1A" roughness={0.9} />
+            <meshStandardMaterial color="#1c1a19" roughness={0.95} />
+          </mesh>
+          {/* Fire Embers Mesh */}
+          <mesh position={[0, 0.33, 0.32]}>
+            <sphereGeometry args={[0.06, 8, 8]} />
+            <meshBasicMaterial color="#ff5500" />
           </mesh>
           {/* Chimney */}
           <mesh castShadow position={[0.2, 0.62, -0.15]}>
@@ -284,7 +379,7 @@ export default function HomesteadDioramaScene({ selectedId, onSelect, prefersRed
       <Canvas
         shadows
         camera={{ position: [0, 5, 7.5], fov: 45 }}
-        gl={{ antialias: true }}
+        gl={{ antialias: true, alpha: true }}
       >
         <SceneContent
           selectedId={selectedId}

@@ -77,7 +77,13 @@ export default function HomesteadDiorama() {
       </div>
 
       {/* Main Diorama Window */}
-      <div className="relative w-full aspect-[4/3] max-h-[520px] rounded-[2.5rem] bg-gradient-to-b from-[#F5EFE6]/40 to-[#FAF7F2] border border-sand/40 overflow-hidden shadow-inner flex items-center justify-center">
+      <div
+        className="relative w-full aspect-[4/3] max-h-[520px] rounded-[2.5rem] border border-sand/40 overflow-hidden shadow-2xl flex items-center justify-center bg-cover bg-center"
+        style={{ backgroundImage: "url('/images/homestead-kitchen-bg.png')" }}
+      >
+        {/* Soft lighting overlay to blend background with 3D elements */}
+        <div className="absolute inset-0 bg-gradient-to-b from-black/10 via-transparent to-black/20 pointer-events-none" />
+
         {/* Interaction helper note */}
         {showHelper && !selectedId && (
           <div className="absolute top-4 z-20 bg-brand/90 backdrop-blur-sm text-white text-[11px] font-bold tracking-[0.1em] uppercase px-4 py-2 rounded-full flex items-center gap-1.5 shadow-md animate-fade-in-out pointer-events-none">
