@@ -1,79 +1,120 @@
 'use client';
 
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import Link from 'next/link';
-import { ArrowLeft, ArrowRight, Cookie, ShoppingBag, HeartHandshake, Sparkles, Flame, X, ChevronLeft, ChevronRight } from 'lucide-react';
+import { ArrowRight, Cookie, ShoppingBag, HeartHandshake, Sparkles, Flame, X, ChevronLeft, ChevronRight } from 'lucide-react';
 
-interface HotspotConfig {
+interface KitchenZoneConfig {
   id: string;
-  label: string;
+  title: string;
+  shortLabel: string;
   description: string;
   href: string;
   top: string;
   left: string;
-  icon: any;
+  focusTransform: string;
   thumbnail: string;
+  previewItems: string[];
+  icon: any;
+  ctaText: string;
 }
 
-const HOTSPOTS: HotspotConfig[] = [
+const KITCHEN_ZONES: KitchenZoneConfig[] = [
   {
     id: 'baked-fresh',
-    label: 'Baked Fresh',
+    title: 'Baked Fresh',
+    shortLabel: 'Baked Fresh',
     description: 'Fresh breads, buns, bagels, cinnamon rolls, and weekend sourdough.',
     href: '/shop?category=baked-fresh',
     top: '62%',
     left: '84%',
-    icon: Cookie,
+    focusTransform: 'scale(1.2) translate(-32%, -10%)',
     thumbnail: '/images/products/sourdough.jpg',
+    previewItems: ['Artisan Bread', 'Sandwich Loaf', 'Bagels', 'Buns', 'Sourdough', 'Cinnamon Rolls'],
+    icon: Cookie,
+    ctaText: 'View Baked Fresh Menu',
   },
   {
     id: 'pantry',
-    label: 'Pantry Goods',
+    title: 'Pantry Goods',
+    shortLabel: 'Pantry Goods',
     description: 'Jams, jellies, pickled goods, simmer pots, dried mixes, and seasonal bundles.',
     href: '/shop?category=pantry',
     top: '27%',
     left: '76%',
-    icon: ShoppingBag,
+    focusTransform: 'scale(1.2) translate(-24%, 22%)',
     thumbnail: '/images/products/jams.jpg',
+    previewItems: ['Jams/Jellies', 'Pickled Goods', 'Simmer Pots', 'Dried Mix Jars', 'Bundles'],
+    icon: ShoppingBag,
+    ctaText: 'View Pantry Goods',
+  },
+  {
+    id: 'special-bakes',
+    title: 'Special Bakes',
+    shortLabel: 'Special Bakes',
+    description: 'Cheesecakes, custom desserts, celebration bakes, and approval-based preorder items.',
+    href: '/custom-orders',
+    top: '52%',
+    left: '68%',
+    focusTransform: 'scale(1.2) translate(-18%, -2%)',
+    thumbnail: '/images/products/cheesecakes.jpg',
+    previewItems: ['Cheesecakes', 'Custom Desserts', 'Occasion Cakes', 'Cupcakes'],
+    icon: Sparkles,
+    ctaText: 'Request a Custom Order',
   },
   {
     id: 'custom-orders',
-    label: 'Custom Orders',
-    description: 'Cakes, custom desserts, large batch requests, and special occasion bakes.',
+    title: 'Custom Orders',
+    shortLabel: 'Custom Orders',
+    description: 'Explain special bakes, large batches, occasion desserts, and preorder requests.',
     href: '/custom-orders',
     top: '67%',
     left: '50%',
-    icon: HeartHandshake,
+    focusTransform: 'scale(1.2) translate(0%, -15%)',
     thumbnail: '/images/products/custom-desserts.jpg',
+    previewItems: ['Celebration Platters', 'Large Batch Bakes', 'Special Preorders'],
+    icon: HeartHandshake,
+    ctaText: 'Start an Order Request',
   },
   {
     id: 'home-body',
-    label: 'Home & Body',
+    title: 'Home & Body',
+    shortLabel: 'Home & Body',
     description: 'Handmade lotions, lip balms, salves, herbal oils, and homestead care.',
     href: '/shop?category=home-body',
     top: '32%',
     left: '36%',
-    icon: Sparkles,
+    focusTransform: 'scale(1.2) translate(14%, 18%)',
     thumbnail: '/images/products/lotions.jpg',
+    previewItems: ['Lotions', 'Lip Balms', 'Salves', 'Herbal Oils'],
+    icon: Sparkles,
+    ctaText: 'View Home & Body',
   },
   {
     id: 'oven-fund',
-    label: 'Oven Fund',
+    title: 'Oven Fund',
+    shortLabel: 'Oven Fund',
     description: 'Support the indoor oven upgrade and outdoor wood-fired oven build.',
     href: '/oven-fund',
     top: '34%',
     left: '18%',
-    icon: Flame,
+    focusTransform: 'scale(1.2) translate(30%, 16%)',
     thumbnail: '/images/products/oven-fund.jpg',
+    previewItems: ['Primary Oven Upgrade', 'Outdoor Brick Oven', 'Supporter Wall Perk'],
+    icon: Flame,
+    ctaText: 'Support the Oven Fund',
   },
 ];
 
 export default function InteractiveKitchenScene() {
-  const [activeHotspot, setActiveHotspot] = useState<string | null>(null);
+  const [activeZone, setActiveZone] = useState<string | null>(null);
   const [hoveredHotspot, setHoveredHotspot] = useState<string | null>(null);
   const [tourIndex, setTourIndex] = useState<number | null>(null);
   const [showLabels, setShowLabels] = useState(false);
   const [prefersReducedMotion, setPrefersReducedMotion] = useState(false);
+  const [isMobile, setIsMobile] = useState(false);
+
+  const drawerRef = useRef<HTMLDivElement>(null);
 
   // Check prefers-reduced-motion media query
   useEffect(() => {
@@ -82,6 +123,14 @@ export default function InteractiveKitchenScene() {
     const handler = (e: MediaQueryListEvent) => setPrefersReducedMotion(e.matches);
     mediaQuery.addEventListener('change', handler);
     return () => mediaQuery.removeEventListener('change', handler);
+  }, []);
+
+  // Check mobile screen width
+  useEffect(() => {
+    const checkMobile = () => setIsMobile(window.innerWidth < 768);
+    checkMobile();
+    window.addEventListener('resize', checkMobile);
+    return () => window.removeEventListener('resize', checkMobile);
   }, []);
 
   // Delay showing micro-labels on initial load
@@ -96,7 +145,7 @@ export default function InteractiveKitchenScene() {
   useEffect(() => {
     const handleKeyDown = (e: KeyboardEvent) => {
       if (e.key === 'Escape') {
-        setActiveHotspot(null);
+        setActiveZone(null);
         setTourIndex(null);
       }
     };
@@ -104,26 +153,34 @@ export default function InteractiveKitchenScene() {
     return () => window.removeEventListener('keydown', handleKeyDown);
   }, []);
 
-  const handleHotspotClick = (id: string) => {
-    setActiveHotspot(activeHotspot === id ? null : id);
+  // Focus navigation shift when drawer is opened
+  useEffect(() => {
+    if (activeZone && drawerRef.current) {
+      drawerRef.current.focus();
+    }
+  }, [activeZone]);
+
+  const handleHotspotClick = (id: string, e: React.MouseEvent | React.KeyboardEvent) => {
+    e.stopPropagation();
+    setActiveZone(activeZone === id ? null : id);
     setTourIndex(null); // Terminate guided tour if user interacts manually
   };
 
   const handleStartTour = () => {
     setTourIndex(0);
-    setActiveHotspot(HOTSPOTS[0].id);
+    setActiveZone(KITCHEN_ZONES[0].id);
   };
 
   const handleNextTour = () => {
     if (tourIndex === null) return;
-    if (tourIndex < HOTSPOTS.length - 1) {
+    if (tourIndex < KITCHEN_ZONES.length - 1) {
       const nextIdx = tourIndex + 1;
       setTourIndex(nextIdx);
-      setActiveHotspot(HOTSPOTS[nextIdx].id);
+      setActiveZone(KITCHEN_ZONES[nextIdx].id);
     } else {
       // Tour completed
       setTourIndex(null);
-      setActiveHotspot(null);
+      setActiveZone(null);
     }
   };
 
@@ -132,14 +189,24 @@ export default function InteractiveKitchenScene() {
     if (tourIndex > 0) {
       const prevIdx = tourIndex - 1;
       setTourIndex(prevIdx);
-      setActiveHotspot(HOTSPOTS[prevIdx].id);
+      setActiveZone(KITCHEN_ZONES[prevIdx].id);
     }
   };
 
   const handleCloseTour = () => {
     setTourIndex(null);
-    setActiveHotspot(null);
+    setActiveZone(null);
   };
+
+  const activeZoneConfig = KITCHEN_ZONES.find(z => z.id === activeZone);
+  
+  // Set transforms based on active configuration and screen type
+  const transformStyle = activeZoneConfig && !isMobile && !prefersReducedMotion
+    ? activeZoneConfig.focusTransform
+    : 'scale(1) translate(0%, 0%)';
+
+  const isLeftHotspot = activeZoneConfig && parseInt(activeZoneConfig.left) < 50;
+  const drawerAlignClass = isLeftHotspot ? 'right-4' : 'left-4';
 
   return (
     <section className="w-full max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 flex flex-col items-center">
@@ -159,8 +226,11 @@ export default function InteractiveKitchenScene() {
         {/* Guided Tour Start Button */}
         <button
           type="button"
-          onClick={handleStartTour}
-          className="inline-flex items-center gap-2 bg-brand/10 hover:bg-brand/20 border border-brand/20 text-brand px-5 py-2.5 rounded-full text-xs font-bold uppercase tracking-wider transition-colors mt-5 shadow-xs"
+          onClick={(e) => {
+            e.stopPropagation();
+            handleStartTour();
+          }}
+          className="inline-flex items-center gap-2 bg-brand/10 hover:bg-brand/20 border border-brand/20 text-brand px-5 py-2.5 rounded-full text-xs font-bold uppercase tracking-wider transition-colors mt-5 shadow-xs focus-visible:ring-2 focus-visible:ring-brand focus-visible:ring-offset-2 focus:outline-none"
           aria-label="Start interactive guided tour of the kitchen map"
         >
           <Sparkles size={14} className={prefersReducedMotion ? '' : 'animate-pulse'} /> 
@@ -170,177 +240,252 @@ export default function InteractiveKitchenScene() {
 
       {/* Main Container Card */}
       <div 
-        className="relative w-full aspect-[16/10] md:aspect-[16/9] rounded-[2rem] border border-sand/40 overflow-hidden shadow-2xl bg-warm group"
-        onMouseEnter={() => setShowLabels(true)}
+        className="relative w-full aspect-[16/10] md:aspect-[16/9] rounded-[2rem] border border-[#EBE3D5] overflow-hidden shadow-2xl bg-warm group"
+        onClick={() => {
+          setActiveZone(null);
+          setTourIndex(null);
+        }}
       >
         
-        {/* Main Background Image */}
-        {/* TODO: Replace with optimized final image storefront/public/images/home/interactive-kitchen.jpg when available. Currently using placeholder copy. */}
-        <img
-          src="/images/home/interactive-kitchen.jpg"
-          alt="Cedar and Sage Homestead kitchen showing oven, pantry, prep table, window, and apothecary shelves"
-          className={`w-full h-full object-cover select-none transition-transform duration-700 ${
-            activeHotspot && !prefersReducedMotion ? 'scale-[1.02]' : 'scale-100'
-          }`}
-        />
+        {/* Zoomable Wrapper (Transforms only image, glows, and hotspots) */}
+        <div 
+          className="w-full h-full relative origin-center"
+          style={{ 
+            transform: transformStyle,
+            transition: prefersReducedMotion ? 'none' : 'transform 0.7s cubic-bezier(0.25, 1, 0.5, 1)'
+          }}
+        >
+          {/* Main Background Image */}
+          {/* TODO: Replace with optimized final image storefront/public/images/home/interactive-kitchen.jpg when available. Currently using placeholder copy. */}
+          <img
+            src="/images/home/interactive-kitchen.jpg"
+            alt="Cedar and Sage Homestead kitchen showing oven, pantry, prep table, window, and apothecary shelves"
+            className="w-full h-full object-cover select-none"
+          />
 
-        {/* Subtle Vignette Overlay for Realism */}
-        <div className="absolute inset-0 pointer-events-none shadow-[inset_0_0_80px_rgba(0,0,0,0.25)] z-5" />
-        <div className="absolute inset-0 bg-gradient-to-t from-black/15 via-transparent to-black/10 pointer-events-none" />
+          {/* Subtle Vignette Overlay for Realism */}
+          <div className="absolute inset-0 pointer-events-none shadow-[inset_0_0_80px_rgba(0,0,0,0.25)] z-5" />
+          <div className="absolute inset-0 bg-gradient-to-t from-black/15 via-transparent to-black/10 pointer-events-none" />
 
-        {/* Warm Light Glow near the Stove/Oven (Baked Fresh: top 62%, left 84%) */}
-        <div className="absolute top-[62%] left-[84%] -translate-x-1/2 -translate-y-1/2 w-48 h-48 bg-amber-500/10 rounded-full blur-3xl pointer-events-none mix-blend-screen" />
+          {/* Warm Light Glow near the Stove/Oven (Baked Fresh: top 62%, left 84%) */}
+          <div className="absolute top-[62%] left-[84%] -translate-x-1/2 -translate-y-1/2 w-48 h-48 bg-amber-500/10 rounded-full blur-3xl pointer-events-none mix-blend-screen" />
 
-        {/* Hotspots Render Overlay */}
-        {HOTSPOTS.map((hotspot, index) => {
-          const isSelected = activeHotspot === hotspot.id;
-          const isHovered = hoveredHotspot === hotspot.id;
-          const leftVal = parseInt(hotspot.left);
-          
-          // Responsive alignment logic
-          const tooltipAlignClass = leftVal > 75 
-            ? 'right-0' 
-            : leftVal < 25 
-              ? 'left-0' 
-              : 'left-1/2 -translate-x-1/2';
+          {/* Hotspots Render Overlay */}
+          {KITCHEN_ZONES.map((hotspot) => {
+            const isSelected = activeZone === hotspot.id;
+            const isHovered = hoveredHotspot === hotspot.id;
 
-          return (
-            <div
-              key={hotspot.id}
-              className="absolute -translate-x-1/2 -translate-y-1/2 z-10"
-              style={{ top: hotspot.top, left: hotspot.left }}
-              onMouseLeave={() => setHoveredHotspot(null)}
-            >
-              
-              {/* Subtle radial selection glow behind selected object */}
-              {isSelected && (
-                <div 
-                  className={`absolute -translate-x-1/2 -translate-y-1/2 w-36 h-36 rounded-full pointer-events-none mix-blend-screen bg-[radial-gradient(ellipse_at_center,rgba(245,158,11,0.18),transparent_60%)] blur-xl z-0 transition-opacity ${
-                    prefersReducedMotion ? '' : 'duration-500'
+            return (
+              <div
+                key={hotspot.id}
+                className="absolute -translate-x-1/2 -translate-y-1/2 z-10"
+                style={{ top: hotspot.top, left: hotspot.left }}
+                onMouseLeave={() => setHoveredHotspot(null)}
+              >
+                
+                {/* Subtle radial selection glow behind selected object */}
+                {isSelected && (
+                  <div 
+                    className={`absolute -translate-x-1/2 -translate-y-1/2 w-36 h-36 rounded-full pointer-events-none mix-blend-screen bg-[radial-gradient(ellipse_at_center,rgba(245,158,11,0.18),transparent_60%)] blur-xl z-0 transition-opacity ${
+                      prefersReducedMotion ? '' : 'duration-500'
+                    }`}
+                  />
+                )}
+
+                {/* Always-visible micro labels (desktop only, subtle delay/hover) */}
+                <span 
+                  className={`absolute top-full mt-2 left-1/2 -translate-x-1/2 text-[9px] font-bold uppercase tracking-wider text-earth bg-cream/90 border border-[#EBE3D5] px-2 py-0.5 rounded shadow-xs select-none pointer-events-none transition-all duration-300 md:block hidden whitespace-nowrap z-10 ${
+                    showLabels || isSelected || isHovered ? 'opacity-90 translate-y-0' : 'opacity-0 -translate-y-1'
                   }`}
-                />
-              )}
-
-              {/* Always-visible micro labels (desktop only, subtle delay/hover) */}
-              <span 
-                className={`absolute top-full mt-2 left-1/2 -translate-x-1/2 text-[9px] font-bold uppercase tracking-wider text-earth bg-cream/90 border border-sand/40 px-2 py-0.5 rounded shadow-xs select-none pointer-events-none transition-all duration-300 md:block hidden whitespace-nowrap ${
-                  showLabels || isSelected || isHovered ? 'opacity-90 translate-y-0' : 'opacity-0 -translate-y-1'
-                }`}
-              >
-                {hotspot.label}
-              </span>
-
-              {/* Target click wrapper button */}
-              <button
-                type="button"
-                onClick={() => handleHotspotClick(hotspot.id)}
-                onMouseEnter={() => setHoveredHotspot(hotspot.id)}
-                onFocus={() => {
-                  setHoveredHotspot(hotspot.id);
-                  setActiveHotspot(hotspot.id);
-                }}
-                onBlur={() => {
-                  setHoveredHotspot(null);
-                  setTimeout(() => {
-                    setActiveHotspot((current) => current === hotspot.id ? null : current);
-                  }, 150);
-                }}
-                className="w-14 h-14 md:w-20 md:h-20 flex items-center justify-center rounded-full focus:outline-none focus-visible:ring-2 focus-visible:ring-amber-500 focus-visible:ring-offset-2 z-10 bg-transparent transition-transform active:scale-95"
-                aria-label={`Show details for ${hotspot.label}`}
-                aria-expanded={isSelected}
-              >
-                {/* Visual pulse / core dot */}
-                <span className="relative flex h-3.5 w-3.5 items-center justify-center">
-                  {(isSelected || isHovered) && (
-                    <span className={`absolute inline-flex h-7 w-7 rounded-full bg-amber-400 opacity-60 ${
-                      prefersReducedMotion ? '' : 'animate-ping'
-                    }`} />
-                  )}
-                  <span className={`relative inline-flex rounded-full h-3 w-3 bg-amber-500 border border-white shadow-md transition-shadow ${
-                    isSelected || isHovered ? 'ring-4 ring-amber-500/20' : ''
-                  }`} />
-                </span>
-              </button>
-
-              {/* Tooltip Card (Snap to bottom overlay on mobile, floats on desktop) */}
-              {isSelected && (
-                <div
-                  className={`md:absolute md:bottom-full md:mb-3 md:w-72 p-4 rounded-2xl bg-[#FDFBF7] border border-[#EBE3D5] shadow-2xl backdrop-blur-md z-20 text-left transition-all duration-300 animate-fade-in ${tooltipAlignClass} fixed bottom-4 left-4 right-4 md:right-auto md:-translate-x-1/2`}
-                  onClick={(e) => e.stopPropagation()}
                 >
-                  <div className="flex gap-3.5 items-start">
-                    {hotspot.thumbnail && (
-                      <img 
-                        src={hotspot.thumbnail} 
-                        alt={hotspot.label} 
-                        className="w-14 h-14 rounded-xl object-cover border border-[#EBE3D5] shrink-0" 
-                      />
+                  {hotspot.shortLabel}
+                </span>
+
+                {/* Target click wrapper button */}
+                <button
+                  type="button"
+                  onClick={(e) => handleHotspotClick(hotspot.id, e)}
+                  onMouseEnter={() => setHoveredHotspot(hotspot.id)}
+                  onFocus={() => {
+                    setHoveredHotspot(hotspot.id);
+                  }}
+                  onBlur={() => {
+                    setHoveredHotspot(null);
+                  }}
+                  className="w-14 h-14 md:w-20 md:h-20 flex items-center justify-center rounded-full focus:outline-none focus-visible:ring-2 focus-visible:ring-amber-500 focus-visible:ring-offset-2 z-10 bg-transparent transition-transform active:scale-95 cursor-pointer"
+                  aria-label={`Open details for ${hotspot.title}`}
+                  aria-expanded={isSelected}
+                >
+                  {/* Visual pulse / core dot */}
+                  <span className="relative flex h-3.5 w-3.5 items-center justify-center">
+                    {(isSelected || isHovered) && (
+                      <span className={`absolute inline-flex h-7 w-7 rounded-full bg-amber-400 opacity-60 ${
+                        prefersReducedMotion ? '' : 'animate-ping'
+                      }`} />
                     )}
-                    <div className="flex-1 min-w-0">
-                      <h4 className="text-earth text-sm font-bold tracking-tight mb-0.5">
-                        {hotspot.label}
-                      </h4>
-                      <p className="text-muted-earth text-xs leading-relaxed mb-3">
-                        {hotspot.description}
-                      </p>
-                    </div>
+                    <span className={`relative inline-flex rounded-full h-3 w-3 bg-amber-500 border border-white shadow-md transition-shadow ${
+                      isSelected || isHovered ? 'ring-4 ring-amber-500/20' : ''
+                    }`} />
+                  </span>
+                </button>
+              </div>
+            );
+          })}
+        </div>
+
+        {/* Stable Overlay Layer (Stable side drawer or bottom sheet outside the transformed wrapper) */}
+        {activeZoneConfig && (
+          <div
+            ref={drawerRef}
+            tabIndex={-1}
+            className={`md:absolute md:top-4 md:bottom-4 md:w-96 p-6 rounded-2xl bg-[#FDFBF7]/95 border border-[#EBE3D5] shadow-2xl backdrop-blur-md z-20 text-left transition-all focus:outline-none ${
+              prefersReducedMotion ? 'duration-0' : 'duration-500 ease-out'
+            } ${drawerAlignClass} fixed bottom-4 left-4 right-4 md:right-auto max-h-[60%] md:max-h-none overflow-y-auto flex flex-col justify-between`}
+            onClick={(e) => e.stopPropagation()}
+          >
+            {/* Drawer Header & Content */}
+            <div className="space-y-4">
+              <div className="flex justify-between items-start">
+                <div className="flex gap-3 items-center">
+                  <div className="w-10 h-10 rounded-xl bg-brand/10 text-brand flex items-center justify-center">
+                    <activeZoneConfig.icon size={20} />
                   </div>
+                  <div>
+                    <h3 className="text-earth text-base font-bold tracking-tight">
+                      {activeZoneConfig.title}
+                    </h3>
+                    <span className="text-[9px] font-bold text-terracotta uppercase tracking-wider block">
+                      Homestead Room Tour
+                    </span>
+                  </div>
+                </div>
+                
+                {/* Manual Close Button */}
+                <button
+                  type="button"
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    setActiveZone(null);
+                    setTourIndex(null);
+                  }}
+                  className="w-7 h-7 rounded-lg border border-[#EBE3D5] text-muted-earth hover:text-earth flex items-center justify-center hover:bg-warm transition-colors focus-visible:ring-2 focus-visible:ring-brand focus-visible:ring-offset-2 focus:outline-none"
+                  aria-label="Close drawer and return to kitchen overview"
+                >
+                  <X size={14} />
+                </button>
+              </div>
 
-                  <div className="flex items-center justify-between border-t border-[#EBE3D5] pt-3 mt-1.5">
-                    {/* Primary Route Link */}
-                    <Link
-                      href={hotspot.href}
-                      className="inline-flex items-center gap-1.5 text-xs font-black text-brand hover:text-brand-accent transition-colors"
+              {/* Thumbnail and Description */}
+              <div className="flex gap-4 items-start bg-warm/30 border border-[#EBE3D5]/40 p-3 rounded-xl">
+                <img 
+                  src={activeZoneConfig.thumbnail} 
+                  alt={activeZoneConfig.title} 
+                  className="w-16 h-16 rounded-xl object-cover border border-[#EBE3D5] shrink-0" 
+                />
+                <p className="text-muted-earth text-xs leading-relaxed">
+                  {activeZoneConfig.description}
+                </p>
+              </div>
+
+              {/* Preview featured products */}
+              <div className="space-y-2.5">
+                <span className="text-[10px] font-black uppercase tracking-wider text-muted-earth block">
+                  Featured Selections
+                </span>
+                <div className="grid grid-cols-2 gap-2">
+                  {activeZoneConfig.previewItems.map((item) => (
+                    <div 
+                      key={item} 
+                      className="bg-white border border-[#EBE3D5]/80 p-2 rounded-xl text-xs text-earth font-semibold flex items-center gap-1.5 shadow-xs"
                     >
-                      <span>Explore</span>
-                      <ArrowRight size={12} />
-                    </Link>
+                      <div className="w-1.5 h-1.5 rounded-full bg-brand shrink-0" />
+                      <span className="truncate">{item}</span>
+                    </div>
+                  ))}
+                </div>
+              </div>
+            </div>
 
-                    {/* Guided Tour Actions */}
-                    {tourIndex !== null && (
-                      <div className="flex items-center gap-2">
-                        <span className="text-[10px] font-semibold text-muted-earth mr-1">
-                          {tourIndex + 1}/5
-                        </span>
-                        
-                        {/* Back control */}
-                        <button
-                          type="button"
-                          onClick={handleBackTour}
-                          disabled={tourIndex === 0}
-                          className="w-6 h-6 flex items-center justify-center rounded-lg border border-[#EBE3D5] text-muted-earth hover:text-earth disabled:opacity-30 disabled:pointer-events-none hover:bg-warm transition-colors"
-                          aria-label="Previous step"
-                        >
-                          <ChevronLeft size={14} />
-                        </button>
+            {/* Footer Navigation & Tour Controls */}
+            <div className="border-t border-[#EBE3D5] pt-4 mt-6 space-y-4">
+              
+              <div className="flex items-center gap-3 w-full">
+                {/* Primary CTA (Navigate to Shop/Category/Custom) */}
+                <Link
+                  href={activeZoneConfig.href}
+                  className="flex-1 text-center bg-brand text-white px-4 py-2.5 rounded-xl font-bold text-xs hover:bg-brand-accent transition-colors shadow-xs focus-visible:ring-2 focus-visible:ring-brand focus-visible:ring-offset-2 focus:outline-none"
+                >
+                  {activeZoneConfig.ctaText}
+                </Link>
 
-                        {/* Next / Finish control */}
-                        <button
-                          type="button"
-                          onClick={handleNextTour}
-                          className="h-6 px-2.5 flex items-center justify-center rounded-lg bg-brand text-white font-bold text-[10px] hover:bg-brand-accent transition-colors"
-                          aria-label={tourIndex === HOTSPOTS.length - 1 ? 'Finish tour' : 'Next step'}
-                        >
-                          {tourIndex === HOTSPOTS.length - 1 ? 'Finish' : <ChevronRight size={14} />}
-                        </button>
+                {/* Back to Kitchen overview (Resets zoom) */}
+                <button
+                  type="button"
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    setActiveZone(null);
+                    setTourIndex(null);
+                  }}
+                  className="px-4 py-2.5 border border-[#EBE3D5] text-earth font-bold text-xs rounded-xl hover:bg-warm transition-colors focus-visible:ring-2 focus-visible:ring-brand focus-visible:ring-offset-2 focus:outline-none"
+                >
+                  Back to Kitchen
+                </button>
+              </div>
 
-                        {/* Close control */}
-                        <button
-                          type="button"
-                          onClick={handleCloseTour}
-                          className="w-6 h-6 flex items-center justify-center rounded-lg border border-red-200 text-red-700 hover:bg-red-50 transition-colors"
-                          aria-label="Close tour"
-                        >
-                          <X size={12} />
-                        </button>
-                      </div>
-                    )}
+              {/* Guided Tour Navigation Controls */}
+              {tourIndex !== null && (
+                <div className="flex flex-col sm:flex-row sm:items-center justify-between bg-warm/60 border border-[#EBE3D5] rounded-xl p-3 gap-2">
+                  <span className="text-[10px] font-black uppercase tracking-wider text-muted-earth text-center sm:text-left">
+                    Tour Step {tourIndex + 1} of {KITCHEN_ZONES.length}
+                  </span>
+                  
+                  <div className="flex items-center justify-center gap-2">
+                    {/* Back step */}
+                    <button
+                      type="button"
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        handleBackTour();
+                      }}
+                      disabled={tourIndex === 0}
+                      className="inline-flex items-center gap-1 px-3 py-1.5 rounded-lg border border-[#EBE3D5] text-muted-earth hover:text-earth disabled:opacity-30 disabled:pointer-events-none bg-white hover:bg-warm transition-colors font-bold text-xs focus-visible:ring-2 focus-visible:ring-brand focus-visible:ring-offset-1 focus:outline-none"
+                    >
+                      <ChevronLeft size={14} />
+                      <span>Back</span>
+                    </button>
+
+                    {/* Next / Finish step */}
+                    <button
+                      type="button"
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        handleNextTour();
+                      }}
+                      className="inline-flex items-center gap-1 px-3 py-1.5 rounded-lg bg-brand text-white font-bold text-xs hover:bg-brand-accent transition-colors focus-visible:ring-2 focus-visible:ring-brand focus-visible:ring-offset-1 focus:outline-none"
+                    >
+                      <span>{tourIndex === KITCHEN_ZONES.length - 1 ? 'Finish' : 'Next'}</span>
+                      {tourIndex < KITCHEN_ZONES.length - 1 && <ChevronRight size={14} />}
+                    </button>
+
+                    {/* Close tour */}
+                    <button
+                      type="button"
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        handleCloseTour();
+                      }}
+                      className="inline-flex items-center gap-1 px-3 py-1.5 rounded-lg border border-red-200 text-red-700 bg-white hover:bg-red-50 transition-colors font-bold text-xs focus-visible:ring-2 focus-visible:ring-red-500 focus-visible:ring-offset-1 focus:outline-none"
+                    >
+                      <X size={12} />
+                      <span>Close</span>
+                    </button>
                   </div>
                 </div>
               )}
             </div>
-          );
-        })}
+
+          </div>
+        )}
       </div>
 
       {/* Quick Explore Cards Section below the Image */}
@@ -354,36 +499,36 @@ export default function InteractiveKitchenScene() {
           </h3>
         </div>
 
-        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-5 gap-5 w-full">
-          {HOTSPOTS.map((hotspot) => {
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-6 gap-5 w-full">
+          {KITCHEN_ZONES.map((hotspot) => {
             const Icon = hotspot.icon;
             return (
               <Link
                 key={hotspot.id}
                 href={hotspot.href}
-                className="bg-white border border-[#EBE3D5] hover:border-brand rounded-2xl p-4 flex flex-col justify-between transition-all duration-300 hover:shadow-md hover:-translate-y-0.5 group"
+                className="bg-white border border-[#EBE3D5] hover:border-brand rounded-2xl p-4 flex flex-col justify-between transition-all duration-300 hover:shadow-md hover:-translate-y-0.5 group focus-visible:ring-2 focus-visible:ring-brand focus-visible:ring-offset-2 focus:outline-none"
               >
                 <div>
                   {/* Thumbnail with overlay icon */}
-                  <div className="relative w-full h-32 rounded-xl overflow-hidden mb-4 border border-[#EBE3D5]">
+                  <div className="relative w-full h-28 rounded-xl overflow-hidden mb-4 border border-[#EBE3D5]">
                     <img 
                       src={hotspot.thumbnail} 
-                      alt={hotspot.label} 
+                      alt={hotspot.title} 
                       className="w-full h-full object-cover transition-transform duration-500 group-hover:scale-105" 
                     />
-                    <div className="absolute top-3 right-3 w-8 h-8 rounded-lg bg-white/90 backdrop-blur-xs text-brand flex items-center justify-center shadow-sm">
-                      <Icon size={16} />
+                    <div className="absolute top-2.5 right-2.5 w-7.5 h-7.5 rounded-lg bg-white/90 backdrop-blur-xs text-brand flex items-center justify-center shadow-sm">
+                      <Icon size={14} />
                     </div>
                   </div>
 
                   <h4 className="text-earth text-sm font-bold tracking-tight mb-1">
-                    {hotspot.label}
+                    {hotspot.title}
                   </h4>
-                  <p className="text-muted-earth text-xs leading-relaxed mb-4">
+                  <p className="text-muted-earth text-[11px] leading-relaxed mb-4 line-clamp-3">
                     {hotspot.description}
                   </p>
                 </div>
-                <div className="inline-flex items-center gap-1 text-xs font-bold text-brand hover:text-brand-accent transition-colors w-fit mt-auto">
+                <div className="inline-flex items-center gap-1 text-[11px] font-bold text-brand hover:text-brand-accent transition-colors w-fit mt-auto">
                   <span>Enter</span>
                   <ArrowRight size={12} className="transform group-hover:translate-x-0.5 transition-transform" />
                 </div>
