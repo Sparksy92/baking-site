@@ -80,7 +80,7 @@ export default function OvenFundPage() {
   return (
     <div className="min-h-screen bg-[#FDFBF7] text-[#2C2623]">
       {/* Header Banner */}
-      <div className="bg-[#4E3629] text-white py-16 sm:py-20 border-b border-[#8C6D58]/30 relative overflow-hidden">
+      <div className="bg-brand text-white py-16 sm:py-20 border-b border-sand/30 relative overflow-hidden">
         <div className="absolute inset-0 bg-[radial-gradient(ellipse_at_top_right,rgba(217,119,6,0.15),transparent_60%)]" aria-hidden="true" />
         <div className="max-w-6xl mx-auto px-4 text-center relative z-10">
           <Link href="/" className="inline-flex items-center gap-1.5 text-xs font-bold text-white/70 hover:text-white mb-6 uppercase tracking-wider transition-colors">
