@@ -28,9 +28,17 @@ const settingsMeta: Record<string, SettingMeta> = {
   payment_instructions:         { section: 'Homestead Content',         label: 'Payment Instructions',         hint: 'Instructions on e-Transfer details and prepayment terms.', type: 'textarea' },
   allergy_disclaimer:           { section: 'Homestead Content',         label: 'Allergy Disclaimer',           hint: 'Disclaimer text regarding cross-contamination.', type: 'textarea' },
   preorder_instructions:        { section: 'Homestead Content',         label: 'Preorder Instructions',        hint: 'Information regarding lead times and ordering cycles.', type: 'textarea' },
+  oven_fund_title:              { section: 'Crowdfunding & Oven Fund',  label: 'Campaign 1 Title',             hint: 'The title of your first fundraising goal.' },
+  oven_fund_goal:               { section: 'Crowdfunding & Oven Fund',  label: 'Campaign 1 Target Goal ($)',   hint: 'Target goal in dollars, e.g. 2500', type: 'number' },
+  oven_fund_current_amount:     { section: 'Crowdfunding & Oven Fund',  label: 'Campaign 1 Current Amount ($)', hint: 'Current amount raised in dollars, e.g. 1620', type: 'number' },
+  oven_fund_description:        { section: 'Crowdfunding & Oven Fund',  label: 'Campaign 1 Description',        hint: 'Description of Campaign 1 objectives.', type: 'textarea' },
+  oven_fund_title_2:            { section: 'Crowdfunding & Oven Fund',  label: 'Campaign 2 Title',             hint: 'The title of your second fundraising goal.' },
+  oven_fund_goal_2:             { section: 'Crowdfunding & Oven Fund',  label: 'Campaign 2 Target Goal ($)',   hint: 'Target goal in dollars, e.g. 5000', type: 'number' },
+  oven_fund_current_amount_2:   { section: 'Crowdfunding & Oven Fund',  label: 'Campaign 2 Current Amount ($)', hint: 'Current amount raised in dollars, e.g. 750', type: 'number' },
+  oven_fund_description_2:      { section: 'Crowdfunding & Oven Fund',  label: 'Campaign 2 Description',        hint: 'Description of Campaign 2 objectives.', type: 'textarea' },
 };
 
-const SECTION_ORDER = ['Brand Identity', 'SEO Defaults', 'Analytics & Verification', 'Store', 'Homestead Content'];
+const SECTION_ORDER = ['Brand Identity', 'SEO Defaults', 'Analytics & Verification', 'Store', 'Homestead Content', 'Crowdfunding & Oven Fund'];
 
 export default function AdminSettings() {
   const [settings, setSettings] = useState<{ key: string; value: string }[]>([]);
@@ -57,6 +65,26 @@ export default function AdminSettings() {
   }
 
   async function handleSave() {
+    // Validation
+    for (const s of settings) {
+      if (s.key === 'oven_fund_title' && !s.value.trim()) {
+        addToast('Campaign 1 Title cannot be empty', 'error');
+        return;
+      }
+      if (s.key === 'oven_fund_title_2' && !s.value.trim()) {
+        addToast('Campaign 2 Title cannot be empty', 'error');
+        return;
+      }
+      if (['oven_fund_goal', 'oven_fund_current_amount', 'oven_fund_goal_2', 'oven_fund_current_amount_2'].includes(s.key)) {
+        const num = Number(s.value);
+        if (isNaN(num) || num < 0) {
+          const label = settingsMeta[s.key]?.label || s.key;
+          addToast(`${label} must be a non-negative number`, 'error');
+          return;
+        }
+      }
+    }
+
     setSaving(true);
     try {
       await api.put('/api/admin/settings', settings.map((s) => ({ key: s.key, value: s.value })));

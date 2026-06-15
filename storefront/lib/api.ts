@@ -189,9 +189,14 @@ export interface PublicSettings {
   payment_instructions: string;
   allergy_disclaimer: string;
   preorder_instructions: string;
+  oven_fund_title: string;
   oven_fund_goal: string;
   oven_fund_current_amount: string;
   oven_fund_description: string;
+  oven_fund_title_2: string;
+  oven_fund_goal_2: string;
+  oven_fund_current_amount_2: string;
+  oven_fund_description_2: string;
 }
 
 export interface CheckoutResponse {

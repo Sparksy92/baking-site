@@ -54,7 +54,20 @@ export async function initDatabase(force: boolean = false) {
               updated_at TIMESTAMPTZ DEFAULT NOW()
           );
         `);
-        return { success: true, message: 'Database already initialized. Verified media_assets table exists.' };
+        console.log('Ensuring all multi-goal Oven Fund settings exist in site_settings...');
+        await p.query(`
+          INSERT INTO site_settings (key, value) VALUES
+          ('oven_fund_title', 'Commercial Oven Upgrade Fund — Phase 1'),
+          ('oven_fund_goal', '2500'),
+          ('oven_fund_current_amount', '1620'),
+          ('oven_fund_description', 'Help us prepare for a commercial stone-deck baking oven by funding the first-stage upgrade: electrical preparation, oven stand, baking trays, proofing tools, and the first deposit toward increased baking capacity.'),
+          ('oven_fund_title_2', 'Outdoor Wood-Fired Brick Oven'),
+          ('oven_fund_goal_2', '5000'),
+          ('oven_fund_current_amount_2', '750'),
+          ('oven_fund_description_2', 'Build a traditional outdoor clay wood-fired brick oven and workbench prep area in the garden for seasonal community baking runs, rustic sourdough, flatbreads, and future workshops.')
+          ON CONFLICT (key) DO NOTHING;
+        `);
+        return { success: true, message: 'Database already initialized. Verified media_assets table and multi-goal oven fund settings exist.' };
       }
     } catch (err) {
       console.log('Error checking table existence, proceeding with init:', err);
