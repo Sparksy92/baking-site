@@ -206,7 +206,7 @@ export default function InteractiveKitchenScene() {
     : 'scale(1) translate(0%, 0%)';
 
   const isLeftHotspot = activeZoneConfig && parseInt(activeZoneConfig.left) < 50;
-  const drawerAlignClass = isLeftHotspot ? 'right-4' : 'left-4';
+  const drawerAlignClass = isLeftHotspot ? 'md:right-4 md:left-auto' : 'md:left-4 md:right-auto';
 
   return (
     <section className="w-full max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 flex flex-col items-center">
@@ -240,21 +240,22 @@ export default function InteractiveKitchenScene() {
 
       {/* Main Container Card */}
       <div 
-        className="relative w-full aspect-[16/10] md:aspect-[16/9] rounded-[2rem] border border-[#EBE3D5] overflow-hidden shadow-2xl bg-warm group"
+        className="relative w-full aspect-[16/10] md:aspect-[16/9] bg-warm rounded-[2rem]"
         onClick={() => {
           setActiveZone(null);
           setTourIndex(null);
         }}
       >
-        
-        {/* Zoomable Wrapper (Transforms only image, glows, and hotspots) */}
-        <div 
-          className="w-full h-full relative origin-center"
-          style={{ 
-            transform: transformStyle,
-            transition: prefersReducedMotion ? 'none' : 'transform 0.7s cubic-bezier(0.25, 1, 0.5, 1)'
-          }}
-        >
+        {/* Inner Rounded Overflow-Hidden Wrapper for the Zoomable Map */}
+        <div className="absolute inset-0 rounded-[2rem] border border-[#EBE3D5] overflow-hidden shadow-2xl w-full h-full">
+          {/* Zoomable Wrapper (Transforms only image, glows, and hotspots) */}
+          <div 
+            className="w-full h-full relative origin-center"
+            style={{ 
+              transform: transformStyle,
+              transition: prefersReducedMotion ? 'none' : 'transform 0.7s cubic-bezier(0.25, 1, 0.5, 1)'
+            }}
+          >
           {/* Main Background Image */}
           {/* TODO: Replace with optimized final image storefront/public/images/home/interactive-kitchen.jpg when available. Currently using placeholder copy. */}
           <img
@@ -332,17 +333,33 @@ export default function InteractiveKitchenScene() {
             );
           })}
         </div>
+        </div>
+
+        {/* Mobile Backdrop Overlay */}
+        {activeZoneConfig && (
+          <div 
+            className="fixed inset-0 bg-black/40 z-40 md:hidden transition-opacity"
+            onClick={(e) => {
+              e.stopPropagation();
+              setActiveZone(null);
+              setTourIndex(null);
+            }}
+            aria-hidden="true"
+          />
+        )}
 
         {/* Stable Overlay Layer (Stable side drawer or bottom sheet outside the transformed wrapper) */}
         {activeZoneConfig && (
           <div
             ref={drawerRef}
             tabIndex={-1}
-            className={`md:absolute md:top-4 md:bottom-4 md:w-96 p-6 rounded-2xl bg-[#FDFBF7]/95 border border-[#EBE3D5] shadow-2xl backdrop-blur-md z-20 text-left transition-all focus:outline-none ${
+            className={`fixed bottom-0 left-0 right-0 z-50 rounded-t-[2rem] max-h-[80vh] md:absolute md:top-4 md:bottom-4 md:w-96 md:rounded-2xl md:z-20 p-6 bg-[#FDFBF7]/95 border-t border-x md:border border-[#EBE3D5] shadow-2xl backdrop-blur-md text-left transition-all focus:outline-none ${
               prefersReducedMotion ? 'duration-0' : 'duration-500 ease-out'
-            } ${drawerAlignClass} fixed bottom-4 left-4 right-4 md:right-auto max-h-[60%] md:max-h-none overflow-y-auto flex flex-col justify-between`}
+            } ${drawerAlignClass} overflow-y-auto flex flex-col justify-between`}
             onClick={(e) => e.stopPropagation()}
           >
+            {/* Drag Handle (Mobile only) */}
+            <div className="w-12 h-1 bg-[#EBE3D5] rounded-full mx-auto mb-4 md:hidden shrink-0" />
             {/* Drawer Header & Content */}
             <div className="space-y-4">
               <div className="flex justify-between items-start">
@@ -409,11 +426,11 @@ export default function InteractiveKitchenScene() {
             {/* Footer Navigation & Tour Controls */}
             <div className="border-t border-[#EBE3D5] pt-4 mt-6 space-y-4">
               
-              <div className="flex items-center gap-3 w-full">
+              <div className="flex flex-col sm:flex-row items-stretch sm:items-center gap-3 w-full">
                 {/* Primary CTA (Navigate to Shop/Category/Custom) */}
                 <Link
                   href={activeZoneConfig.href}
-                  className="flex-1 text-center bg-brand text-white px-4 py-2.5 rounded-xl font-bold text-xs hover:bg-brand-accent transition-colors shadow-xs focus-visible:ring-2 focus-visible:ring-brand focus-visible:ring-offset-2 focus:outline-none"
+                  className="w-full sm:w-auto sm:flex-1 text-center bg-brand text-white px-4 py-2.5 rounded-xl font-bold text-xs hover:bg-brand-accent transition-colors shadow-xs focus-visible:ring-2 focus-visible:ring-brand focus-visible:ring-offset-2 focus:outline-none"
                 >
                   {activeZoneConfig.ctaText}
                 </Link>
@@ -426,7 +443,7 @@ export default function InteractiveKitchenScene() {
                     setActiveZone(null);
                     setTourIndex(null);
                   }}
-                  className="px-4 py-2.5 border border-[#EBE3D5] text-earth font-bold text-xs rounded-xl hover:bg-warm transition-colors focus-visible:ring-2 focus-visible:ring-brand focus-visible:ring-offset-2 focus:outline-none"
+                  className="w-full sm:w-auto text-center px-4 py-2.5 border border-[#EBE3D5] text-earth font-bold text-xs rounded-xl hover:bg-warm transition-colors focus-visible:ring-2 focus-visible:ring-brand focus-visible:ring-offset-2 focus:outline-none"
                 >
                   Back to Kitchen
                 </button>
