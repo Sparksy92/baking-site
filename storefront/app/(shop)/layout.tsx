@@ -7,7 +7,7 @@ import { CustomerProvider } from '@/lib/customer';
 export default function ShopLayout({ children }: { children: React.ReactNode }) {
   return (
     <CustomerProvider>
-      <div className="min-h-screen flex flex-col bg-white">
+      <div className="min-h-screen flex flex-col bg-white overflow-x-hidden">
         <Suspense><Header /></Suspense>
         <Toaster />
         <main id="main-content" className="flex-1">{children}</main>

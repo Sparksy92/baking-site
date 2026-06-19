@@ -11,6 +11,8 @@
 @layer base {
   html {
     scroll-behavior: smooth;
+    overflow-x: hidden;
+    max-width: 100%;
   }
 
   body {
@@ -20,6 +22,8 @@
     background-color: #FDFBF7;
     color: #2C2623;
     min-height: 100vh;
+    overflow-x: hidden;
+    max-width: 100%;
   }
 
   *:focus-visible {
