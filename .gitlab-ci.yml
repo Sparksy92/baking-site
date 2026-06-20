@@ -11,6 +11,11 @@ include:
     file:
       - '/.gitlab-ci/templates/base.yml'
       - '/.gitlab-ci/templates/security-baseline.yml'
+      - '/.gitlab-ci/templates/python-fastapi-postgres.yml'
+      - '/.gitlab-ci/templates/license-audit.yml'
+      - '/.gitlab-ci/templates/telemetry-audit.yml'
+      - '/.gitlab-ci/templates/sbom.yml'
+      - '/.gitlab-ci/templates/frontend-bundle-scan.yml'
 
 variables:
   APP_NAME: "clothing-ecommerce-baseline"
@@ -23,6 +28,11 @@ variables:
   ENABLE_VULNERABILITY_SCAN: "true"
   ENABLE_SAST: "false"
   DEPLOY_APP: "clothing-ecommerce-baseline"
+  ENABLE_FASTAPI_POSTGRES_TEST: "true"
+  ENABLE_LICENSE_AUDIT: "true"
+  ENABLE_TELEMETRY_SCAN: "true"
+  ENABLE_SBOM: "true"
+  ENABLE_FRONTEND_BUNDLE_SCAN: "true"
 
 # =============================================================================
 # VALIDATE — Infrastructure change detection
@@ -96,69 +106,11 @@ quality:typecheck:
 # TEST — API (pytest) + Storefront (Vitest)
 # =============================================================================
 
-test:api:
-  stage: test
-  image: python:3.12-bookworm
-  services:
-    - name: postgres:16-alpine
-      alias: postgres
-      command: ["postgres", "-c", "fsync=off"]
-  variables:
-    # Force an isolated Docker network so the postgres service alias resolves
-    # reliably on shared runners.
-    FF_NETWORK_PER_BUILD: "true"
-    POSTGRES_USER: ecommerce
-    POSTGRES_PASSWORD: ecommerce_password
-    POSTGRES_DB: ecommerce_test
-    POSTGRES_HOST: postgres
-    POSTGRES_PORT: 5432
-  extends: .default_job
-  cache:
-    key: api-pip
-    paths:
-      - .cache/pip
-      - api/.venv
-  before_script:
-    - cd api
-    - python -m venv .venv
-    - source .venv/bin/activate
-    - pip install -r requirements.txt
-    # Wait for PostgreSQL to be ready
-    - |
-      for i in {1..60}; do
-        if python <<'PY' 2>/dev/null; then
-      import asyncio
-      import asyncpg
-
-      async def main():
-          conn = await asyncpg.connect("postgresql://ecommerce:ecommerce_password@postgres:5432/ecommerce_test")
-          await conn.close()
-
-      asyncio.run(main())
-      PY
-          echo "PostgreSQL is ready"
-          exit 0
-        fi
-        echo "Waiting for PostgreSQL... ($i/60)"
-        sleep 2
-      done
-      echo "PostgreSQL did not become reachable"
-      echo "POSTGRES_HOST=${POSTGRES_HOST}"
-      getent hosts postgres || true
-      exit 1
-  script:
-    - source .venv/bin/activate
-    - mkdir -p ../reports
-    - python -m pytest tests/ -v --tb=short --junitxml=../reports/api-test-results.xml
-  artifacts:
-    when: always
-    paths:
-      - reports/api-test-results.xml
-    reports:
-      junit: reports/api-test-results.xml
-    expire_in: 30 days
+test:api:fastapi-postgres:
   rules:
-    - changes:
+    - if: '$CI_COMMIT_BRANCH == "staging" || $CI_COMMIT_BRANCH == "main"'
+    - if: '$CI_PIPELINE_SOURCE == "merge_request_event"'
+      changes:
         - api/**/*
 
 test:unit:
