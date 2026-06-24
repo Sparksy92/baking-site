@@ -14,9 +14,9 @@ export default function AboutPage() {
       .catch(() => {});
   }, []);
 
-  const name = settings?.brand_name || brandName() || 'Cedar & Sage Homestead';
+  const name = settings?.brand_name || brandName() || 'Sage & Sweetgrass Homestead';
   const tagline = settings?.brand_tagline || brandTagline() || 'Fresh baking, pantry goods & handmade homestead care';
-  const aboutText = settings?.about_content || 'Cedar & Sage Homestead is a small-batch homestead kitchen offering fresh baking, pantry goods, and handmade home and body products. Every request is handled with care, and many items are prepared by preorder so they can be made fresh.';
+  const aboutText = settings?.about_content || 'Sage & Sweetgrass Homestead is a small-batch homestead kitchen offering fresh baking, pantry goods, and handmade home and body products. Every request is handled with care, and many items are prepared by preorder so they can be made fresh.';
 
   return (
     <div className="bg-cream min-h-screen">

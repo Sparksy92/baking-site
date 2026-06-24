@@ -14,8 +14,8 @@ import { ArrowRight, Leaf, HeartHandshake, Truck, Shield, HelpCircle } from 'luc
 import InteractiveKitchenScene from '@/components/home/InteractiveKitchenScene';
 
 export const metadata: Metadata = {
-  title: 'Cedar & Sage Homestead | Fresh Baking & Homestead Goods',
-  description: 'Fresh breads, sourdough preorders, desserts, pantry goods, and handmade homestead care products from Cedar & Sage Homestead.',
+  title: 'Sage & Sweetgrass Homestead | Fresh Baking & Homestead Goods',
+  description: 'Fresh breads, sourdough preorders, desserts, pantry goods, and handmade homestead care products from Sage & Sweetgrass Homestead.',
 };
 
 export default async function Home() {
@@ -58,7 +58,7 @@ export default async function Home() {
             {/* Eyebrow */}
             <div className="mb-6 flex flex-wrap items-center gap-3">
               <span className="inline-flex items-center rounded-full border border-white/20 bg-white/5 px-4 py-2 text-[10px] font-bold uppercase tracking-[0.25em] text-white/95">
-                Cedar & Sage Homestead
+                Sage & Sweetgrass Homestead
               </span>
             </div>
 
@@ -66,7 +66,7 @@ export default async function Home() {
             <h1 className="font-black leading-[0.95] tracking-[-0.03em] text-white">
               <span className="block text-[clamp(2.5rem,7vw,5.5rem)]">Fresh baking from</span>
               <span className="block text-[clamp(2.5rem,7vw,5.5rem)] text-brand-secondary">
-                Cedar & Sage Homestead
+                Sage & Sweetgrass Homestead
               </span>
             </h1>
 

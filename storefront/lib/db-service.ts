@@ -171,7 +171,7 @@ export async function getPublicSettings(): Promise<PublicSettings> {
   });
 
   return {
-    brand_name: settingsMap['brand_name'] || 'Cedar & Sage Homestead',
+    brand_name: settingsMap['brand_name'] || 'Sage & Sweetgrass Homestead',
     brand_tagline: settingsMap['brand_tagline'] || 'Fresh baking, pantry goods & handmade homestead care',
     store_announcement: settingsMap['store_announcement'] || '',
     shipping_flat_rate_cents: parseInt(settingsMap['shipping_flat_rate_cents'] || '0', 10),

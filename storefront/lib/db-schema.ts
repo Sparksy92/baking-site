@@ -1,4 +1,4 @@
-export const SCHEMA_SQL = `-- Cedar & Sage Homestead Vercel-Lite Database Schema
+export const SCHEMA_SQL = `-- Sage & Sweetgrass Homestead Vercel-Lite Database Schema
 
 CREATE TABLE IF NOT EXISTS categories (
     id SERIAL PRIMARY KEY,
@@ -63,7 +63,7 @@ CREATE TABLE IF NOT EXISTS media_assets (
 );
 `;
 
-export const SEED_SQL = `-- Seed default Cedar & Sage categories
+export const SEED_SQL = `-- Seed default Sage & Sweetgrass categories
 INSERT INTO categories (name, slug, description, sort_order) VALUES
 ('Baked Fresh', 'baked-fresh', 'Freshly baked breads, buns, and sourdoughs from our homestead oven.', 1),
 ('Desserts', 'desserts', 'Cakes, cheesecakes, cinnamon rolls, and sweet treats.', 2),
@@ -109,7 +109,7 @@ ON CONFLICT (slug) DO NOTHING;
 
 -- Seed default site settings
 INSERT INTO site_settings (key, value) VALUES
-('about_content', 'Welcome to Cedar & Sage Homestead. We are a family-run homestead kitchen located in the heart of our community, focusing on small-batch artisan sourdoughs, freshly baked breads, home-canned pantry preserves, and hand-crafted body care items. Every loaf we bake is shaped by hand and crafted with care, using organic and locally sourced ingredients wherever possible. Because we believe in freshness and reducing waste, we bake exclusively by request. Your support helps build our homestead, including our dream of a wood-fired brick oven to serve our community even better!'),
+('about_content', 'Welcome to Sage & Sweetgrass Homestead. We are a family-run homestead kitchen located in the heart of our community, focusing on small-batch artisan sourdoughs, freshly baked breads, home-canned pantry preserves, and hand-crafted body care items. Every loaf we bake is shaped by hand and crafted with care, using organic and locally sourced ingredients wherever possible. Because we believe in freshness and reducing waste, we bake exclusively by request. Your support helps build our homestead, including our dream of a wood-fired brick oven to serve our community even better!'),
 ('faq_content', 'Q: How do I order?
 A: Browse our menu, add items to your request list, and submit the order request. We will review it and send an e-transfer payment confirmation within 24 hours.
 
