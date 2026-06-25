@@ -139,7 +139,7 @@ export async function POST(req: NextRequest) {
 
         const emailHtml = `
           <div style="font-family: sans-serif; color: #2B2522; line-height: 1.6; max-width: 600px; margin: 0 auto; padding: 20px; border: 1px solid #E3DDD3; borderRadius: 16px; backgroundColor: #FAF7F2;">
-            <h2 style="color: #6F7D5C; border-bottom: 2px solid #E3DDD3; padding-bottom: 10px; margin-top: 0;">New Order Request #CSH-${savedOrder.id}</h2>
+            <h2 style="color: #6F7D5C; border-bottom: 2px solid #E3DDD3; padding-bottom: 10px; margin-top: 0;">New Order Request #SSH-${savedOrder.id}</h2>
             
             <table style="width: 100%; border-collapse: collapse; margin-bottom: 20px;">
               <tr>
@@ -202,7 +202,7 @@ export async function POST(req: NextRequest) {
           body: JSON.stringify({
             from: emailFrom,
             to: contactEmail,
-            subject: `New Order Request #CSH-${savedOrder.id} - ${customer_name}`,
+            subject: `New Order Request #SSH-${savedOrder.id} - ${customer_name}`,
             html: emailHtml
           })
         });
@@ -211,7 +211,7 @@ export async function POST(req: NextRequest) {
       }
     }
 
-    return NextResponse.json({ order_number: `CSH-${savedOrder.id}`, id: savedOrder.id }, { status: 201 });
+    return NextResponse.json({ order_number: `SSH-${savedOrder.id}`, id: savedOrder.id }, { status: 201 });
   } catch (error: any) {
     return NextResponse.json({ detail: error.message }, { status: 500 });
   }

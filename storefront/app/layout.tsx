@@ -8,7 +8,7 @@ import './globals.css';
 export function generateMetadata(): Metadata {
   const name = brandName();
   const tagline = brandTagline();
-  const description = brandConfig.metadata.description || tagline || `Shop ${name} — premium streetwear and apparel.`;
+  const description = brandConfig.metadata.description || tagline || `Shop ${name} — fresh baking, pantry preserves, and homestead care.`;
   const url = siteUrl();
   const { seo } = brandConfig;
 

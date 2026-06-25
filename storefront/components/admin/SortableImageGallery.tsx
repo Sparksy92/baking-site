@@ -215,7 +215,10 @@ export default function SortableImageGallery({ productId, images, variants, onIm
         onDragLeave={handleDragLeave}
         onDrop={handleDrop}
         className={`border-2 border-dashed rounded-lg p-6 text-center transition-colors cursor-pointer ${dragOver ? 'border-brand bg-brand/5' : 'border-gray-200 hover:border-gray-300'}`}
+        role="button"
+        tabIndex={0}
         onClick={() => document.getElementById('img-upload')?.click()}
+        onKeyDown={(e) => (e.key === 'Enter' || e.key === ' ') && document.getElementById('img-upload')?.click()}
       >
         <Upload size={24} className="mx-auto text-gray-400 mb-2" />
         <p className="text-sm text-gray-500">

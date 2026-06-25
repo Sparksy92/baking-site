@@ -69,7 +69,16 @@ export async function initDatabase(force: boolean = false) {
           ('oven_fund_description_2', 'Build a traditional outdoor clay wood-fired brick oven and workbench prep area in the garden for seasonal community baking runs, rustic sourdough, flatbreads, and future workshops.')
           ON CONFLICT (key) DO NOTHING;
         `);
-        return { success: true, message: 'Database already initialized. Verified media_assets table and multi-goal oven fund settings exist.' };
+        // Migrate legacy "Cedar & Sage" settings to "Sage & Sweetgrass Homestead"
+        await p.query(`
+          UPDATE site_settings 
+          SET value = REPLACE(value, 'Cedar & Sage', 'Sage & Sweetgrass Homestead') 
+          WHERE value LIKE '%Cedar & Sage%';
+          UPDATE site_settings 
+          SET value = REPLACE(value, 'Cedar and Sage', 'Sage & Sweetgrass Homestead') 
+          WHERE value LIKE '%Cedar and Sage%';
+        `);
+        return { success: true, message: 'Database already initialized. Verified media_assets table, migrated legacy setting names, and ensured multi-goal settings.' };
       }
     } catch (err) {
       console.log('Error checking table existence, proceeding with init:', err);

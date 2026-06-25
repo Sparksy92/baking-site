@@ -24,12 +24,34 @@ type NavSection = {
 const CORE_NAV: NavItem[] = [
   { label: 'Dashboard',      to: '/admin',            icon: LayoutDashboard },
   { label: 'Order Requests', to: '/admin/order-requests', icon: Inbox },
+  { label: 'Orders',         to: '/admin/orders',     icon: ShoppingCart },
   { label: 'Menu Items',     to: '/admin/products',   icon: Package },
+  { label: 'Collections',    to: '/admin/collections',icon: Layers },
+  { label: 'Categories',     to: '/admin/categories', icon: FolderOpen },
+  { label: 'Pages',          to: '/admin/pages',      icon: FileText },
   { label: 'Media',          to: '/admin/media',      icon: FolderOpen },
   { label: 'Settings',       to: '/admin/settings',   icon: Settings },
 ];
 
-const SECTIONS: NavSection[] = [];
+const SECTIONS: NavSection[] = [
+  {
+    id: 'marketing',
+    label: 'Marketing',
+    icon: Megaphone,
+    items: [
+      { label: 'Promos',      to: '/admin/promos',      icon: Tag },
+      { label: 'Newsletter',  to: '/admin/newsletter',  icon: Mail },
+    ],
+  },
+  {
+    id: 'advanced',
+    label: 'Advanced',
+    icon: Wrench,
+    items: [
+      { label: 'Redirects',   to: '/admin/redirects',   icon: ArrowLeftRight },
+    ],
+  },
+];
 
 const LS_KEY = 'admin_nav_open_sections';
 
@@ -116,9 +138,9 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
           ))}
 
           {SECTIONS.map((section) => {
-            const isOpen = !!openSections[section.id];
-            const SectionIcon = section.icon as any;
             const hasActive = section.items.some((i) => pathname.startsWith(i.to));
+            const isOpen = !!openSections[section.id] || hasActive;
+            const SectionIcon = section.icon as any;
             return (
               <div key={section.id} className="pt-1">
                 <button
@@ -150,7 +172,14 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
 
         <div className="p-2 border-t border-gray-100">
           <button
-            onClick={async () => { await api.post('/api/auth/logout'); router.push('/admin/login'); }}
+            onClick={async () => {
+              try {
+                await api.post('/api/auth/logout');
+              } catch (err) {
+                console.error('Logout error:', err);
+              }
+              router.push('/admin/login');
+            }}
             className="flex items-center gap-2.5 px-3 py-2 rounded-lg text-sm text-gray-700 hover:bg-gray-100 w-full"
           >
             <LogOut size={16} />

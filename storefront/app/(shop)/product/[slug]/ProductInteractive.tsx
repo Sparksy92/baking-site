@@ -2,14 +2,36 @@
 
 import { useState, useEffect } from 'react';
 import Link from 'next/link';
-import { Clock, AlertTriangle, MapPin, ChevronDown, ChevronUp, ArrowLeft, Send } from 'lucide-react';
+import { Clock, AlertTriangle, MapPin, ChevronDown, ChevronUp, ArrowLeft, Send, ShoppingBag } from 'lucide-react';
 import type { Product } from '@/lib/api';
 import { formatCents } from '@/lib/format';
 import { ImageGallery } from './ImageGallery';
 import { trackView } from '@/lib/recently-viewed';
+import { useCart } from '@/lib/cart';
+import { addToast } from '@/lib/toast';
+import { SocialProof } from '@/components/SocialProof';
 
 export function ProductInteractive({ product }: { product: Product }) {
   const [descOpen, setDescOpen] = useState(true);
+  const { addItem } = useCart();
+
+  const handleAddToCart = () => {
+    if (product.variants && product.variants.length > 0) {
+      const variant = product.variants[0];
+      addItem({
+        variantId: variant.id,
+        productId: product.id,
+        productName: product.name,
+        variantSize: variant.size || 'Standard',
+        variantColor: variant.color || 'Default',
+        unitPriceCents: variant.price_cents,
+        imageUrl: product.images[0]?.url || null,
+      });
+      addToast(`Added ${product.name} to your cart!`, 'success');
+    } else {
+      addToast('Product has no available options to order.', 'error');
+    }
+  };
 
   useEffect(() => {
     trackView({
@@ -139,6 +161,8 @@ export function ProductInteractive({ product }: { product: Product }) {
           {renderPrice()}
         </div>
 
+        <SocialProof productId={product.id} />
+
         <div className="mt-6 h-px bg-sand" />
 
         {/* Bakers notes / attributes */}
@@ -182,13 +206,23 @@ export function ProductInteractive({ product }: { product: Product }) {
         {/* Primary CTA */}
         <div className="mt-8 space-y-4">
           {product.availability_status !== 'sold_out' ? (
-            <Link
-              href={`/custom-orders?item=${encodeURIComponent(product.slug)}`}
-              className="w-full flex items-center justify-center gap-3 py-4 rounded-2xl font-bold text-base transition-all duration-300 bg-brand text-white hover:bg-earth hover:scale-[1.01] active:scale-[0.98] shadow-earth-sm hover:shadow-earth"
-            >
-              <Send size={18} />
-              Request This Item
-            </Link>
+            product.pricing_mode === 'quote_only' || product.pricing_mode === 'seasonal' ? (
+              <Link
+                href={`/custom-orders?item=${encodeURIComponent(product.slug)}`}
+                className="w-full flex items-center justify-center gap-3 py-4 rounded-2xl font-bold text-base transition-all duration-300 bg-brand text-white hover:bg-earth hover:scale-[1.01] active:scale-[0.98] shadow-earth-sm hover:shadow-earth"
+              >
+                <Send size={18} />
+                Request Custom Quote
+              </Link>
+            ) : (
+              <button
+                onClick={handleAddToCart}
+                className="w-full flex items-center justify-center gap-3 py-4 rounded-2xl font-bold text-base transition-all duration-300 bg-brand text-white hover:bg-earth hover:scale-[1.01] active:scale-[0.98] shadow-earth-sm hover:shadow-earth cursor-pointer"
+              >
+                <ShoppingBag size={18} />
+                Add to Cart
+              </button>
+            )
           ) : (
             <button
               disabled

@@ -1,6 +1,6 @@
 import { test, expect } from '@playwright/test';
 
-test.describe('Customer Account (C1-C6)', () => {
+test.describe.serial('Customer Account (C1-C6)', () => {
   const timestamp = Date.now();
   const email = `testuser_${timestamp}@example.com`;
   const password = 'Password123!';
@@ -36,6 +36,7 @@ test.describe('Customer Account (C1-C6)', () => {
         await page.locator('input[id*="postal"], input[name*="postal"]').first().fill('M1M 1M1');
         await page.getByRole('button', { name: /save/i }).click();
         await expect(page.getByText('123 Test St')).toBeVisible();
+        await page.goto('/account');
     }
 
     await page.getByRole('button', { name: /sign out|logout/i }).click();

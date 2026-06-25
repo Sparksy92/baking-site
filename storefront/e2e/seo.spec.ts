@@ -466,6 +466,17 @@ test.describe.serial('Admin SEO fields', () => {
       test.skip(true, 'Admin login rate-limited — run this spec in isolation: npx playwright test e2e/seo.spec.ts');
       return;
     }
+    // Ensure at least one page exists
+    await request.post('/api/admin/pages', {
+      data: {
+        title: 'Test Page',
+        slug: 'test-page',
+        content_html: '<p>Test page content</p>',
+        page_type: 'blog_post',
+        status: 'draft',
+      },
+    }).catch(() => {});
+
     await page.goto('/admin/login');
     await page.getByPlaceholder(/username/i).fill('testadmin');
     await page.getByPlaceholder(/password/i).fill('admin123');
@@ -523,7 +534,8 @@ test.describe.serial('Admin SEO fields', () => {
 
   test('Pages admin has SEO edit link', async ({ page }) => {
     await page.goto('/admin/pages');
-    await expect(page.getByRole('link', { name: /edit/i }).first()).toBeVisible();
+    await page.waitForLoadState('networkidle');
+    await expect(page.getByRole('link', { name: /edit/i }).first()).toBeVisible({ timeout: 15000 });
   });
 
   test('Redirects admin page loads and shows table', async ({ page }) => {

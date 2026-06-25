@@ -15,6 +15,22 @@ export async function getCategories(): Promise<Category[]> {
   }));
 }
 
+export async function getCategoryBySlug(slug: string): Promise<Category | null> {
+  const res = await query('SELECT * FROM categories WHERE slug = $1', [slug]);
+  if (res.rows.length === 0) return null;
+  const r = res.rows[0];
+  return {
+    id: r.id,
+    name: r.name,
+    slug: r.slug,
+    description: r.description,
+    image_url: r.image_url,
+    sort_order: r.sort_order,
+    is_active: r.is_active,
+    product_count: 0
+  };
+}
+
 export async function getProducts(categorySlug?: string | null, limit: number = 48, sortBy?: string | null, featuredOnly: boolean = false): Promise<{ products: ProductListItem[]; total: number }> {
   let sql = `
     SELECT m.*, c.slug as category_slug, c.name as category_name 
@@ -167,7 +183,12 @@ export async function getPublicSettings(): Promise<PublicSettings> {
   const res = await query('SELECT key, value FROM site_settings');
   const settingsMap: Record<string, string> = {};
   res.rows.forEach(r => {
-    settingsMap[r.key] = r.value;
+    let val = r.value || '';
+    if (typeof val === 'string') {
+      val = val.replace(/Cedar\s*&\s*Sage/gi, 'Sage & Sweetgrass Homestead');
+      val = val.replace(/Cedar\s+and\s+Sage/gi, 'Sage & Sweetgrass Homestead');
+    }
+    settingsMap[r.key] = val;
   });
 
   return {

@@ -4,7 +4,7 @@ import { cookies } from 'next/headers';
 const SESSION_COOKIE_NAME = 'admin_session';
 
 export const DEFAULT_SESSION_SECRET = 'fallback-secret-use-a-real-one-in-production-12345';
-export const DEFAULT_PASSWORD_HASH = 'b1a20bf155239e240212f45ec926719cd227eb0d507119ecb001a1db6c1bf9eb9d5929532ea4a5690bfa3fcd6d8174f84a4a581458dc6b4b455b5f2cd796f6e5';
+export const DEFAULT_PASSWORD_HASH = 'cc9b836a15f075e04556cb0b9b54f579d0bf7365cc95cfba80b96890af827611162e9c63baa1c47cc26cff225cc6c3f96ecfa7513c5e8ea33fc909584e91ff87';
 
 export function isProduction(): boolean {
   return process.env.NODE_ENV === 'production' || process.env.DEV_MODE === 'false';
@@ -112,6 +112,7 @@ export async function createSession(user: { email: string; username: string; rol
 export async function destroySession() {
   const cookieStore = await cookies();
   cookieStore.delete(SESSION_COOKIE_NAME);
+  cookieStore.delete('_auth_token');
 }
 
 // Password hashing utility using pbkdf2

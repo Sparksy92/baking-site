@@ -24,32 +24,36 @@ export default function ContactPage() {
       <div className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8">
         
         <div className="text-center max-w-2xl mx-auto mb-16">
-          <h1 className="text-4xl md:text-5xl font-black text-earth mb-4 tracking-tight">Contact Us</h1>
-          <p className="text-lg text-muted-earth">
+          <span className="inline-block mb-3 text-[10px] font-black uppercase tracking-[0.28em] text-terracotta">
+            Get In Touch
+          </span>
+          <h1 className="text-4xl md:text-5xl font-bold font-serif text-earth mb-4 tracking-tight">Contact Us</h1>
+          <p className="text-base sm:text-lg text-muted-earth max-w-xl mx-auto leading-relaxed">
             Have a question about a bake, ingredients, custom desserts, or your order request? We&apos;d love to hear from you.
           </p>
         </div>
 
-        <div className="flex flex-col lg:flex-row gap-12 lg:gap-20">
+        <div className="flex flex-col lg:flex-row gap-12 lg:gap-16">
           
           {/* Contact Form */}
           <div className="flex-1">
-            <div className="bg-white p-8 sm:p-10 rounded-[2.5rem] shadow-sm border border-sand/50">
+            <div className="bg-white p-8 sm:p-10 rounded-[2.5rem] shadow-sm hover:shadow-md hover:scale-[1.005] transition-all duration-500 border border-sand/50">
               <ContactForm />
             </div>
           </div>
 
           {/* Sidebar */}
           <div className="w-full lg:w-[380px] space-y-8">
-            <div className="bg-white p-8 rounded-3xl shadow-sm border border-sand/50 space-y-8">
+            <div className="bg-white p-8 rounded-3xl shadow-sm hover:shadow-md hover:scale-[1.005] transition-all duration-500 border border-sand/50 space-y-8 relative overflow-hidden">
+              <div className="absolute top-0 left-0 w-full h-1 bg-brand" />
               
               <div className="flex items-start gap-4">
                 <div className="w-10 h-10 rounded-full bg-brand/10 flex items-center justify-center flex-shrink-0 mt-1">
                   <Mail className="text-brand w-5 h-5" />
                 </div>
                 <div>
-                  <h2 className="text-base font-bold text-earth mb-1">Email</h2>
-                  <a href={`mailto:${email}`} className="text-brand hover:text-brand/80 transition-colors font-semibold">
+                  <h2 className="text-base font-bold text-earth mb-1 font-serif">Email</h2>
+                  <a href={`mailto:${email}`} className="text-brand hover:text-brand/80 transition-colors font-bold text-sm sm:text-base">
                     {email}
                   </a>
                 </div>
@@ -60,8 +64,8 @@ export default function ContactPage() {
                   <Clock className="text-brand w-5 h-5" />
                 </div>
                 <div>
-                  <h2 className="text-base font-bold text-earth mb-1">Response Time</h2>
-                  <p className="text-muted-earth text-sm leading-relaxed">Kirstin typically responds within 24 hours.</p>
+                  <h2 className="text-base font-bold text-earth mb-1 font-serif">Response Time</h2>
+                  <p className="text-muted-earth text-sm leading-relaxed font-medium">Kirstin typically responds within 24 hours.</p>
                 </div>
               </div>
 
@@ -70,8 +74,8 @@ export default function ContactPage() {
                   <FileText className="text-brand w-5 h-5" />
                 </div>
                 <div>
-                  <h2 className="text-base font-bold text-earth mb-1">Order Requests</h2>
-                  <p className="text-muted-earth text-sm leading-relaxed">
+                  <h2 className="text-base font-bold text-earth mb-1 font-serif">Order Requests</h2>
+                  <p className="text-muted-earth text-sm leading-relaxed font-medium">
                     Order requests are reviewed in the order received. You will receive an email once Kirstin confirms availability and final pricing.
                   </p>
                 </div>
@@ -79,12 +83,13 @@ export default function ContactPage() {
 
             </div>
 
-            <div className="bg-earth rounded-3xl p-8 text-white">
-              <h2 className="text-lg font-bold mb-4">Quick Links</h2>
-              <ul className="space-y-3">
-                <li><Link href="/order-info" className="flex items-center gap-2 text-white/80 hover:text-white transition-colors group"><ExternalLink size={16} className="group-hover:-translate-y-0.5 group-hover:translate-x-0.5 transition-transform" /> Order Information</Link></li>
-                <li><Link href="/faq" className="flex items-center gap-2 text-white/80 hover:text-white transition-colors group"><ExternalLink size={16} className="group-hover:-translate-y-0.5 group-hover:translate-x-0.5 transition-transform" /> Frequently Asked Questions</Link></li>
-                <li><Link href="/oven-fund" className="flex items-center gap-2 text-white/80 hover:text-white transition-colors group"><ExternalLink size={16} className="group-hover:-translate-y-0.5 group-hover:translate-x-0.5 transition-transform" /> Homestead Oven Fund</Link></li>
+            <div className="bg-earth rounded-3xl p-8 text-white hover:scale-[1.005] hover:shadow-earth-sm transition-all duration-500 relative overflow-hidden">
+              <div className="absolute inset-0 bg-[radial-gradient(circle_at_bottom_left,rgba(200,162,168,0.15),transparent_60%)]" aria-hidden="true" />
+              <h2 className="text-lg font-bold mb-4 font-serif">Quick Links</h2>
+              <ul className="space-y-4 relative z-10">
+                <li><Link href="/order-info" className="flex items-center gap-2 text-white/80 hover:text-white transition-colors group text-sm font-bold"><ExternalLink size={16} className="group-hover:-translate-y-0.5 group-hover:translate-x-0.5 transition-transform" /> Order Information</Link></li>
+                <li><Link href="/faq" className="flex items-center gap-2 text-white/80 hover:text-white transition-colors group text-sm font-bold"><ExternalLink size={16} className="group-hover:-translate-y-0.5 group-hover:translate-x-0.5 transition-transform" /> Frequently Asked Questions</Link></li>
+                <li><Link href="/oven-fund" className="flex items-center gap-2 text-white/80 hover:text-white transition-colors group text-sm font-bold"><ExternalLink size={16} className="group-hover:-translate-y-0.5 group-hover:translate-x-0.5 transition-transform" /> Homestead Oven Fund</Link></li>
               </ul>
             </div>
           </div>

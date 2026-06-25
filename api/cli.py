@@ -383,7 +383,7 @@ A: Visit our Oven Fund page to view current progress and support tiers. Contribu
 
         break
 
-    print("Success: Seeded database with Cedar & Sage Homestead data:")
+    print("Success: Seeded database with Sage & Sweetgrass Homestead data:")
     print("  - 5 categories (Baked Fresh, Desserts, Pantry, Home & Body, Oven Fund)")
     print("  - 22 custom products with options and variants")
     print("  - 2 collections (New Arrivals, Best Sellers)")
