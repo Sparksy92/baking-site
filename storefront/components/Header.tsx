@@ -50,14 +50,14 @@ export function Header() {
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 h-20 flex items-center justify-between gap-6">
 
           {/* Logo */}
-          <Link href="/" className="flex items-center gap-3 flex-shrink-0 group">
+          <Link href="/" className="flex items-center gap-3 flex-shrink-0 group relative z-10">
             {/* eslint-disable-next-line @next/next/no-img-element */}
             <img
               src="/logo.png"
               alt="Logo"
-              className="w-14 h-14 sm:w-16 sm:h-16 rounded-full object-cover group-hover:scale-105 transition-transform duration-300 border border-sand"
+              className="w-18 h-18 md:w-26 md:h-26 rounded-full object-cover group-hover:scale-105 transition-transform duration-300 border-2 border-sand shadow-md bg-cream transform translate-y-1 md:translate-y-2"
             />
-            <span className="text-lg sm:text-xl font-semibold font-serif tracking-tight text-earth group-hover:text-brand-secondary transition-colors duration-300">{brandName()}</span>
+            <span className="text-lg sm:text-xl md:text-2xl font-semibold font-serif tracking-tight text-earth group-hover:text-brand-secondary transition-colors duration-300 ml-1">{brandName()}</span>
           </Link>
 
           {/* Nav — desktop */}
