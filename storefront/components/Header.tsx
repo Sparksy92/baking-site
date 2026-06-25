@@ -114,15 +114,15 @@ export function Header() {
           borderColor: hexToRgba(brandConfig.colors.border, scrolled ? 0.8 : 0.6),
         }}
       >
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 h-20 flex items-center justify-between gap-6">
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 h-20 flex items-center justify-between gap-2 sm:gap-6">
 
-          <Link href="/" className="flex items-center gap-3 flex-shrink-0 group relative z-10">
+          <Link href="/" className="flex items-center gap-2 sm:gap-3 flex-shrink-0 group relative z-10">
             <img
               src="/logo.png"
               alt="Logo"
               className="w-12 h-12 md:w-14 md:h-14 rounded-full object-cover group-hover:scale-105 transition-transform duration-300 border-2 border-sand shadow-md bg-cream transform translate-y-0.5"
             />
-            <span className="text-lg sm:text-xl md:text-2xl font-semibold font-serif tracking-tight text-earth group-hover:text-brand-secondary transition-colors duration-300 ml-1">
+            <span className="text-sm min-[380px]:text-base sm:text-xl md:text-2xl font-semibold font-serif tracking-tight text-earth group-hover:text-brand-secondary transition-colors duration-300 ml-1">
               <span className="inline md:hidden">Sage &amp; Sweetgrass</span>
               <span className="hidden md:inline">{brandName()}</span>
             </span>
@@ -149,11 +149,11 @@ export function Header() {
           </nav>
 
           {/* Actions */}
-          <div className="flex items-center gap-2">
+          <div className="flex items-center gap-1.5 sm:gap-2 flex-shrink-0">
             {/* Shopping Cart Link */}
             <Link
               href="/cart"
-              className="relative p-2 rounded-full transition-all duration-200 header-cart-btn"
+              className="relative p-2 rounded-full transition-all duration-200 header-cart-btn flex-shrink-0"
               aria-label="View Cart"
             >
               <ShoppingBag size={20} />
@@ -167,7 +167,7 @@ export function Header() {
             {/* Mobile hamburger */}
             <button
               onClick={() => setMobileOpen(!mobileOpen)}
-              className="md:hidden ml-1 w-9 h-9 flex items-center justify-center rounded-full transition-all duration-200 header-menu-btn"
+              className="md:hidden ml-1 w-9 h-9 flex-shrink-0 flex items-center justify-center rounded-full transition-all duration-200 header-menu-btn"
               aria-label="Menu"
               aria-expanded={mobileOpen}
             >
