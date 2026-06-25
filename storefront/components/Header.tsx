@@ -55,7 +55,7 @@ export function Header() {
             <img
               src="/logo.png"
               alt="Logo"
-              className="w-18 h-18 md:w-26 md:h-26 rounded-full object-cover group-hover:scale-105 transition-transform duration-300 border-2 border-sand shadow-md bg-cream transform translate-y-1 md:translate-y-2"
+              className="w-16 h-16 md:w-24 md:h-24 rounded-full object-cover group-hover:scale-105 transition-transform duration-300 border-2 border-sand shadow-md bg-cream transform translate-y-1 md:translate-y-2"
             />
             <span className="text-lg sm:text-xl md:text-2xl font-semibold font-serif tracking-tight text-earth group-hover:text-brand-secondary transition-colors duration-300 ml-1">{brandName()}</span>
           </Link>
