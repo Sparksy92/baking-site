@@ -49,6 +49,54 @@ export function Header() {
 
   return (
     <>
+      <style>{`
+        .header-nav-link-active {
+          color: ${brandConfig.colors.accent} !important;
+          background-color: ${hexToRgba(brandConfig.colors.accent, 0.08)} !important;
+        }
+        .header-nav-link-inactive {
+          color: ${hexToRgba(brandConfig.colors.text, 0.65)} !important;
+        }
+        .header-nav-link-inactive:hover {
+          color: ${brandConfig.colors.text} !important;
+          background-color: ${hexToRgba(brandConfig.colors.border, 0.6)} !important;
+        }
+        .header-cart-btn {
+          color: ${hexToRgba(brandConfig.colors.text, 0.6)} !important;
+        }
+        .header-cart-btn:hover {
+          color: ${brandConfig.colors.accent} !important;
+          background-color: ${hexToRgba(brandConfig.colors.border, 0.7)} !important;
+        }
+        .header-menu-btn {
+          color: ${hexToRgba(brandConfig.colors.text, 0.6)} !important;
+        }
+        .header-menu-btn:hover {
+          color: ${brandConfig.colors.accent} !important;
+          background-color: ${hexToRgba(brandConfig.colors.border, 0.7)} !important;
+        }
+        .header-mobile-drawer-nav {
+          border-color: ${hexToRgba(brandConfig.colors.border, 0.6)} !important;
+        }
+        .header-mobile-link-active {
+          background-color: ${brandConfig.colors.border} !important;
+          color: ${brandConfig.colors.accent} !important;
+        }
+        .header-mobile-link-inactive {
+          color: ${hexToRgba(brandConfig.colors.text, 0.75)} !important;
+        }
+        .header-mobile-link-inactive:hover {
+          background-color: ${hexToRgba(brandConfig.colors.border, 0.6)} !important;
+          color: ${brandConfig.colors.text} !important;
+        }
+        .header-mobile-browse-link {
+          color: ${brandConfig.colors.accent} !important;
+        }
+        .header-mobile-browse-link:hover {
+          background-color: ${hexToRgba(brandConfig.colors.accent, 0.08)} !important;
+        }
+      `}</style>
+
       {/* Announcement bar */}
       {announcement && (
         <div className="relative overflow-hidden bg-earth text-white text-center text-xs font-bold tracking-widest uppercase py-2.5 px-4">
@@ -58,11 +106,12 @@ export function Header() {
       )}
 
       <header
-        className={`sticky top-0 z-50 transition-all duration-300 backdrop-blur-xl ${
-          scrolled ? 'shadow-earth-sm border-b border-sand/80' : 'border-b border-sand/60'
+        className={`sticky top-0 z-50 transition-all duration-300 border-b backdrop-blur-xl ${
+          scrolled ? 'shadow-earth-sm' : ''
         }`}
         style={{
           backgroundColor: hexToRgba(brandConfig.colors.background, scrolled ? 0.98 : 0.95),
+          borderColor: hexToRgba(brandConfig.colors.border, scrolled ? 0.8 : 0.6),
         }}
       >
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 h-20 flex items-center justify-between gap-6">
@@ -87,8 +136,8 @@ export function Header() {
                 href={link.href}
                 className={`relative px-4 py-2 text-sm font-semibold rounded-full transition-all duration-200 ${
                   fullPath === link.href
-                    ? 'text-terracotta bg-terracotta/8'
-                    : 'text-earth/65 hover:text-earth hover:bg-sand/60'
+                    ? 'header-nav-link-active'
+                    : 'header-nav-link-inactive'
                 }`}
               >
                 {link.label}
@@ -104,7 +153,7 @@ export function Header() {
             {/* Shopping Cart Link */}
             <Link
               href="/cart"
-              className="relative p-2 text-earth/60 hover:text-terracotta hover:bg-sand/70 rounded-full transition-all duration-200"
+              className="relative p-2 rounded-full transition-all duration-200 header-cart-btn"
               aria-label="View Cart"
             >
               <ShoppingBag size={20} />
@@ -118,7 +167,7 @@ export function Header() {
             {/* Mobile hamburger */}
             <button
               onClick={() => setMobileOpen(!mobileOpen)}
-              className="md:hidden ml-1 w-9 h-9 flex items-center justify-center rounded-full text-earth/60 hover:bg-sand/70 hover:text-terracotta transition-all duration-200"
+              className="relative md:hidden ml-1 w-9 h-9 flex items-center justify-center rounded-full transition-all duration-200 header-menu-btn"
               aria-label="Menu"
               aria-expanded={mobileOpen}
             >
@@ -142,7 +191,7 @@ export function Header() {
           }}
         >
           <nav
-            className="md:hidden border-t border-sand/60 backdrop-blur-xl px-4 py-5 space-y-1"
+            className="md:hidden border-t backdrop-blur-xl px-4 py-5 space-y-1 header-mobile-drawer-nav"
             style={{
               backgroundColor: hexToRgba(brandConfig.colors.surface, 0.98),
             }}
@@ -153,18 +202,18 @@ export function Header() {
                 href={link.href}
                 className={`flex items-center justify-between py-3 px-4 text-sm font-semibold rounded-2xl transition-all duration-200 ${
                   fullPath === link.href
-                    ? 'bg-sand text-terracotta'
-                    : 'text-earth/75 hover:bg-sand/60 hover:text-earth'
+                    ? 'header-mobile-link-active'
+                    : 'header-mobile-link-inactive'
                 }`}
               >
                 {link.label}
                 {fullPath === link.href && <span className="w-1.5 h-1.5 rounded-full bg-terracotta" />}
               </Link>
             ))}
-            <div className="pt-3 border-t border-sand/60 mt-3">
+            <div className="pt-3 border-t mt-3" style={{ borderColor: hexToRgba(brandConfig.colors.border, 0.6) }}>
               <Link
                 href="/shop"
-                className="flex items-center gap-2 py-3 px-4 text-sm font-bold text-terracotta rounded-2xl hover:bg-terracotta/8 transition-colors duration-200"
+                className="flex items-center gap-2 py-3 px-4 text-sm font-bold rounded-2xl transition-colors duration-200 header-mobile-browse-link"
               >
                 Browse All Products <ArrowRight size={14} />
               </Link>
