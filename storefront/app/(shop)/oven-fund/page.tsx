@@ -183,13 +183,12 @@ export default function OvenFundPage() {
               </div>
             </div>
           </div>
-
           {/* Campaign 2: Outdoor Oven */}
           <div className="bg-white border border-[#EBE3D5] rounded-3xl p-6 sm:p-8 flex flex-col justify-between hover:shadow-md transition-all duration-300 relative overflow-hidden">
-            <div className="absolute top-0 left-0 w-full h-1.5 bg-[#C27D38]" />
+            <div className="absolute top-0 left-0 w-full h-1.5 bg-accent" />
             <div>
               <div className="flex justify-between items-start mb-4">
-                <span className="text-[10px] font-bold uppercase tracking-widest bg-[#C27D38]/10 text-[#C27D38] px-2.5 py-1 rounded-full">
+                <span className="text-[10px] font-bold uppercase tracking-widest bg-accent/10 text-accent px-2.5 py-1 rounded-full">
                   Community Project
                 </span>
                 <span className="text-xs font-semibold text-emerald-700 bg-emerald-50 px-2.5 py-1 rounded-full">
@@ -202,17 +201,17 @@ export default function OvenFundPage() {
               <p className="text-sm text-[#6B5A50] leading-relaxed mb-6">
                 {description2}
               </p>
-
+ 
               {/* Progress Tracker */}
               <div className="bg-[#FAF8F5] border border-[#F0EAE1] rounded-2xl p-5 mb-8">
-                <div className="flex justify-between text-xs font-semibold text-[#C27D38] uppercase mb-2">
+                <div className="flex justify-between text-xs font-semibold text-accent uppercase mb-2">
                   <span>Raised: ${raised2.toLocaleString()}</span>
                   <span>Goal: ${goal2.toLocaleString()}</span>
                 </div>
                 {/* Progress Bar */}
                 <div className="w-full h-3.5 bg-[#EBE3D5] rounded-full overflow-hidden mb-3">
                   <div 
-                    className="h-full bg-[#C27D38] rounded-full transition-all duration-1000 ease-out"
+                    className="h-full bg-accent rounded-full transition-all duration-1000 ease-out"
                     style={{ width: `${pct2}%` }}
                   />
                 </div>
@@ -221,15 +220,15 @@ export default function OvenFundPage() {
                   <span>{remaining2 > 0 ? `$${remaining2.toLocaleString()} remaining` : 'Goal Reached!'}</span>
                 </div>
               </div>
-
+ 
               {/* Roadmap Milestones */}
               <div className="space-y-4 mb-6">
-                <h3 className="text-xs font-bold uppercase tracking-wider text-[#C27D38] mb-3">Milestone Roadmap</h3>
+                <h3 className="text-xs font-bold uppercase tracking-wider text-accent mb-3">Milestone Roadmap</h3>
                 {CAMPAIGN_2_MILESTONES.map((ms, idx) => {
                   const isFunded = raised2 >= ms.target;
                   const prevTarget = idx > 0 ? CAMPAIGN_2_MILESTONES[idx - 1].target : 0;
                   const isActive = raised2 >= prevTarget && raised2 < ms.target;
-
+ 
                   return (
                     <div 
                       key={ms.target} 
@@ -237,7 +236,7 @@ export default function OvenFundPage() {
                         isFunded 
                           ? 'bg-emerald-50/40 border-emerald-100/60' 
                           : isActive 
-                            ? 'bg-[#FAF8F5] border-[#C27D38] shadow-sm' 
+                            ? 'bg-[#FAF8F5] border-accent shadow-sm' 
                             : 'bg-gray-50/50 border-gray-100 opacity-60'
                       }`}
                     >
@@ -245,15 +244,15 @@ export default function OvenFundPage() {
                         isFunded 
                           ? 'bg-emerald-100 text-emerald-800' 
                           : isActive 
-                            ? 'bg-[#C27D38] text-white' 
-                            : 'bg-[#EBE3D5] text-[#C27D38]'
+                            ? 'bg-accent text-white' 
+                            : 'bg-[#EBE3D5] text-accent'
                       }`}>
                         {isFunded ? <ShieldCheck size={16} /> : idx + 1}
                       </div>
                       <div>
                         <div className="flex items-center gap-1.5">
                           <span className="font-bold text-sm text-[#4E3629]">{ms.label}</span>
-                          <span className="text-[10px] font-bold text-[#C27D38]">(${ms.target})</span>
+                          <span className="text-[10px] font-bold text-accent">(${ms.target})</span>
                         </div>
                         <p className="text-xs text-[#6B5A50] mt-0.5 leading-relaxed">{ms.desc}</p>
                       </div>

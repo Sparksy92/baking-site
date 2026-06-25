@@ -1,11 +1,18 @@
+@import url('https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,400..900;1,400..900&family=Plus+Jakarta+Sans:ital,wght@0,200..800;1,200..800&display=swap');
+
 @tailwind base;
 @tailwind components;
 @tailwind utilities;
 
 :root {
-  --brand-primary: #4A5D4E;
-  --brand-accent: #C27D38;
-  --brand-surface: #FDFBF7;
+  --brand-primary: #6F7D5C;
+  --brand-secondary: #C8A2A8;
+  --brand-accent: #C8A2A8;
+  --brand-background: #FAF7F2;
+  --brand-surface: #F5EFE6;
+  --brand-text: #2B2522;
+  --brand-text-muted: #6B605A;
+  --brand-border: #E3DDD3;
 }
 
 @layer base {
@@ -16,18 +23,22 @@
   }
 
   body {
-    font-family: 'Inter', system-ui, -apple-system, sans-serif;
+    font-family: 'Plus Jakarta Sans', 'Inter', system-ui, -apple-system, sans-serif;
     -webkit-font-smoothing: antialiased;
     -moz-osx-font-smoothing: grayscale;
-    background-color: #FDFBF7;
-    color: #2C2623;
+    background-color: var(--brand-background);
+    color: var(--brand-text);
     min-height: 100vh;
     overflow-x: hidden;
     max-width: 100%;
   }
 
+  h1, h2, h3, h4, h5, h6 {
+    font-family: 'Playfair Display', Georgia, serif;
+  }
+
   *:focus-visible {
-    outline: 2px solid #C27D38;
+    outline: 2px solid var(--brand-accent);
     outline-offset: 3px;
     border-radius: 4px;
   }
@@ -41,12 +52,12 @@
 }
 
 ::selection {
-  background: rgba(194, 125, 56, 0.22);
-  color: #2C2623;
+  background: rgba(200, 162, 168, 0.25);
+  color: var(--brand-text);
 }
 
 a, button, input, select, textarea {
-  outline-color: #C27D38;
+  outline-color: var(--brand-accent);
 }
 
 .admin-surface {
@@ -102,7 +113,7 @@ a, button, input, select, textarea {
 }
 
 .section-kicker {
-  color: #C27D38;
+  color: var(--brand-accent);
   font-size: 0.75rem;
   font-weight: 700;
   letter-spacing: 0.14em;
@@ -111,15 +122,16 @@ a, button, input, select, textarea {
 }
 
 .section-heading {
-  color: #354E41;
-  font-size: clamp(2rem, 4vw, 3rem);
-  font-weight: 900;
-  letter-spacing: 0;
-  line-height: 1.03;
+  font-family: 'Playfair Display', Georgia, serif;
+  color: var(--brand-primary);
+  font-size: clamp(2.25rem, 4.5vw, 3.25rem);
+  font-weight: 800;
+  letter-spacing: -0.01em;
+  line-height: 1.1;
 }
 
 .section-copy {
-  color: #8C7A6B;
+  color: var(--brand-text-muted);
   font-size: 1rem;
   line-height: 1.75;
 }
@@ -140,25 +152,25 @@ a, button, input, select, textarea {
 }
 
 .btn-primary {
-  background: #C27D38;
-  box-shadow: 0 18px 36px -20px rgba(194, 125, 56, 0.3);
+  background: var(--brand-primary);
+  box-shadow: 0 18px 36px -20px rgba(111, 125, 92, 0.3);
   color: #fff;
 }
 
 .btn-primary:hover {
-  background: #AF6C2D;
+  background: var(--brand-accent);
   transform: translateY(-1px) scale(1.02);
 }
 
 .btn-secondary {
-  background: #FAF3EC;
-  border: 1px solid #E8DDD3;
-  color: #354E41;
+  background: var(--brand-surface);
+  border: 1px solid var(--brand-border);
+  color: var(--brand-primary);
 }
 
 .btn-secondary:hover {
-  border-color: #C27D38;
-  color: #C27D38;
+  border-color: var(--brand-accent);
+  color: var(--brand-accent);
   transform: translateY(-1px) scale(1.02);
 }
 
@@ -174,21 +186,21 @@ a, button, input, select, textarea {
 }
 
 .premium-card {
-  border: 1px solid rgba(232, 221, 211, 0.9);
+  border: 1px solid var(--brand-border);
   border-radius: 1rem;
-  box-shadow: 0 18px 50px -34px rgba(53, 78, 65, 0.55);
+  box-shadow: 0 18px 50px -34px rgba(111, 125, 92, 0.4);
   overflow: hidden;
   transition: transform 600ms ease, box-shadow 600ms ease;
 }
 
 .premium-card:hover {
-  box-shadow: 0 28px 70px -38px rgba(53, 78, 65, 0.7);
+  box-shadow: 0 28px 70px -38px rgba(111, 125, 92, 0.55);
   transform: translateY(-3px);
 }
 
 .brand-mark {
   align-items: center;
-  background: #C27D38;
+  background: var(--brand-accent);
   border-radius: 999px;
   color: #fff;
   display: inline-flex;
@@ -257,10 +269,10 @@ a, button, input, select, textarea {
 
 /* ── Input base ─────────────────────────────────────────────── */
 .input-earth {
-  background: #FDFBF7;
-  border: 1px solid #E8DDD3;
+  background: var(--brand-background);
+  border: 1px solid var(--brand-border);
   border-radius: 1rem;
-  color: #2C2623;
+  color: var(--brand-text);
   font-size: 0.875rem;
   padding: 0.875rem 1.25rem;
   transition: border-color 300ms ease, box-shadow 300ms ease;
@@ -268,12 +280,13 @@ a, button, input, select, textarea {
 }
 
 .input-earth::placeholder {
-  color: rgba(139, 123, 107, 0.6);
+  color: var(--brand-text-muted);
+  opacity: 0.6;
 }
 
 .input-earth:focus {
-  border-color: #C27D38;
-  box-shadow: 0 0 0 4px rgba(194, 125, 56, 0.10);
+  border-color: var(--brand-accent);
+  box-shadow: 0 0 0 4px rgba(200, 162, 168, 0.10);
   outline: none;
 }
 
