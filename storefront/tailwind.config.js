@@ -10,20 +10,25 @@ module.exports = {
   theme: {
     extend: {
       colors: {
-        brand:        '#4A5D4E',
-        accent:       '#C27D38',
-        surface:      '#FDFBF7',
-        earth:        '#354E41',
-        terracotta:   '#C27D38',
-        sage:         '#6B7F5E',
-        sand:         '#E8DDD3',
-        cream:        '#FDFBF7',
-        warm:         '#FAF3EC',
-        deep:         '#223229',
-        'muted-earth':'#8C7A6B',
+        brand: {
+          DEFAULT: 'var(--brand-primary)',
+          secondary: 'var(--brand-secondary)',
+          accent: 'var(--brand-accent)',
+        },
+        accent:       'var(--brand-accent)',
+        surface:      'var(--brand-surface)',
+        earth:        'var(--brand-primary)',
+        terracotta:   'var(--brand-accent)',
+        sage:         'var(--brand-primary)',
+        sand:         'var(--brand-border)',
+        cream:        'var(--brand-background)',
+        warm:         'var(--brand-surface)',
+        deep:         'var(--brand-text)',
+        'muted-earth':'var(--brand-text-muted)',
       },
       fontFamily: {
-        sans: ['Inter', 'system-ui', '-apple-system', 'sans-serif'],
+        sans: ['"Plus Jakarta Sans"', 'Inter', 'system-ui', '-apple-system', 'sans-serif'],
+        serif: ['"Playfair Display"', 'Georgia', 'serif'],
       },
       borderRadius: {
         '2xl': '1rem',

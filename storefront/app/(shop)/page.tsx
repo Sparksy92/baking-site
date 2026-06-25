@@ -63,9 +63,9 @@ export default async function Home() {
             </div>
 
             {/* Heading */}
-            <h1 className="font-black leading-[0.95] tracking-[-0.03em] text-white">
-              <span className="block text-[clamp(2.5rem,7vw,5.5rem)]">Fresh baking from</span>
-              <span className="block text-[clamp(2.5rem,7vw,5.5rem)] text-brand-secondary">
+            <h1 className="font-serif font-black leading-[1.05] tracking-[-0.01em] text-white">
+              <span className="block text-[clamp(2.25rem,6.5vw,5rem)]">Fresh baking from</span>
+              <span className="block text-[clamp(2.25rem,6.5vw,5rem)] text-brand-secondary italic font-normal">
                 Sage & Sweetgrass Homestead
               </span>
             </h1>

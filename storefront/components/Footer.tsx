@@ -21,9 +21,9 @@ export function Footer() {
               <img
                 src="/logo.png"
                 alt="Logo"
-                className="w-14 h-14 rounded-full object-cover border border-white/10"
+                className="w-20 h-20 rounded-full object-cover border border-white/10"
               />
-              <span className="text-xl font-black tracking-tight text-white">{name}</span>
+              <span className="text-xl sm:text-2xl font-semibold font-serif tracking-tight text-white">{name}</span>
             </div>
             {tagline && (
               <p className="text-sm leading-relaxed text-white/55 max-w-[220px]">{tagline}</p>
