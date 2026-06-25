@@ -86,7 +86,7 @@ async def seed_admin(username: str, password: str, display_name: str | None, rol
 
 
 async def seed():
-    """Insert sample products, categories, and collections for Cedar & Sage Homestead."""
+    """Insert sample products, categories, and collections for Sage & Sweetgrass Homestead."""
     from app.config import get_settings
     from app.database import init_db, get_db
 
@@ -100,7 +100,7 @@ async def seed():
             ("Desserts", "desserts", "Small-batch desserts, muffins, banana bread, cookies, cheesecakes, and special requests.", 1),
             ("Pantry", "pantry", "Homemade pantry goods, preserves, pickled goods, dried mixes, simmer pots, and seasonal bundles.", 2),
             ("Home & Body", "home-body", "Handmade homestead care products including lotions, lip balms, salves, and herbal oils.", 3),
-            ("Oven Fund", "oven-fund", "Support Cedar & Sage Homestead’s equipment and baking capacity goals.", 4),
+            ("Oven Fund", "oven-fund", "Support Sage & Sweetgrass Homestead’s equipment and baking capacity goals.", 4),
         ]
         
         category_ids = {}
@@ -186,7 +186,7 @@ async def seed():
              "home-body", True, False, 20, "starting_at", "available", 2, False, False, False, "Essential oils, botanical carrier oils.", "Organic herbal extracts."),
              
             # OVEN FUND
-            ("Oven Fund Support", "oven-fund-support", "Support Cedar & Sage Homestead’s equipment and baking capacity goals. This is separate from product checkout.", 
+            ("Oven Fund Support", "oven-fund-support", "Support Sage & Sweetgrass Homestead’s equipment and baking capacity goals. This is separate from product checkout.", 
              "oven-fund", True, True, 21, "quote_only", "quote_only", 0, False, False, True, "N/A", "Donations are processed separately from storefront orders.")
         ]
 
@@ -305,7 +305,7 @@ async def seed():
         # 4. Collections Seeding
         collections_data = [
             ("New Arrivals", "new-arrivals", "Fresh seasonal preorders and specials from our kitchen.", 0),
-            ("Best Sellers", "best-sellers", "Cedar & Sage community favorites.", 1),
+            ("Best Sellers", "best-sellers", "Sage & Sweetgrass community favorites.", 1),
         ]
         
         collection_ids = {}
@@ -341,11 +341,11 @@ async def seed():
 
         # 6. Default Homestead Settings Seeding
         settings_to_seed = [
-            ('brand_name', 'Cedar & Sage Homestead'),
+            ('brand_name', 'Sage & Sweetgrass Homestead'),
             ('brand_tagline', 'Fresh baking, pantry goods & handmade homestead care'),
             ('store_announcement', 'Fresh weekly baking preorders — Local pickup & custom requests welcome!'),
-            ('brand_abbreviation', 'CSH'),
-            ('about_content', 'Cedar & Sage Homestead is a small-batch homestead kitchen offering fresh baking, pantry goods, and handmade home and body products. Every request is handled with care, and many items are prepared by preorder so they can be made fresh.'),
+            ('brand_abbreviation', 'SSH'),
+            ('about_content', 'Sage & Sweetgrass Homestead is a small-batch homestead kitchen offering fresh baking, pantry goods, and handmade home and body products. Every request is handled with care, and many items are prepared by preorder so they can be made fresh.'),
             ('pickup_instructions', 'Orders are prepared by request. Pickup or local delivery details will be confirmed after Kirstin reviews your order request.'),
             ('payment_instructions', 'Payment details will be confirmed after your request is reviewed. E-transfer or pay-on-confirmation is preferred while the menu and availability are being finalized.'),
             ('preorder_instructions', 'Sourdough is available by preorder and is usually prepared on weekends. Please include your desired date and any special notes when submitting your request.'),
