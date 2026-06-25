@@ -53,7 +53,7 @@ export default function ContactPage() {
                 </div>
                 <div>
                   <h2 className="text-base font-bold text-earth mb-1 font-serif">Email</h2>
-                  <a href={`mailto:${email}`} className="text-brand hover:text-brand/80 transition-colors font-bold text-sm sm:text-base">
+                  <a href={`mailto:${email}`} className="text-brand hover:text-brand/80 transition-colors font-bold text-sm sm:text-base break-all">
                     {email}
                   </a>
                 </div>
