@@ -16,7 +16,7 @@ export default function ContactPage() {
       .catch(() => {});
   }, []);
 
-  const name = settings?.brand_name || brandName() || 'Cedar & Sage Homestead';
+  const name = settings?.brand_name || brandName() || 'Sage & Sweetgrass Homestead';
   const email = settings?.contact_email || settings?.etransfer_email || 'kirstinsparks@hotmail.com';
 
   return (

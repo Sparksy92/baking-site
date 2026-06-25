@@ -1,12 +1,12 @@
 import { BrandConfig } from '../types/brand';
 
 export const brandConfig: BrandConfig = {
-  id: 'cedar-and-sage-homestead',
+  id: 'sage-and-sweetgrass-homestead',
   metadata: {
-    name: 'Cedar & Sage Homestead',
+    name: 'Sage & Sweetgrass Homestead',
     tagline: 'Fresh baking, pantry goods & handmade homestead care',
     description: 'Homemade fresh baking, desserts, pantry goods, jams, pickled goods, handmade tallow lotions, lip balms, salves, and herbal oils.',
-    siteName: 'Cedar & Sage Homestead',
+    siteName: 'Sage & Sweetgrass Homestead',
     baseUrl: 'https://yourdomain.com',
     locale: 'en-CA',
     defaultRegion: 'ca',
@@ -29,7 +29,7 @@ export const brandConfig: BrandConfig = {
     body: 'var(--font-geist-sans), sans-serif',
   },
   assets: {
-    logo: '/images/brand/logo.svg',
+    logo: '/logo.png',
     favicon: '/images/brand/favicon.svg',
   },
   payment: {
@@ -85,7 +85,7 @@ export const brandConfig: BrandConfig = {
     ],
   },
   content: {
-    copyright: '© {year} Cedar & Sage Homestead. All rights reserved.',
+    copyright: '© {year} Sage & Sweetgrass Homestead. All rights reserved.',
     poweredBy: '',
     pages: {},
   },
@@ -101,7 +101,7 @@ export const brandConfig: BrandConfig = {
   ],
   socialLinks: [],
   seo: {
-    abbreviation: 'CSH',
+    abbreviation: 'SSH',
     currency: 'CAD',
     twitterHandle: '',
     googleVerification: '',

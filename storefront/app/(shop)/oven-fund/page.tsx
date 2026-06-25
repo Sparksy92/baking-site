@@ -334,7 +334,7 @@ export default function OvenFundPage() {
           <div className="max-w-xl mx-auto bg-[#F59E0B]/5 border border-[#F59E0B]/20 rounded-2xl p-4 flex gap-3 text-left mb-8">
             <Info size={20} className="text-[#D97706] shrink-0 mt-0.5" />
             <p className="text-xs text-[#8F5B1E] leading-relaxed font-medium">
-              Oven Fund contributions are voluntary support for Cedar & Sage Homestead equipment and growth. They are not charitable donations and no charitable tax receipt will be issued.
+              Oven Fund contributions are voluntary support for Sage & Sweetgrass Homestead equipment and growth. They are not charitable donations and no charitable tax receipt will be issued.
             </p>
           </div>
 

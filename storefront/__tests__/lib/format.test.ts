@@ -25,7 +25,7 @@ describe('formatCents', () => {
 
 describe('brandName', () => {
   it('returns brand config name', () => {
-    expect(brandName()).toBe('Cedar & Sage Homestead');
+    expect(brandName()).toBe('Sage & Sweetgrass Homestead');
   });
 });
 
@@ -37,7 +37,7 @@ describe('brandTagline', () => {
 
 describe('brandLogo', () => {
   it('returns brand config logo path', () => {
-    expect(brandLogo()).toBe('/images/brand/logo.svg');
+    expect(brandLogo()).toBe('/logo.png');
   });
 });
 

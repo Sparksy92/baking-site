@@ -1,4 +1,4 @@
--- Cedar & Sage Homestead Vercel-Lite Database Schema
+-- Sage & Sweetgrass Homestead Vercel-Lite Database Schema
 
 CREATE TABLE IF NOT EXISTS categories (
     id SERIAL PRIMARY KEY,

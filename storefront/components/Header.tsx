@@ -53,7 +53,7 @@ export function Header() {
           <Link href="/" className="flex items-center gap-3 flex-shrink-0 group">
             {/* eslint-disable-next-line @next/next/no-img-element */}
             <img
-              src="/logo.jpg"
+              src="/logo.png"
               alt="Logo"
               className="w-12 h-12 rounded-full object-cover group-hover:scale-105 transition-transform duration-300 border border-sand"
             />

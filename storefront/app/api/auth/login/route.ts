@@ -18,7 +18,7 @@ export async function POST(req: NextRequest) {
       );
     }
     
-    const adminEmail = process.env.ADMIN_EMAIL || 'admin@cedarandsagehomestead.ca';
+    const adminEmail = process.env.ADMIN_EMAIL || 'admin@sageandsweetgrass.ca';
     const expectedHash = process.env.ADMIN_PASSWORD_HASH || DEFAULT_PASSWORD_HASH;
 
     // 2. Resolve matching criteria

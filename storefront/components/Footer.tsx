@@ -19,7 +19,7 @@ export function Footer() {
             <div className="flex items-center gap-3">
               {/* eslint-disable-next-line @next/next/no-img-element */}
               <img
-                src="/logo.jpg"
+                src="/logo.png"
                 alt="Logo"
                 className="w-14 h-14 rounded-full object-cover border border-white/10"
               />

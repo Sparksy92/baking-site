@@ -95,7 +95,7 @@ describe('Pricing Label Formatting', () => {
   it('should format cents to currency string or custom messages', () => {
     expect(formatCents(800)).toBe('$8.00');
     expect(formatCents(1250)).toBe('$12.50');
-    // If cents is 0 or negative, it should return Price to be confirmed for Cedar & Sage
+    // If cents is 0 or negative, it should return Price to be confirmed for Sage & Sweetgrass
     expect(formatCents(0)).toBe('Price to be confirmed');
   });
 });
