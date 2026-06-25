@@ -28,6 +28,7 @@ async def get_public_settings(db: PostgresConnection = Depends(get_db)):
         currency=store_settings.get("currency", settings.store_currency),
         analytics_id=store_settings.get("analytics_id", ""),
         etransfer_email=store_settings.get("etransfer_email", "") or settings.etransfer_email,
+        contact_email=store_settings.get("contact_email", "") or settings.contact_email,
         default_og_image=store_settings.get("default_og_image", ""),
         twitter_handle=store_settings.get("twitter_handle", ""),
         google_verification=store_settings.get("google_verification", ""),

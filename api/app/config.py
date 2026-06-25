@@ -47,7 +47,7 @@ class Settings(BaseSettings):
     stripe_webhook_secret: str = ""
 
     # ── Payments ──────────────────────────────────────────────────
-    etransfer_email: str = "payments@example.com"
+    etransfer_email: str = "payments@sageandsweetgrass.ca"
 
     # ── Shipping ─────────────────────────────────────────────────
     shipping_flat_rate_cents: int = 1200
@@ -75,8 +75,8 @@ class Settings(BaseSettings):
 
     # ── Email (Resend) ───────────────────────────────────────────
     resend_api_key: str = ""
-    email_from: str = "Elder <orders@example.com>"
-    contact_email: str = ""
+    email_from: str = "Sage & Sweetgrass Homestead <orders@sageandsweetgrass.ca>"
+    contact_email: str = "hello@sageandsweetgrass.ca"
 
     # ── Store ────────────────────────────────────────────────────
     order_number_prefix: str = "ELD"
