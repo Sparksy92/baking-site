@@ -18,7 +18,7 @@ async def seed_admin():
             "INSERT OR IGNORE INTO admin_users (username, password_hash, display_name, role) VALUES (?, ?, ?, ?)",
             ("admin", pw_hash, "Automated Admin", "owner"),
         )
-        print("✓ Automated admin user seeded.")
+        print("Automated admin user seeded.")
 
 if __name__ == "__main__":
     asyncio.run(seed_admin())

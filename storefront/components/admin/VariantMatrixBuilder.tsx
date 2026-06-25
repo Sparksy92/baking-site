@@ -100,7 +100,7 @@ export default function VariantMatrixBuilder({ productId, existingVariants, onVa
   if (!open) {
     return (
       <button type="button" onClick={() => setOpen(true)} className="inline-flex items-center gap-1.5 text-sm text-brand hover:text-brand/80 font-medium">
-        <Zap size={14} /> Generate Options (Batch Size × Flavour)
+        <Zap size={14} /> Generate Variants (Size × Color)
       </button>
     );
   }
@@ -108,15 +108,15 @@ export default function VariantMatrixBuilder({ productId, existingVariants, onVa
   return (
     <div className="bg-brand/5 border border-brand/20 rounded-lg p-4 space-y-4">
       <div className="flex items-center justify-between">
-        <h3 className="text-sm font-semibold text-gray-900 flex items-center gap-1.5"><Zap size={14} className="text-brand" /> Option Matrix Builder</h3>
+        <h3 className="text-sm font-semibold text-gray-900 flex items-center gap-1.5"><Zap size={14} className="text-brand" /> Variant Matrix Builder</h3>
         <button type="button" onClick={() => setOpen(false)} className="text-gray-400 hover:text-gray-600"><X size={16} /></button>
       </div>
 
-      <p className="text-xs text-gray-500">Define batch sizes and flavours, then generate all combinations at once.</p>
+      <p className="text-xs text-gray-500">Define sizes and colors, then generate all combinations at once.</p>
 
       {/* Sizes */}
       <div>
-        <label className="text-xs font-medium text-gray-700 block mb-1">Batch Sizes</label>
+        <label className="text-xs font-medium text-gray-700 block mb-1">Sizes</label>
         <div className="flex flex-wrap gap-1.5 mb-2">
           {sizes.map((s) => (
             <span key={s} className="inline-flex items-center gap-1 px-2 py-0.5 bg-white border border-gray-200 rounded text-xs">
@@ -130,7 +130,7 @@ export default function VariantMatrixBuilder({ productId, existingVariants, onVa
             value={sizeInput}
             onChange={(e) => setSizeInput(e.target.value)}
             onKeyDown={(e) => handleKeyDown(e, addSize)}
-            placeholder="e.g. Dozen, Half Dozen, Single"
+            placeholder="e.g. S, M, L, XL"
             className="flex-1 px-3 py-1.5 border border-gray-200 rounded-lg text-sm"
           />
           <button type="button" onClick={addSize} className="px-3 py-1.5 bg-gray-100 hover:bg-gray-200 rounded-lg text-sm text-gray-700">Add</button>
@@ -139,7 +139,7 @@ export default function VariantMatrixBuilder({ productId, existingVariants, onVa
 
       {/* Colors */}
       <div>
-        <label className="text-xs font-medium text-gray-700 block mb-1">Flavours</label>
+        <label className="text-xs font-medium text-gray-700 block mb-1">Colors</label>
         <div className="flex flex-wrap gap-1.5 mb-2">
           {colors.map((c) => (
             <span key={c} className="inline-flex items-center gap-1.5 px-2 py-0.5 bg-white border border-gray-200 rounded text-xs">
@@ -160,7 +160,7 @@ export default function VariantMatrixBuilder({ productId, existingVariants, onVa
             value={colorInput}
             onChange={(e) => setColorInput(e.target.value)}
             onKeyDown={(e) => handleKeyDown(e, addColor)}
-            placeholder="e.g. Chocolate, Vanilla, Lemon"
+            placeholder="e.g. Black, White, Red"
             className="flex-1 px-3 py-1.5 border border-gray-200 rounded-lg text-sm"
           />
           <button type="button" onClick={addColor} className="px-3 py-1.5 bg-gray-100 hover:bg-gray-200 rounded-lg text-sm text-gray-700">Add</button>
@@ -177,7 +177,7 @@ export default function VariantMatrixBuilder({ productId, existingVariants, onVa
           </div>
         </div>
         <div>
-          <label className="text-xs font-medium text-gray-700 block mb-1">Default Availability</label>
+          <label className="text-xs font-medium text-gray-700 block mb-1">Default Stock</label>
           <input type="number" value={bulkStock} onChange={(e) => setBulkStock(e.target.value)} placeholder="0" className="w-full px-3 py-1.5 border border-gray-200 rounded-lg text-sm" />
         </div>
       </div>
@@ -186,7 +186,7 @@ export default function VariantMatrixBuilder({ productId, existingVariants, onVa
       {sizes.length > 0 && colors.length > 0 && (
         <div className="bg-white rounded-lg border border-gray-200 p-3">
           <p className="text-xs text-gray-500 mb-2">
-            Will create <strong>{newCombos.length}</strong> new option{newCombos.length !== 1 ? 's' : ''} ({sizes.length} batch sizes × {colors.length} flavours{existingVariants.length > 0 ? `, minus ${sizes.length * colors.length - newCombos.length} existing` : ''})
+            Will create <strong>{newCombos.length}</strong> new variant{newCombos.length !== 1 ? 's' : ''} ({sizes.length} sizes × {colors.length} colors{existingVariants.length > 0 ? `, minus ${sizes.length * colors.length - newCombos.length} existing` : ''})
           </p>
           <div className="flex flex-wrap gap-1">
             {newCombos.slice(0, 12).map((c) => (
@@ -205,7 +205,7 @@ export default function VariantMatrixBuilder({ productId, existingVariants, onVa
         disabled={generating || newCombos.length === 0}
         className="w-full py-2 bg-brand text-white rounded-lg text-sm font-medium hover:bg-brand/90 disabled:opacity-50"
       >
-        {generating ? 'Generating...' : `Generate ${newCombos.length} Option${newCombos.length !== 1 ? 's' : ''}`}
+        {generating ? 'Generating...' : `Generate ${newCombos.length} Variant${newCombos.length !== 1 ? 's' : ''}`}
       </button>
     </div>
   );

@@ -1,9 +1,11 @@
 'use client';
 
 import { useState, useEffect } from 'react';
-import { api, type PublicSettings } from '@/lib/api';
-import { Flame, Landmark, Heart, ArrowLeft, ShieldCheck, Lock, Sparkles, Coins, Gift, Info } from 'lucide-react';
+import { api, type PublicSettings, type Product } from '@/lib/api';
+import { Flame, Landmark, Heart, ArrowLeft, ShieldCheck, Lock, Sparkles, Coins, Gift, Info, ShoppingCart } from 'lucide-react';
 import Link from 'next/link';
+import { useCart } from '@/lib/cart';
+import { addToast } from '@/lib/toast';
 
 interface CampaignMilestone {
   target: number;
@@ -53,13 +55,38 @@ const SUPPORT_TIERS = [
 export default function OvenFundPage() {
   const [settings, setSettings] = useState<PublicSettings | null>(null);
   const [loading, setLoading] = useState(true);
+  const { addItem } = useCart();
+  const [ovenFundProduct, setOvenFundProduct] = useState<Product | null>(null);
 
   useEffect(() => {
     api.get<PublicSettings>('/api/settings/public')
       .then(setSettings)
       .catch((err) => console.error('Failed to load public settings:', err))
       .finally(() => setLoading(false));
+
+    api.get<Product>('/api/products/oven-fund-contribution')
+      .then(setOvenFundProduct)
+      .catch((err) => console.error('Failed to load oven fund product:', err));
   }, []);
+
+  const handleAddContribution = (amount: number, title: string) => {
+    const productId = ovenFundProduct?.id || 9999;
+    const variantId = ovenFundProduct?.variants?.[0]?.id 
+      ? ovenFundProduct.variants[0].id * 100 + amount 
+      : 999900 + amount;
+    
+    addItem({
+      variantId,
+      productId,
+      productName: 'Oven Fund Contribution',
+      variantSize: `${title} ($${amount})`,
+      variantColor: 'Default',
+      unitPriceCents: amount * 100,
+      imageUrl: ovenFundProduct?.images?.[0]?.url || '/images/products/oven-fund.jpg'
+    });
+    
+    addToast(`Added ${title} ($${amount}) to your cart!`, 'success');
+  };
 
   // Campaign 1: Commercial Oven Upgrade
   const title1 = settings?.oven_fund_title || 'Commercial Oven Upgrade Fund — Phase 1';
@@ -288,6 +315,12 @@ export default function OvenFundPage() {
                 <p className="text-[#6B5A50] text-sm leading-relaxed mb-6">
                   {tier.desc}
                 </p>
+                <button
+                  onClick={() => handleAddContribution(tier.amount, tier.title)}
+                  className="w-full flex items-center justify-center gap-2 py-3 mb-6 rounded-xl bg-brand text-white font-bold text-sm hover:bg-[#4E3629] active:scale-[0.98] transition-all cursor-pointer shadow-sm hover:shadow-md"
+                >
+                  <ShoppingCart size={15} /> Add to Cart (${tier.amount})
+                </button>
               </div>
               <div className="border-t border-[#EBE3D5] pt-4 mt-auto">
                 <span className="text-[10px] font-bold uppercase tracking-wider text-[#8C6D58] block mb-1">

@@ -11,7 +11,7 @@ test.describe('Header navigation', () => {
     await page.goto('/');
     const nav = page.locator('header nav.hidden.md\\:flex');
     await expect(nav.getByRole('link', { name: 'Shop' })).toBeVisible();
-    await expect(nav.getByRole('link', { name: 'Categories' })).toBeVisible();
+    await expect(nav.getByRole('link', { name: 'Oven Fund' })).toBeVisible();
     await expect(nav.getByRole('link', { name: 'About' })).toBeVisible();
   });
 
@@ -21,7 +21,7 @@ test.describe('Header navigation', () => {
     await page.getByLabel('Menu').click();
     const mobileNav = page.locator('header nav.md\\:hidden');
     await expect(mobileNav.getByRole('link', { name: 'Shop' })).toBeVisible();
-    await expect(mobileNav.getByRole('link', { name: 'Categories' })).toBeVisible();
+    await expect(mobileNav.getByRole('link', { name: 'Oven Fund' })).toBeVisible();
     await expect(mobileNav.getByRole('link', { name: 'About' })).toBeVisible();
   });
 
@@ -43,7 +43,7 @@ test.describe('Footer navigation', () => {
     const footer = page.locator('footer');
     await expect(footer.getByRole('link', { name: 'Privacy Policy' })).toBeVisible();
     await expect(footer.getByRole('link', { name: 'Terms of Service' })).toBeVisible();
-    await expect(footer.getByRole('link', { name: 'Shipping' })).toBeVisible();
+    await expect(footer.getByRole('link', { name: /shipping|pickup/i })).toBeVisible();
   });
 
   test('footer has company links', async ({ page }) => {

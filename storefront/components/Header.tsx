@@ -3,10 +3,11 @@
 import { useState, useEffect } from 'react';
 import Link from 'next/link';
 import { usePathname, useSearchParams } from 'next/navigation';
-import { Menu, X, ArrowRight } from 'lucide-react';
+import { Menu, X, ArrowRight, ShoppingBag } from 'lucide-react';
 import { api, type PublicSettings } from '@/lib/api';
 import { brandName } from '@/lib/format';
 import { brandConfig } from '@/config/brand.config';
+import { useCart } from '@/lib/cart';
 
 export function Header() {
   const pathname = usePathname();
@@ -15,6 +16,12 @@ export function Header() {
   const [mobileOpen, setMobileOpen] = useState(false);
   const [announcement, setAnnouncement] = useState('');
   const [scrolled, setScrolled] = useState(false);
+  const { count } = useCart();
+  const [mounted, setMounted] = useState(false);
+
+  useEffect(() => {
+    setMounted(true);
+  }, []);
 
   useEffect(() => {
     api.get<PublicSettings>('/api/settings/public')
@@ -51,11 +58,10 @@ export function Header() {
 
           {/* Logo */}
           <Link href="/" className="flex items-center gap-3 flex-shrink-0 group relative z-10">
-            {/* eslint-disable-next-line @next/next/no-img-element */}
             <img
               src="/logo.png"
               alt="Logo"
-              className="w-16 h-16 md:w-24 md:h-24 rounded-full object-cover group-hover:scale-105 transition-transform duration-300 border-2 border-sand shadow-md bg-cream transform translate-y-1 md:translate-y-2"
+              className="w-12 h-12 md:w-14 md:h-14 rounded-full object-cover group-hover:scale-105 transition-transform duration-300 border-2 border-sand shadow-md bg-cream transform translate-y-0.5"
             />
             <span className="text-lg sm:text-xl md:text-2xl font-semibold font-serif tracking-tight text-earth group-hover:text-brand-secondary transition-colors duration-300 ml-1">{brandName()}</span>
           </Link>
@@ -81,13 +87,26 @@ export function Header() {
           </nav>
 
           {/* Actions */}
-          <div className="flex items-center gap-1">
+          <div className="flex items-center gap-2">
+            {/* Shopping Cart Link */}
+            <Link
+              href="/cart"
+              className="relative p-2 text-earth/60 hover:text-terracotta hover:bg-sand/70 rounded-full transition-all duration-200"
+              aria-label="View Cart"
+            >
+              <ShoppingBag size={20} />
+              {mounted && count > 0 && (
+                <span className="absolute -top-1 -right-1 bg-terracotta text-white text-[9px] font-black w-4.5 h-4.5 flex items-center justify-center rounded-full border border-cream leading-none">
+                  {count}
+                </span>
+              )}
+            </Link>
 
             {/* Mobile hamburger */}
             <button
               onClick={() => setMobileOpen(!mobileOpen)}
               className="md:hidden ml-1 w-9 h-9 flex items-center justify-center rounded-full text-earth/60 hover:bg-sand/70 hover:text-terracotta transition-all duration-200"
-              aria-label={mobileOpen ? 'Close menu' : 'Open menu'}
+              aria-label="Menu"
               aria-expanded={mobileOpen}
             >
               <span className={`transition-all duration-200 ${mobileOpen ? 'opacity-0 scale-75' : 'opacity-100 scale-100'} absolute`}>
@@ -104,7 +123,7 @@ export function Header() {
         <div className={`md:hidden overflow-hidden transition-all duration-300 ease-in-out ${
           mobileOpen ? 'max-h-[480px] opacity-100' : 'max-h-0 opacity-0'
         }`}>
-          <nav className="border-t border-sand/60 bg-warm/98 backdrop-blur-xl px-4 py-5 space-y-1">
+          <nav className={`${!mobileOpen ? 'hidden' : 'md:hidden'} border-t border-sand/60 bg-warm/98 backdrop-blur-xl px-4 py-5 space-y-1`}>
             {navLinks.map((link) => (
               <Link
                 key={link.href}
@@ -124,7 +143,7 @@ export function Header() {
                 href="/shop"
                 className="flex items-center gap-2 py-3 px-4 text-sm font-bold text-terracotta rounded-2xl hover:bg-terracotta/8 transition-colors duration-200"
               >
-                Shop All Products <ArrowRight size={14} />
+                Browse All Products <ArrowRight size={14} />
               </Link>
             </div>
           </nav>

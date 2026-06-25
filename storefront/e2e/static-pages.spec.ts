@@ -13,12 +13,12 @@ test.describe('Policy pages', () => {
 
   test('shipping policy has expected content', async ({ page }) => {
     await page.goto('/shipping-policy');
-    await expect(page.getByRole('heading', { name: 'Shipping Policy' })).toBeVisible();
+    await expect(page.getByRole('heading', { name: /shipping|pickup.*delivery/i })).toBeVisible();
   });
 
   test('return policy has expected content', async ({ page }) => {
     await page.goto('/return-policy');
-    await expect(page.getByRole('heading', { name: /return.*exchange.*policy/i })).toBeVisible();
+    await expect(page.getByRole('heading', { name: /return.*cancellation/i })).toBeVisible();
   });
 });
 
