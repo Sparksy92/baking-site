@@ -167,16 +167,11 @@ export function Header() {
             {/* Mobile hamburger */}
             <button
               onClick={() => setMobileOpen(!mobileOpen)}
-              className="relative md:hidden ml-1 w-9 h-9 flex items-center justify-center rounded-full transition-all duration-200 header-menu-btn"
+              className="md:hidden ml-1 w-9 h-9 flex items-center justify-center rounded-full transition-all duration-200 header-menu-btn"
               aria-label="Menu"
               aria-expanded={mobileOpen}
             >
-              <span className={`transition-all duration-200 ${mobileOpen ? 'opacity-0 scale-75' : 'opacity-100 scale-100'} absolute`}>
-                <Menu size={20} />
-              </span>
-              <span className={`transition-all duration-200 ${mobileOpen ? 'opacity-100 scale-100' : 'opacity-0 scale-75'} absolute`}>
-                <X size={20} />
-              </span>
+              {mobileOpen ? <X size={20} /> : <Menu size={20} />}
             </button>
           </div>
         </div>
