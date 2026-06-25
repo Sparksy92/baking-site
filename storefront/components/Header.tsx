@@ -56,14 +56,16 @@ export function Header() {
       }`}>
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 h-20 flex items-center justify-between gap-6">
 
-          {/* Logo */}
           <Link href="/" className="flex items-center gap-3 flex-shrink-0 group relative z-10">
             <img
               src="/logo.png"
               alt="Logo"
               className="w-12 h-12 md:w-14 md:h-14 rounded-full object-cover group-hover:scale-105 transition-transform duration-300 border-2 border-sand shadow-md bg-cream transform translate-y-0.5"
             />
-            <span className="text-lg sm:text-xl md:text-2xl font-semibold font-serif tracking-tight text-earth group-hover:text-brand-secondary transition-colors duration-300 ml-1">{brandName()}</span>
+            <span className="text-lg sm:text-xl md:text-2xl font-semibold font-serif tracking-tight text-earth group-hover:text-brand-secondary transition-colors duration-300 ml-1">
+              <span className="inline md:hidden">Sage &amp; Sweetgrass</span>
+              <span className="hidden md:inline">{brandName()}</span>
+            </span>
           </Link>
 
           {/* Nav — desktop */}

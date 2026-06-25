@@ -313,7 +313,7 @@ export default function InteractiveKitchenScene() {
                   onBlur={() => {
                     setHoveredHotspot(null);
                   }}
-                  className="w-14 h-14 md:w-20 md:h-20 flex items-center justify-center rounded-full focus:outline-none focus-visible:ring-2 focus-visible:ring-amber-500 focus-visible:ring-offset-2 z-10 bg-transparent transition-transform active:scale-95 cursor-pointer"
+                  className="w-10 h-10 md:w-16 md:h-16 flex items-center justify-center rounded-full focus:outline-none focus-visible:ring-2 focus-visible:ring-amber-500 focus-visible:ring-offset-2 z-10 bg-transparent transition-transform active:scale-95 cursor-pointer"
                   aria-label={`Open details for ${hotspot.title}`}
                   aria-expanded={isSelected}
                 >

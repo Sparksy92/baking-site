@@ -55,7 +55,7 @@ export function ImageGallery({ images, productName, selectedColor }: { images: P
               onClick={prev}
               disabled={!canPrev}
               className={`absolute left-3 top-1/2 -translate-y-1/2 w-9 h-9 rounded-full bg-cream/90 backdrop-blur-sm border border-sand/60 shadow-earth-sm flex items-center justify-center text-earth transition-all duration-200 ${
-                canPrev ? 'opacity-0 group-hover:opacity-100 hover:bg-cream hover:scale-105' : 'opacity-0 cursor-default'
+                canPrev ? 'opacity-100 lg:opacity-0 lg:group-hover:opacity-100 hover:bg-cream hover:scale-105' : 'opacity-0 cursor-default'
               }`}
               aria-label="Previous image"
             >
@@ -65,7 +65,7 @@ export function ImageGallery({ images, productName, selectedColor }: { images: P
               onClick={next}
               disabled={!canNext}
               className={`absolute right-3 top-1/2 -translate-y-1/2 w-9 h-9 rounded-full bg-cream/90 backdrop-blur-sm border border-sand/60 shadow-earth-sm flex items-center justify-center text-earth transition-all duration-200 ${
-                canNext ? 'opacity-0 group-hover:opacity-100 hover:bg-cream hover:scale-105' : 'opacity-0 cursor-default'
+                canNext ? 'opacity-100 lg:opacity-0 lg:group-hover:opacity-100 hover:bg-cream hover:scale-105' : 'opacity-0 cursor-default'
               }`}
               aria-label="Next image"
             >
