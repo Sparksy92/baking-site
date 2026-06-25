@@ -351,7 +351,7 @@ export default function OvenFundPage() {
             <div className="bg-[#FAF8F5] border border-[#EBE3D5] rounded-2xl p-5">
               <span className="font-bold text-[#4E3629] text-sm block mb-1">💸 Interac E-Transfer</span>
               <p className="text-xs text-[#6B5A50] leading-relaxed">
-                Send your contribution to <span className="font-semibold text-[#8C6D58] break-all">{settings?.etransfer_email || 'kirstinsparks@hotmail.com'}</span> (please add &quot;Oven Fund&quot; in the transfer notes).
+                Send your contribution to <span className="font-semibold text-[#8C6D58] break-all">{settings?.etransfer_email || 'payments@sageandsweetgrass.ca'}</span> (please add &quot;Oven Fund&quot; in the transfer notes).
               </p>
             </div>
             <div className="bg-[#FAF8F5] border border-[#EBE3D5] rounded-2xl p-5">

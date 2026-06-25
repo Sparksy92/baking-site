@@ -13,7 +13,7 @@ export function generateMetadata(): Metadata {
 export default async function ReturnPolicyPage() {
   const settings = await getPublicSettings().catch(() => null);
   const name = settings?.brand_name || brandName();
-  const email = settings?.contact_email || 'kirstinsparks@hotmail.com';
+  const email = settings?.contact_email || 'hello@sageandsweetgrass.ca';
 
   return (
     <div className="max-w-3xl mx-auto px-4 py-12">

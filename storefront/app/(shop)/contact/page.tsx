@@ -17,7 +17,7 @@ export default function ContactPage() {
   }, []);
 
   const name = settings?.brand_name || brandName() || 'Sage & Sweetgrass Homestead';
-  const email = settings?.contact_email || settings?.etransfer_email || 'kirstinsparks@hotmail.com';
+  const email = settings?.contact_email || settings?.etransfer_email || 'hello@sageandsweetgrass.ca';
 
   return (
     <div className="bg-cream min-h-screen py-16 md:py-24">

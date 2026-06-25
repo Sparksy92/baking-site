@@ -401,6 +401,7 @@ class PublicSettingsResponse(BaseModel):
     currency: str
     analytics_id: str = ""
     etransfer_email: str = ""
+    contact_email: str = ""
     default_og_image: str = ""
     twitter_handle: str = ""
     google_verification: str = ""
