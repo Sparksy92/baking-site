@@ -187,6 +187,14 @@ export async function getPublicSettings(): Promise<PublicSettings> {
     if (typeof val === 'string') {
       val = val.replace(/Cedar\s*&\s*Sage/gi, 'Sage & Sweetgrass Homestead');
       val = val.replace(/Cedar\s+and\s+Sage/gi, 'Sage & Sweetgrass Homestead');
+      
+      // Self-healing email domain replacements
+      val = val.replace(/[a-zA-Z0-9._%+-]+@cedar(?:and)?sage(?:homestead)?\.(?:ca|com)/gi, (match: string) => {
+        if (match.toLowerCase().includes('payment') || match.toLowerCase().includes('etransfer')) {
+          return 'payments@sageandsweetgrass.ca';
+        }
+        return 'hello@sageandsweetgrass.ca';
+      });
     }
     settingsMap[r.key] = val;
   });
