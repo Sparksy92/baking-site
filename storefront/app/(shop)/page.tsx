@@ -49,8 +49,16 @@ export default async function Home() {
 
       {/* Hero */}
       <section className="relative isolate overflow-hidden bg-brand text-white py-20 sm:py-28 lg:py-36 border-b border-sand/30">
-        <div className="absolute inset-0 bg-gradient-to-r from-brand via-brand/95 to-brand/80" />
-        <div className="absolute inset-0 bg-[radial-gradient(ellipse_at_top_right,rgba(200,162,168,0.15),transparent_50%)]" aria-hidden="true" />
+        {/* Background Image */}
+        <Image
+          src="/images/hero/homestead_landscape.png"
+          alt="Sage & Sweetgrass Homestead Outdoor Landscape"
+          fill
+          priority
+          className="absolute inset-0 object-cover opacity-35 mix-blend-multiply pointer-events-none"
+        />
+        <div className="absolute inset-0 bg-gradient-to-r from-brand via-brand/90 to-brand/70" />
+        <div className="absolute inset-0 bg-[radial-gradient(ellipse_at_top_right,rgba(200,162,168,0.2),transparent_55%)]" aria-hidden="true" />
         <div className="grain" aria-hidden="true" />
 
         <div className="relative z-10 site-shell flex flex-col justify-center min-h-[60vh]">
