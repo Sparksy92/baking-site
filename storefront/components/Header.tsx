@@ -9,6 +9,14 @@ import { brandName } from '@/lib/format';
 import { brandConfig } from '@/config/brand.config';
 import { useCart } from '@/lib/cart';
 
+function hexToRgba(hex: string, alpha: number): string {
+  const cleanHex = hex.replace('#', '');
+  const r = parseInt(cleanHex.substring(0, 2), 16);
+  const g = parseInt(cleanHex.substring(2, 4), 16);
+  const b = parseInt(cleanHex.substring(4, 6), 16);
+  return `rgba(${r}, ${g}, ${b}, ${alpha})`;
+}
+
 export function Header() {
   const pathname = usePathname();
   const searchParams = useSearchParams();
@@ -49,11 +57,14 @@ export function Header() {
         </div>
       )}
 
-      <header className={`sticky top-0 z-50 transition-all duration-300 ${
-        scrolled
-          ? 'bg-cream/98 backdrop-blur-2xl shadow-earth-sm border-b border-sand/80'
-          : 'bg-cream/95 backdrop-blur-xl border-b border-sand/60'
-      }`}>
+      <header
+        className={`sticky top-0 z-50 transition-all duration-300 backdrop-blur-xl ${
+          scrolled ? 'shadow-earth-sm border-b border-sand/80' : 'border-b border-sand/60'
+        }`}
+        style={{
+          backgroundColor: hexToRgba(brandConfig.colors.background, scrolled ? 0.98 : 0.95),
+        }}
+      >
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 h-20 flex items-center justify-between gap-6">
 
           <Link href="/" className="flex items-center gap-3 flex-shrink-0 group relative z-10">
@@ -122,10 +133,20 @@ export function Header() {
         </div>
 
         {/* Mobile nav drawer */}
-        <div className={`md:hidden overflow-hidden transition-all duration-300 ease-in-out ${
-          mobileOpen ? 'max-h-[480px] opacity-100' : 'max-h-0 opacity-0'
-        }`}>
-          <nav className={`${!mobileOpen ? 'hidden' : 'md:hidden'} border-t border-sand/60 bg-warm/98 backdrop-blur-xl px-4 py-5 space-y-1`}>
+        <div
+          className={`md:hidden overflow-hidden transition-all duration-300 ease-in-out ${
+            mobileOpen ? 'max-h-[480px] opacity-100' : 'max-h-0 opacity-0'
+          }`}
+          style={{
+            visibility: mobileOpen ? 'visible' : 'hidden',
+          }}
+        >
+          <nav
+            className="md:hidden border-t border-sand/60 backdrop-blur-xl px-4 py-5 space-y-1"
+            style={{
+              backgroundColor: hexToRgba(brandConfig.colors.surface, 0.98),
+            }}
+          >
             {navLinks.map((link) => (
               <Link
                 key={link.href}
