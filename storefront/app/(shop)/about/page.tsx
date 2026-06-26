@@ -15,7 +15,7 @@ export default function AboutPage() {
   }, []);
 
   const name = settings?.brand_name || brandName() || 'Sage & Sweetgrass Homestead';
-  const tagline = settings?.brand_tagline || brandTagline() || 'Fresh baking, pantry goods & handmade homestead care';
+  const tagline = settings?.brand_tagline || brandTagline() || 'Fresh baking, pantry goods & handmade home and body care';
   const aboutText = settings?.about_content || 'Sage & Sweetgrass Homestead is a small-batch kitchen offering fresh baking, pantry goods, and handmade home and body products. Every request is handled with care, and many items are prepared by preorder so they can be made fresh.';
 
   return (
