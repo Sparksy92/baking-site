@@ -180,13 +180,89 @@ export async function getProductBySlug(slug: string): Promise<Product | null> {
 }
 
 export async function getPublicSettings(): Promise<PublicSettings> {
-  const res = await query('SELECT key, value FROM site_settings');
-  const settingsMap: Record<string, string> = {};
+  let res = await query('SELECT key, value FROM site_settings');
+  let settingsMap: Record<string, string> = {};
+  res.rows.forEach(r => {
+    settingsMap[r.key] = r.value || '';
+  });
+
+  const needsHealing = 
+    !settingsMap['brand_name'] || 
+    settingsMap['brand_name'] === 'Automated Brand' || 
+    settingsMap['brand_name'].includes('Cedar') ||
+    !settingsMap['brand_tagline'] ||
+    settingsMap['brand_tagline'] === 'Homestead' ||
+    settingsMap['brand_tagline'].toLowerCase().includes('homestead care') ||
+    settingsMap['brand_tagline'].includes('Cedar') ||
+    (settingsMap['about_content'] && (
+      settingsMap['about_content'].includes('homestead kitchen') ||
+      settingsMap['about_content'].includes('Homestead Homestead')
+    ));
+
+  if (needsHealing) {
+    try {
+      console.log('Stale settings detected. Running self-healing Postgres updates...');
+      await query(`
+        INSERT INTO site_settings (key, value) VALUES
+        ('brand_name', 'Sage & Sweetgrass Homestead'),
+        ('brand_tagline', 'Fresh baking, pantry goods & handmade home and body care'),
+        ('brand_abbreviation', 'SSH'),
+        ('contact_email', 'hello@sageandsweetgrass.ca'),
+        ('etransfer_email', 'payments@sageandsweetgrass.ca')
+        ON CONFLICT (key) DO UPDATE
+        SET value = EXCLUDED.value;
+      `);
+      
+      await query(`
+        UPDATE site_settings 
+        SET value = REPLACE(value, 'Cedar & Sage', 'Sage & Sweetgrass Homestead') 
+        WHERE value LIKE '%Cedar & Sage%';
+      `);
+      
+      await query(`
+        UPDATE site_settings 
+        SET value = REPLACE(value, 'Cedar and Sage', 'Sage & Sweetgrass Homestead') 
+        WHERE value LIKE '%Cedar and Sage%';
+      `);
+
+      await query(`
+        UPDATE site_settings 
+        SET value = REPLACE(value, 'family-run homestead kitchen', 'family-run kitchen')
+        WHERE value LIKE '%family-run homestead kitchen%';
+      `);
+
+      await query(`
+        UPDATE site_settings 
+        SET value = REPLACE(value, 'small-batch homestead kitchen', 'small-batch kitchen')
+        WHERE value LIKE '%small-batch homestead kitchen%';
+      `);
+
+      await query(`
+        UPDATE site_settings 
+        SET value = REPLACE(value, 'Homestead Homestead', 'Homestead') 
+        WHERE value LIKE '%Homestead Homestead%';
+      `);
+
+      // Refetch
+      res = await query('SELECT key, value FROM site_settings');
+      settingsMap = {};
+      res.rows.forEach(r => {
+        settingsMap[r.key] = r.value || '';
+      });
+    } catch (e) {
+      console.error('Failed to run self-healing settings query:', e);
+    }
+  }
+
+  // Refill settingsMap applying in-memory replacements for safety
   res.rows.forEach(r => {
     let val = r.value || '';
     if (typeof val === 'string') {
       val = val.replace(/Cedar\s*&\s*Sage/gi, 'Sage & Sweetgrass Homestead');
       val = val.replace(/Cedar\s+and\s+Sage/gi, 'Sage & Sweetgrass Homestead');
+      val = val.replace(/family-run homestead kitchen/gi, 'family-run kitchen');
+      val = val.replace(/small-batch homestead kitchen/gi, 'small-batch kitchen');
+      val = val.replace(/Homestead\s+Homestead/gi, 'Homestead');
       
       // Self-healing email domain replacements
       val = val.replace(/[a-zA-Z0-9._%+-]+@cedar(?:and)?sage(?:homestead)?\.(?:ca|com)/gi, (match: string) => {
@@ -196,6 +272,15 @@ export async function getPublicSettings(): Promise<PublicSettings> {
         return 'hello@sageandsweetgrass.ca';
       });
     }
+
+    // Explicit taglines and brand names healing in-memory
+    if (r.key === 'brand_tagline' && (val === 'Homestead' || val.toLowerCase().includes('homestead care') || val.toLowerCase().includes('cedar'))) {
+      val = 'Fresh baking, pantry goods & handmade home and body care';
+    }
+    if (r.key === 'brand_name' && (val === 'Automated Brand' || val.toLowerCase().includes('cedar'))) {
+      val = 'Sage & Sweetgrass Homestead';
+    }
+
     settingsMap[r.key] = val;
   });
 

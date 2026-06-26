@@ -24,7 +24,9 @@ export async function GET() {
       SET value = EXCLUDED.value
       WHERE site_settings.value = 'Automated Brand' 
          OR site_settings.value = '' 
-         OR site_settings.value LIKE '%Cedar%';
+         OR site_settings.value = 'Homestead'
+         OR site_settings.value LIKE '%Cedar%'
+         OR site_settings.value LIKE '%homestead care%';
     `);
 
     await query(`
@@ -37,6 +39,12 @@ export async function GET() {
       UPDATE site_settings 
       SET value = REPLACE(value, 'Cedar and Sage', 'Sage & Sweetgrass Homestead') 
       WHERE value LIKE '%Cedar and Sage%';
+    `);
+
+    await query(`
+      UPDATE site_settings 
+      SET value = REPLACE(value, 'Homestead Homestead', 'Homestead') 
+      WHERE value LIKE '%Homestead Homestead%';
     `);
 
     await query(`
@@ -82,6 +90,7 @@ export async function GET() {
       if (typeof val === 'string') {
         val = val.replace(/Cedar\s*&\s*Sage/gi, 'Sage & Sweetgrass Homestead');
         val = val.replace(/Cedar\s+and\s+Sage/gi, 'Sage & Sweetgrass Homestead');
+        val = val.replace(/Homestead\s+Homestead/gi, 'Homestead');
         
         // Self-healing email domain replacements
         val = val.replace(/[a-zA-Z0-9._%+-]+@cedar(?:and)?sage(?:homestead)?\.(?:ca|com)/gi, (match: string) => {
@@ -95,6 +104,15 @@ export async function GET() {
         val = val.replace(/family-run homestead kitchen/gi, 'family-run kitchen');
         val = val.replace(/small-batch homestead kitchen/gi, 'small-batch kitchen');
       }
+
+      // Explicit taglines and brand names healing in-memory
+      if (r.key === 'brand_tagline' && (val === 'Homestead' || val.toLowerCase().includes('homestead care') || val.toLowerCase().includes('cedar'))) {
+        val = 'Fresh baking, pantry goods & handmade home and body care';
+      }
+      if (r.key === 'brand_name' && (val === 'Automated Brand' || val.toLowerCase().includes('cedar'))) {
+        val = 'Sage & Sweetgrass Homestead';
+      }
+
       return { ...r, value: val };
     });
 
