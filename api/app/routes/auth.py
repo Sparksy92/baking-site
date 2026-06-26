@@ -30,8 +30,8 @@ async def login(
     db: PostgresConnection = Depends(get_db),
 ):
     cursor = await db.execute(
-        "SELECT * FROM admin_users WHERE username = ? AND is_active = 1",
-        (body.username,),
+        "SELECT * FROM admin_users WHERE LOWER(username) = ? AND is_active = 1",
+        (body.username.lower().strip(),),
     )
     user = await cursor.fetchone()
 
