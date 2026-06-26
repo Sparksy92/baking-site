@@ -1,7 +1,7 @@
 import type { Metadata } from 'next';
 import Link from 'next/link';
 import Image from 'next/image';
-import dynamic from 'next/dynamic';
+
 import { apiFetch } from '@/lib/api-server';
 import { type ProductListItem } from '@/lib/api';
 import { ProductCard } from '@/components/ProductCard';
@@ -13,9 +13,11 @@ import { ArrowRight, Leaf, HeartHandshake, Truck, Shield, HelpCircle } from 'luc
 
 import InteractiveKitchenScene from '@/components/home/InteractiveKitchenScene';
 
+export const dynamic = 'force-dynamic';
+
 export const metadata: Metadata = {
-  title: 'Sage & Sweetgrass Homestead | Fresh Baking & Homestead Goods',
-  description: 'Fresh breads, sourdough preorders, desserts, pantry goods, and handmade homestead care products from Sage & Sweetgrass Homestead.',
+  title: 'Sage & Sweetgrass Homestead | Fresh Baking & Handcrafted Goods',
+  description: 'Fresh breads, sourdough preorders, desserts, pantry goods, and handmade home and body care products from Sage & Sweetgrass Homestead.',
 };
 
 export default async function Home() {
@@ -80,7 +82,7 @@ export default async function Home() {
 
             {/* Subheading */}
             <p className="mt-6 max-w-2xl text-base sm:text-lg leading-relaxed text-white/80">
-              Homemade breads, buns, bagels, cinnamon rolls, cookies, muffins, banana bread, pantry goods, and handmade homestead care products.
+              Homemade breads, buns, bagels, cinnamon rolls, cookies, muffins, banana bread, pantry goods, and handmade home and body care products.
             </p>
 
             {/* Supporting note */}
@@ -146,7 +148,7 @@ export default async function Home() {
                 How Our Baking Style Ordering Works
               </h3>
               <p className="text-muted-earth text-sm leading-relaxed">
-                Because we bake in small batches, items can be ordered in two ways: instant checkout for fixed-price daily items, or via custom quote requests for sourdough preorders, specialty bakes, and homestead bundles. 
+                Because we bake in small batches, items can be ordered in two ways: instant checkout for fixed-price daily items, or via custom quote requests for sourdough preorders, specialty bakes, and custom bundles. 
               </p>
             </div>
             <Link 

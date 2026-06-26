@@ -16,7 +16,7 @@ export async function GET() {
     await query(`
       INSERT INTO site_settings (key, value) VALUES
       ('brand_name', 'Sage & Sweetgrass Homestead'),
-      ('brand_tagline', 'Fresh baking, pantry goods & handmade homestead care'),
+      ('brand_tagline', 'Fresh baking, pantry goods & handmade home and body care'),
       ('brand_abbreviation', 'SSH'),
       ('contact_email', 'hello@sageandsweetgrass.ca'),
       ('etransfer_email', 'payments@sageandsweetgrass.ca')

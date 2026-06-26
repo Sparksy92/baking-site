@@ -371,7 +371,7 @@ export default function OvenFundPage() {
           </div>
 
           <div className="inline-flex items-center gap-1.5 text-xs font-bold text-[#8C6D58] uppercase tracking-wider">
-            <Heart size={12} className="text-[#D97706] animate-pulse" /> Thank you for helping build our homestead capacity!
+            <Heart size={12} className="text-[#D97706] animate-pulse" /> Thank you for helping build our baking capacity!
           </div>
         </div>
       </div>

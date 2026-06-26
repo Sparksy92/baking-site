@@ -340,7 +340,7 @@ async def seed():
         # 6. Default Homestead Settings Seeding
         settings_to_seed = [
             ('brand_name', 'Sage & Sweetgrass Homestead'),
-            ('brand_tagline', 'Fresh baking, pantry goods & handmade homestead care'),
+            ('brand_tagline', 'Fresh baking, pantry goods & handmade home and body care'),
             ('store_announcement', 'Fresh weekly baking preorders — Local pickup & custom requests welcome!'),
             ('brand_abbreviation', 'SSH'),
             ('about_content', 'Sage & Sweetgrass Homestead is a small-batch kitchen offering fresh baking, pantry goods, and handmade home and body products. Every request is handled with care, and many items are prepared by preorder so they can be made fresh.'),

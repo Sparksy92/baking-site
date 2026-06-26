@@ -25,7 +25,7 @@ async def get_all_settings(
     await db.execute("""
       INSERT INTO settings (key, value) VALUES
       ('brand_name', 'Sage & Sweetgrass Homestead'),
-      ('brand_tagline', 'Fresh baking, pantry goods & handmade homestead care'),
+      ('brand_tagline', 'Fresh baking, pantry goods & handmade home and body care'),
       ('brand_abbreviation', 'SSH'),
       ('contact_email', 'hello@sageandsweetgrass.ca'),
       ('etransfer_email', 'payments@sageandsweetgrass.ca')

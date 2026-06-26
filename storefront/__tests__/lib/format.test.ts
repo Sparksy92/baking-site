@@ -31,7 +31,7 @@ describe('brandName', () => {
 
 describe('brandTagline', () => {
   it('returns brand config tagline', () => {
-    expect(brandTagline()).toBe('Fresh baking, pantry goods & handmade homestead care');
+    expect(brandTagline()).toBe('Fresh baking, pantry goods & handmade home and body care');
   });
 });
 

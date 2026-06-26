@@ -45,8 +45,8 @@ export default function AboutPage() {
           <div className="flex-1 w-full aspect-square bg-white border border-sand/60 rounded-[2.5rem] overflow-hidden relative shadow-sm hover:shadow-md hover:scale-[1.01] transition-all duration-500 group">
              <div className="absolute inset-0 flex flex-col items-center justify-center text-muted-earth font-medium p-8 text-center bg-warm transition-colors duration-300 group-hover:bg-sand/20">
                <span className="text-6xl mb-4 transform group-hover:scale-110 transition-transform duration-500">🌻</span>
-               <h3 className="font-bold text-earth text-lg mb-2 font-serif">Homestead Kitchen</h3>
-               <p className="text-xs text-muted-earth max-w-xs leading-relaxed">Baking fresh in small batches with traditional methods and organic homestead ingredients.</p>
+               <h3 className="font-bold text-earth text-lg mb-2 font-serif">Our Kitchen</h3>
+               <p className="text-xs text-muted-earth max-w-xs leading-relaxed">Baking fresh in small batches with traditional methods and organic, locally sourced ingredients.</p>
              </div>
           </div>
         </section>

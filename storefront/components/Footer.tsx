@@ -30,7 +30,7 @@ export function Footer() {
             )}
             <div className="h-px w-10 bg-terracotta/60" />
             <p className="text-xs text-white/35 leading-relaxed">
-              Fresh Weekly Baking &amp;<br />Handmade Homestead Goods.
+              Fresh Weekly Baking &amp;<br />Handcrafted Home &amp; Body Goods.
             </p>
           </div>
 

@@ -7,6 +7,8 @@ import { Pagination } from '@/components/Pagination';
 import { ArrowRight, Calendar, User } from 'lucide-react';
 import { brandConfig } from '@/config/brand.config';
 
+export const dynamic = 'force-dynamic';
+
 export function generateMetadata(): Metadata {
   return {
     title: 'Homestead Journal & Recipes',

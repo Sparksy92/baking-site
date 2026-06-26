@@ -4,6 +4,8 @@ import { apiFetch } from '@/lib/api';
 import { brandName, siteUrl } from '@/lib/format';
 import { ArrowRight, Tag } from 'lucide-react';
 
+export const dynamic = 'force-dynamic';
+
 export const metadata: Metadata = {
   title: 'Shop by Tag',
   description: `Browse products by tag at ${brandName()}.`,

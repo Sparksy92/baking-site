@@ -4,7 +4,7 @@ export const brandConfig: BrandConfig = {
   id: 'sage-and-sweetgrass-homestead',
   metadata: {
     name: 'Sage & Sweetgrass Homestead',
-    tagline: 'Fresh baking, pantry goods & handmade homestead care',
+    tagline: 'Fresh baking, pantry goods & handmade home and body care',
     description: 'Homemade fresh baking, desserts, pantry goods, jams, pickled goods, handmade tallow lotions, lip balms, salves, and herbal oils.',
     siteName: 'Sage & Sweetgrass Homestead',
     baseUrl: 'https://yourdomain.com',

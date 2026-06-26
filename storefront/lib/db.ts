@@ -68,7 +68,7 @@ export async function initDatabase(force: boolean = false) {
           ('oven_fund_current_amount_2', '750'),
           ('oven_fund_description_2', 'Build a traditional outdoor clay wood-fired brick oven and workbench prep area in the garden for seasonal community baking runs, rustic sourdough, flatbreads, and future workshops.'),
           ('brand_name', 'Sage & Sweetgrass Homestead'),
-          ('brand_tagline', 'Fresh baking, pantry goods & handmade homestead care'),
+          ('brand_tagline', 'Fresh baking, pantry goods & handmade home and body care'),
           ('brand_abbreviation', 'SSH')
           ON CONFLICT (key) DO NOTHING;
         `);
@@ -77,7 +77,7 @@ export async function initDatabase(force: boolean = false) {
         await p.query(`
           INSERT INTO site_settings (key, value) VALUES
           ('brand_name', 'Sage & Sweetgrass Homestead'),
-          ('brand_tagline', 'Fresh baking, pantry goods & handmade homestead care'),
+          ('brand_tagline', 'Fresh baking, pantry goods & handmade home and body care'),
           ('brand_abbreviation', 'SSH')
           ON CONFLICT (key) DO UPDATE
           SET value = EXCLUDED.value
