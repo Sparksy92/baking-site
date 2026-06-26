@@ -30,7 +30,7 @@ export const brandConfig: BrandConfig = {
   },
   assets: {
     logo: '/logo.png',
-    favicon: '/images/brand/favicon.svg',
+    favicon: '/logo.png',
   },
   payment: {
     provider: 'stripe',

@@ -30,7 +30,11 @@ export function generateMetadata(): Metadata {
     },
     robots: { index: true, follow: true },
     alternates: { canonical: url },
-    icons: { icon: brandConfig.assets.favicon },
+    icons: {
+      icon: brandConfig.assets.favicon,
+      shortcut: brandConfig.assets.favicon,
+      apple: '/logo.png',
+    },
     other: { 'theme-color': brandConfig.colors.primary },
     ...(seo.googleVerification ? { verification: { google: seo.googleVerification } } : {}),
   };

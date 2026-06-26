@@ -72,10 +72,13 @@ export async function POST(req: NextRequest) {
     // 3. Resolve matching criteria
     const isProd = isProduction();
     
+    const inputUser = username?.toLowerCase().trim();
+    const targetEmail = adminEmail.toLowerCase().trim();
+    
     // Do not allow "admin" alias in production, require exact configured ADMIN_EMAIL
     const usernameMatched = isProd
-      ? username === adminEmail
-      : (username === adminEmail || username === 'admin' || username === 'testadmin');
+      ? inputUser === targetEmail
+      : (inputUser === targetEmail || inputUser === 'admin' || inputUser === 'testadmin');
 
     if ((backendSuccess && usernameMatched) || (usernameMatched && verifyPassword(password, expectedHash))) {
       const user = { email: adminEmail, username: username || 'Admin', role: 'admin' };
