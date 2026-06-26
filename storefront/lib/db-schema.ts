@@ -109,6 +109,9 @@ ON CONFLICT (slug) DO NOTHING;
 
 -- Seed default site settings
 INSERT INTO site_settings (key, value) VALUES
+('brand_name', 'Sage & Sweetgrass Homestead'),
+('brand_tagline', 'Fresh baking, pantry goods & handmade homestead care'),
+('brand_abbreviation', 'SSH'),
 ('about_content', 'Welcome to Sage & Sweetgrass Homestead. We are a family-run homestead kitchen located in the heart of our community, focusing on small-batch artisan sourdoughs, freshly baked breads, home-canned pantry preserves, and hand-crafted body care items. Every loaf we bake is shaped by hand and crafted with care, using organic and locally sourced ingredients wherever possible. Because we believe in freshness and reducing waste, we bake exclusively by request. Your support helps build our homestead, including our dream of a wood-fired brick oven to serve our community even better!'),
 ('faq_content', 'Q: How do I order?
 A: Browse our menu, add items to your request list, and submit the order request. We will review it and send an e-transfer payment confirmation within 24 hours.
@@ -140,4 +143,5 @@ A: Absolutely! Use the Custom Orders page to request birthday cakes, large bun c
 ('oven_fund_description_2', 'Build a traditional outdoor clay wood-fired brick oven and workbench prep area in the garden for seasonal community baking runs, rustic sourdough, flatbreads, and future workshops.'),
 ('store_announcement', 'Preorders for Saturday sourdough are open! Order by Wednesday 5 PM.')
 ON CONFLICT (key) DO NOTHING;
+
 `;

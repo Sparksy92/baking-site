@@ -54,7 +54,7 @@ export async function initDatabase(force: boolean = false) {
               updated_at TIMESTAMPTZ DEFAULT NOW()
           );
         `);
-        console.log('Ensuring all multi-goal Oven Fund and contact settings exist in site_settings...');
+        console.log('Ensuring all multi-goal Oven Fund, contact, and brand settings exist in site_settings...');
         await p.query(`
           INSERT INTO site_settings (key, value) VALUES
           ('contact_email', 'hello@sageandsweetgrass.ca'),
@@ -66,8 +66,24 @@ export async function initDatabase(force: boolean = false) {
           ('oven_fund_title_2', 'Outdoor Wood-Fired Brick Oven'),
           ('oven_fund_goal_2', '5000'),
           ('oven_fund_current_amount_2', '750'),
-          ('oven_fund_description_2', 'Build a traditional outdoor clay wood-fired brick oven and workbench prep area in the garden for seasonal community baking runs, rustic sourdough, flatbreads, and future workshops.')
+          ('oven_fund_description_2', 'Build a traditional outdoor clay wood-fired brick oven and workbench prep area in the garden for seasonal community baking runs, rustic sourdough, flatbreads, and future workshops.'),
+          ('brand_name', 'Sage & Sweetgrass Homestead'),
+          ('brand_tagline', 'Fresh baking, pantry goods & handmade homestead care'),
+          ('brand_abbreviation', 'SSH')
           ON CONFLICT (key) DO NOTHING;
+        `);
+        
+        // Reset brand name/tagline/abbreviation if they are currently set to test values ('Automated Brand') or empty or legacy names
+        await p.query(`
+          INSERT INTO site_settings (key, value) VALUES
+          ('brand_name', 'Sage & Sweetgrass Homestead'),
+          ('brand_tagline', 'Fresh baking, pantry goods & handmade homestead care'),
+          ('brand_abbreviation', 'SSH')
+          ON CONFLICT (key) DO UPDATE
+          SET value = EXCLUDED.value
+          WHERE site_settings.value = 'Automated Brand' 
+             OR site_settings.value = '' 
+             OR site_settings.value LIKE '%Cedar%';
         `);
         // Migrate legacy "Cedar & Sage" settings and emails to "Sage & Sweetgrass Homestead" and correct domains
         await p.query(`
