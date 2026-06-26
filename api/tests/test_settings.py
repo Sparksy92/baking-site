@@ -37,3 +37,30 @@ async def test_public_settings_custom_announcement(client: AsyncClient):
 
     resp = await client.get("/api/settings/public")
     assert resp.json()["store_announcement"] == "Free shipping this weekend!"
+
+
+@pytest.mark.asyncio
+async def test_admin_settings_cleans_legacy_values(admin_client: AsyncClient):
+    """Admin settings GET endpoint cleans legacy Cedar & Sage brand values."""
+    from app.database import get_db
+    async for db in get_db():
+        await db.execute(
+            "INSERT OR REPLACE INTO settings (key, value) VALUES (?, ?)",
+            ("brand_name", "Cedar & Sage"),
+        )
+        await db.execute(
+            "INSERT OR REPLACE INTO settings (key, value) VALUES (?, ?)",
+            ("contact_email", "kirstinsparks@hotmail.com"),
+        )
+        await db.commit()
+
+    resp = await admin_client.get("/api/admin/settings")
+    assert resp.status_code == 200
+    data = resp.json()
+    
+    brand_name_setting = next(s for s in data if s["key"] == "brand_name")
+    contact_email_setting = next(s for s in data if s["key"] == "contact_email")
+    
+    assert brand_name_setting["value"] == "Sage & Sweetgrass Homestead"
+    assert contact_email_setting["value"] == "hello@sageandsweetgrass.ca"
+
