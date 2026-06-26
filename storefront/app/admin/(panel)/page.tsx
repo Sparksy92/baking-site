@@ -69,7 +69,7 @@ export default function AdminDashboard() {
       </div>
 
       {/* Order status breakdown */}
-      <div className="grid grid-cols-3 gap-4 mb-6">
+      <div className="grid grid-cols-3 gap-2 sm:gap-4 mb-6">
         <div className="bg-yellow-50 border border-yellow-200 rounded-xl p-4 text-center">
           <p className="text-2xl font-bold text-yellow-700">{stats?.pending_orders ?? 0}</p>
           <p className="text-xs text-yellow-600 mt-1">Received</p>

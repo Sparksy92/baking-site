@@ -120,7 +120,7 @@ export function Header() {
             <img
               src="/logo.png"
               alt="Logo"
-              className="w-12 h-12 md:w-14 md:h-14 rounded-full object-cover group-hover:scale-105 transition-transform duration-300 border-2 border-sand shadow-md bg-cream transform translate-y-0.5"
+              className="w-14 h-14 md:w-16 md:h-16 rounded-full object-cover group-hover:scale-105 transition-transform duration-300 border-2 border-sand shadow-md bg-cream transform translate-y-0.5"
             />
             <span className="text-sm min-[380px]:text-base sm:text-xl md:text-2xl font-semibold font-serif tracking-tight text-earth group-hover:text-brand-secondary transition-colors duration-300 ml-1">
               <span className="inline md:hidden">Sage &amp; Sweetgrass</span>

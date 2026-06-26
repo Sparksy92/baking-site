@@ -449,18 +449,18 @@ export default function ProductForm({ productId }: Props) {
         </div>
 
         {/* Action button */}
-        <div className="flex justify-end gap-4 pt-4">
+        <div className="flex flex-col-reverse sm:flex-row justify-end gap-3 sm:gap-4 pt-4">
           <button
             type="button"
             onClick={() => router.push('/admin/products')}
-            className="px-6 py-3 border border-gray-200 text-gray-700 font-semibold text-sm rounded-xl hover:bg-gray-50 transition-colors"
+            className="w-full sm:w-auto px-6 py-3 border border-gray-200 text-gray-700 font-semibold text-sm rounded-xl hover:bg-gray-50 transition-colors"
           >
             Cancel
           </button>
           <button
             type="submit"
             disabled={saving}
-            className="px-6 py-3 bg-brand text-white font-bold text-sm rounded-xl hover:bg-brand/90 disabled:opacity-50 transition-colors shadow-sm"
+            className="w-full sm:w-auto px-6 py-3 bg-brand text-white font-bold text-sm rounded-xl hover:bg-brand/90 disabled:opacity-50 transition-colors shadow-sm"
           >
             {saving ? 'Saving...' : isNew ? 'Create Menu Item' : 'Save Changes'}
           </button>

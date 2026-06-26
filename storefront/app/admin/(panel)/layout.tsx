@@ -7,7 +7,7 @@ import {
   LayoutDashboard, Package, ShoppingCart, Layers, FolderOpen, Tag, Settings, LogOut, Mail,
   BarChart3, RotateCcw, Webhook, Gift, Star, PackageOpen, FileText, Tags, Users, Ruler, Shield,
   ArrowLeftRight, ChevronDown, ChevronRight, Megaphone, Wrench, CreditCard, TrendingUp, Share2, Bot, Inbox,
-  AlertTriangle,
+  AlertTriangle, Menu,
 } from 'lucide-react';
 import { api } from '@/lib/api';
 import { Toaster } from '@/components/Toaster';
@@ -93,6 +93,7 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
   const [loading, setLoading] = useState(true);
   const [openSections, setOpenSections] = useState<Record<string, boolean>>({});
   const [newRequestsCount, setNewRequestsCount] = useState<number | null>(null);
+  const [sidebarOpen, setSidebarOpen] = useState(false);
 
   useEffect(() => {
     setOpenSections(readOpenSections());
@@ -113,6 +114,10 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
     }
   }, [user, pathname]); // Re-fetch on pathname changes to refresh when navigating
 
+  useEffect(() => {
+    setSidebarOpen(false);
+  }, [pathname]);
+
   function toggleSection(id: string) {
     setOpenSections((prev) => {
       const next = { ...prev, [id]: !prev[id] };
@@ -125,11 +130,34 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
   if (!user) return null;
 
   return (
-    <div className="admin-surface flex h-screen bg-gray-50">
-      <aside className="w-56 bg-white border-r border-gray-200 flex flex-col">
-        <div className="p-4 border-b border-gray-100">
-          <h1 className="font-bold text-brand text-sm">Admin Panel</h1>
-          <p className="text-xs text-gray-500 mt-0.5">{user.username}</p>
+    <div className="admin-surface flex h-screen bg-gray-50 overflow-hidden">
+      {/* Sidebar Backdrop Overlay - Mobile Only */}
+      {sidebarOpen && (
+        <div 
+          className="fixed inset-0 bg-black/45 z-40 md:hidden transition-opacity duration-300"
+          onClick={() => setSidebarOpen(false)}
+        />
+      )}
+
+      {/* Sidebar - sliding drawer on mobile, static sidebar on desktop */}
+      <aside 
+        className={`fixed inset-y-0 left-0 w-64 bg-white border-r border-gray-200 z-50 transform transition-transform duration-300 ease-in-out md:translate-x-0 md:static md:w-56 md:flex-shrink-0 flex flex-col h-full ${
+          sidebarOpen ? 'translate-x-0' : '-translate-x-full'
+        }`}
+      >
+        <div className="p-4 border-b border-gray-100 flex items-center justify-between">
+          <div>
+            <h1 className="font-bold text-brand text-sm">Admin Panel</h1>
+            <p className="text-xs text-gray-500 mt-0.5">{user.username}</p>
+          </div>
+          {/* Close button on mobile drawer */}
+          <button
+            onClick={() => setSidebarOpen(false)}
+            className="md:hidden p-1 rounded-lg text-gray-500 hover:bg-gray-100"
+            aria-label="Close Sidebar"
+          >
+            <ChevronRight className="rotate-180" size={18} />
+          </button>
         </div>
 
         <nav className="flex-1 p-2 space-y-0.5 overflow-y-auto">
@@ -188,7 +216,30 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
         </div>
       </aside>
 
-      <main className="flex-1 overflow-y-auto p-6">{children}</main>
+      {/* Main Content Area */}
+      <div className="flex-1 flex flex-col min-w-0 overflow-hidden">
+        {/* Mobile top header */}
+        <header className="flex md:hidden items-center justify-between px-4 h-14 bg-white border-b border-gray-200 flex-shrink-0">
+          <div className="flex items-center gap-3">
+            <button
+              onClick={() => setSidebarOpen(true)}
+              className="p-1.5 rounded-lg text-gray-500 hover:bg-gray-100 hover:text-gray-700"
+              aria-label="Open Sidebar"
+            >
+              <Menu size={20} />
+            </button>
+            <span className="font-bold text-brand text-sm">Admin Panel</span>
+          </div>
+          {newRequestsCount !== null && newRequestsCount > 0 && (
+            <Link href="/admin/order-requests" className="bg-rose-500 text-white text-[10px] font-bold px-2 py-0.5 rounded-full flex items-center justify-center min-w-5 h-5 mr-1">
+              {newRequestsCount}
+            </Link>
+          )}
+        </header>
+
+        {/* Page content */}
+        <main className="flex-1 overflow-y-auto p-4 md:p-6">{children}</main>
+      </div>
       <Toaster />
     </div>
   );
