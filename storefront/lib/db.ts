@@ -83,7 +83,9 @@ export async function initDatabase(force: boolean = false) {
           SET value = EXCLUDED.value
           WHERE site_settings.value = 'Automated Brand' 
              OR site_settings.value = '' 
-             OR site_settings.value LIKE '%Cedar%';
+             OR site_settings.value = 'Homestead'
+             OR site_settings.value LIKE '%Cedar%'
+             OR site_settings.value LIKE '%homestead care%';
         `);
         // Migrate legacy "Cedar & Sage" settings and emails to "Sage & Sweetgrass Homestead" and correct domains
         await p.query(`
@@ -93,6 +95,9 @@ export async function initDatabase(force: boolean = false) {
           UPDATE site_settings 
           SET value = REPLACE(value, 'Cedar and Sage', 'Sage & Sweetgrass Homestead') 
           WHERE value LIKE '%Cedar and Sage%';
+          UPDATE site_settings 
+          SET value = REPLACE(value, 'Homestead Homestead', 'Homestead') 
+          WHERE value LIKE '%Homestead Homestead%';
           UPDATE site_settings 
           SET value = REPLACE(value, 'kirstinsparks@hotmail.com', 'hello@sageandsweetgrass.ca') 
           WHERE key = 'contact_email';
