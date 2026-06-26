@@ -63,6 +63,18 @@ export async function GET() {
       WHERE value ~ '@cedar(and)?sage(homestead)?\\.(ca|com)';
     `);
 
+    await query(`
+      UPDATE site_settings 
+      SET value = REPLACE(value, 'family-run homestead kitchen', 'family-run kitchen')
+      WHERE key = 'about_content' AND value LIKE '%family-run homestead kitchen%';
+    `);
+
+    await query(`
+      UPDATE site_settings 
+      SET value = REPLACE(value, 'small-batch homestead kitchen', 'small-batch kitchen')
+      WHERE key = 'about_content' AND value LIKE '%small-batch homestead kitchen%';
+    `);
+
     // 2. Fetch and clean settings in memory for safety
     const res = await query('SELECT key, value FROM site_settings');
     const cleanedRows = res.rows.map(r => {
@@ -78,6 +90,10 @@ export async function GET() {
           }
           return 'hello@sageandsweetgrass.ca';
         });
+
+        // Clean homestead kitchen duplications
+        val = val.replace(/family-run homestead kitchen/gi, 'family-run kitchen');
+        val = val.replace(/small-batch homestead kitchen/gi, 'small-batch kitchen');
       }
       return { ...r, value: val };
     });

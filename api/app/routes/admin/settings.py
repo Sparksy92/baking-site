@@ -41,6 +41,8 @@ async def get_all_settings(
     await db.execute("UPDATE settings SET value = REPLACE(value, 'kirstinsparks@hotmail.com', 'hello@sageandsweetgrass.ca') WHERE key = 'contact_email'")
     await db.execute("UPDATE settings SET value = REPLACE(value, 'kirstinsparks@hotmail.com', 'payments@sageandsweetgrass.ca') WHERE key = 'etransfer_email' OR key = 'payment_instructions'")
     await db.execute("UPDATE settings SET value = REPLACE(value, 'payments@example.com', 'payments@sageandsweetgrass.ca') WHERE value LIKE '%payments@example.com%'")
+    await db.execute("UPDATE settings SET value = REPLACE(value, 'family-run homestead kitchen', 'family-run kitchen') WHERE value LIKE '%family-run homestead kitchen%'")
+    await db.execute("UPDATE settings SET value = REPLACE(value, 'small-batch homestead kitchen', 'small-batch kitchen') WHERE value LIKE '%small-batch homestead kitchen%'")
 
     # 2. Fetch and return values, applying clean_legacy_value
     cursor = await db.execute("SELECT * FROM settings ORDER BY key")
