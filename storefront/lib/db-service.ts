@@ -201,7 +201,7 @@ export async function getPublicSettings(): Promise<PublicSettings> {
 
   return {
     brand_name: settingsMap['brand_name'] || 'Sage & Sweetgrass Homestead',
-    brand_tagline: settingsMap['brand_tagline'] || 'Fresh baking, pantry goods & handmade homestead care',
+    brand_tagline: settingsMap['brand_tagline'] || 'Fresh baking, pantry goods & handmade home and body care',
     store_announcement: settingsMap['store_announcement'] || '',
     shipping_flat_rate_cents: parseInt(settingsMap['shipping_flat_rate_cents'] || '0', 10),
     shipping_free_threshold_cents: parseInt(settingsMap['shipping_free_threshold_cents'] || '0', 10),

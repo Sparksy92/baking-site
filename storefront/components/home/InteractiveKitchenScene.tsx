@@ -80,7 +80,7 @@ const KITCHEN_ZONES: KitchenZoneConfig[] = [
     id: 'home-body',
     title: 'Home & Body',
     shortLabel: 'Home & Body',
-    description: 'Handmade lotions, lip balms, salves, herbal oils, and homestead care.',
+    description: 'Handmade lotions, lip balms, salves, herbal oils, and home & body care.',
     href: '/shop?category=home-body',
     top: '32%',
     left: '36%',
