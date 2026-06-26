@@ -343,7 +343,7 @@ async def seed():
             ('brand_tagline', 'Fresh baking, pantry goods & handmade homestead care'),
             ('store_announcement', 'Fresh weekly baking preorders — Local pickup & custom requests welcome!'),
             ('brand_abbreviation', 'SSH'),
-            ('about_content', 'Sage & Sweetgrass Homestead is a small-batch homestead kitchen offering fresh baking, pantry goods, and handmade home and body products. Every request is handled with care, and many items are prepared by preorder so they can be made fresh.'),
+            ('about_content', 'Sage & Sweetgrass Homestead is a small-batch kitchen offering fresh baking, pantry goods, and handmade home and body products. Every request is handled with care, and many items are prepared by preorder so they can be made fresh.'),
             ('pickup_instructions', 'Orders are prepared by request. Pickup or local delivery details will be confirmed after Kirstin reviews your order request.'),
             ('payment_instructions', 'Payment details will be confirmed after your request is reviewed. E-transfer or pay-on-confirmation is preferred while the menu and availability are being finalized.'),
             ('preorder_instructions', 'Sourdough is available by preorder and is usually prepared on weekends. Please include your desired date and any special notes when submitting your request.'),

@@ -52,6 +52,10 @@ async def test_admin_settings_cleans_legacy_values(admin_client: AsyncClient):
             "INSERT OR REPLACE INTO settings (key, value) VALUES (?, ?)",
             ("contact_email", "kirstinsparks@hotmail.com"),
         )
+        await db.execute(
+            "INSERT OR REPLACE INTO settings (key, value) VALUES (?, ?)",
+            ("about_content", "Welcome to Sage & Sweetgrass Homestead. We are a family-run homestead kitchen."),
+        )
         await db.commit()
 
     resp = await admin_client.get("/api/admin/settings")
@@ -60,7 +64,9 @@ async def test_admin_settings_cleans_legacy_values(admin_client: AsyncClient):
     
     brand_name_setting = next(s for s in data if s["key"] == "brand_name")
     contact_email_setting = next(s for s in data if s["key"] == "contact_email")
+    about_content_setting = next(s for s in data if s["key"] == "about_content")
     
     assert brand_name_setting["value"] == "Sage & Sweetgrass Homestead"
     assert contact_email_setting["value"] == "hello@sageandsweetgrass.ca"
+    assert about_content_setting["value"] == "Welcome to Sage & Sweetgrass Homestead. We are a family-run kitchen."
 

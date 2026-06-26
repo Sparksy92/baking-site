@@ -22,6 +22,9 @@ def clean_legacy_value(val: str | None) -> str | None:
             return 'payments@sageandsweetgrass.ca'
         return 'hello@sageandsweetgrass.ca'
     val = re.sub(r'(?i)[a-zA-Z0-9._%+-]+@cedar(?:and)?sage(?:homestead)?\.(?:ca|com)', repl, val)
+    # Clean homestead kitchen duplications
+    val = re.sub(r'(?i)family-run\s+homestead\s+kitchen', 'family-run kitchen', val)
+    val = re.sub(r'(?i)small-batch\s+homestead\s+kitchen', 'small-batch kitchen', val)
     return val
 
 
