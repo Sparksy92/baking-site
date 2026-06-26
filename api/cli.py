@@ -20,7 +20,7 @@ sys.path.insert(0, os.path.dirname(__file__))
 async def create_admin():
     """Create the first admin user interactively."""
     from app.config import get_settings
-    from app.database import init_db, get_db
+    from app.database import init_db, db_connection
     from app.auth import hash_password
 
     settings = get_settings()
@@ -46,7 +46,7 @@ async def create_admin():
 
     pw_hash = hash_password(password)
 
-    async for db in get_db():
+    async with db_connection() as db:
         try:
             await db.execute(
                 "INSERT INTO admin_users (username, password_hash, display_name, role) VALUES ($1, $2, $3, $4)",
@@ -58,18 +58,17 @@ async def create_admin():
                 print(f"Error: username '{username}' already exists")
             else:
                 print(f"Error: {e}")
-        break
 
 
 async def seed_admin(username: str, password: str, display_name: str | None, role: str):
     """Non-interactive admin user creation for CI/CD and Ansible deployments."""
-    from app.database import init_db, get_db
+    from app.database import init_db, db_connection
     from app.auth import hash_password
 
     await init_db()
     pw_hash = hash_password(password)
 
-    async for db in get_db():
+    async with db_connection() as db:
         try:
             await db.execute(
                 "INSERT INTO admin_users (username, password_hash, display_name, role) VALUES ($1, $2, $3, $4)",
@@ -82,18 +81,17 @@ async def seed_admin(username: str, password: str, display_name: str | None, rol
             else:
                 print(f"error: {e}")
                 sys.exit(1)
-        break
 
 
 async def seed():
     """Insert sample products, categories, and collections for Sage & Sweetgrass Homestead."""
     from app.config import get_settings
-    from app.database import init_db, get_db
+    from app.database import init_db, db_connection
 
     settings = get_settings()
     await init_db()
 
-    async for db in get_db():
+    async with db_connection() as db:
         # 1. Categories Seeding
         categories_data = [
             ("Baked Fresh", "baked-fresh", "Fresh breads, buns, bagels, sandwich loaves, cinnamon rolls, and weekend sourdough preorders.", 0),
@@ -380,8 +378,6 @@ A: Visit our Oven Fund page to view current progress and support tiers. Contribu
                 INSERT INTO settings (key, value) VALUES (?, ?)
                 ON CONFLICT (key) DO UPDATE SET value = EXCLUDED.value
             """, (key, value))
-
-        break
 
     print("Success: Seeded database with Sage & Sweetgrass Homestead data:")
     print("  - 5 categories (Baked Fresh, Desserts, Pantry, Home & Body, Oven Fund)")
