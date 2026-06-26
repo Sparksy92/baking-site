@@ -1,6 +1,8 @@
-<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 256 256" role="img" aria-label="Baseline Store">
-  <rect width="256" height="256" rx="64" fill="#FBF7F4"/>
-  <circle cx="128" cy="128" r="92" fill="#5C3D2E"/>
-  <path d="M73 162c54-5 94-49 105-106 11 69-28 119-94 139 18-31 42-60 78-89-40 16-69 41-98 79Z" fill="#B85C38"/>
-  <path d="M92 180c32-16 59-44 82-86" fill="none" stroke="#F5EDE8" stroke-width="12" stroke-linecap="round"/>
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 256 256" role="img" aria-label="Sage &amp; Sweetgrass Homestead Logo">
+  <rect width="256" height="256" rx="64" fill="#6F7D5C"/>
+  <!-- Stylized braided sweetgrass circle -->
+  <circle cx="128" cy="128" r="72" fill="none" stroke="#FAF7F2" stroke-width="12" stroke-dasharray="24 16" opacity="0.8"/>
+  <!-- Crossed leaves (representing Sage and Sweetgrass) -->
+  <path d="M88 168C96 136 128 112 160 96C136 120 112 144 88 168Z" fill="#FAF7F2"/>
+  <path d="M168 168C160 136 128 112 96 96C120 120 144 144 168 168Z" fill="#FAF7F2" opacity="0.9"/>
 </svg>
