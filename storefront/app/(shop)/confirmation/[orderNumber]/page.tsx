@@ -249,7 +249,7 @@ export default function ConfirmationPage() {
             Continue to Shop <ArrowRight size={16} />
           </Link>
           <div className="flex items-center justify-center gap-1.5 text-xs font-bold text-brand uppercase tracking-wider">
-            <Heart size={12} className="text-terracotta animate-pulse" /> Thank you for supporting our homestead bakery!
+            <Heart size={12} className="text-terracotta animate-pulse" /> Thank you for supporting our small-batch bakery!
           </div>
         </div>
 

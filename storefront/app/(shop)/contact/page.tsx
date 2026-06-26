@@ -89,7 +89,7 @@ export default function ContactPage() {
               <ul className="space-y-4 relative z-10">
                 <li><Link href="/order-info" className="flex items-center gap-2 text-white/80 hover:text-white transition-colors group text-sm font-bold"><ExternalLink size={16} className="group-hover:-translate-y-0.5 group-hover:translate-x-0.5 transition-transform" /> Order Information</Link></li>
                 <li><Link href="/faq" className="flex items-center gap-2 text-white/80 hover:text-white transition-colors group text-sm font-bold"><ExternalLink size={16} className="group-hover:-translate-y-0.5 group-hover:translate-x-0.5 transition-transform" /> Frequently Asked Questions</Link></li>
-                <li><Link href="/oven-fund" className="flex items-center gap-2 text-white/80 hover:text-white transition-colors group text-sm font-bold"><ExternalLink size={16} className="group-hover:-translate-y-0.5 group-hover:translate-x-0.5 transition-transform" /> Homestead Oven Fund</Link></li>
+                <li><Link href="/oven-fund" className="flex items-center gap-2 text-white/80 hover:text-white transition-colors group text-sm font-bold"><ExternalLink size={16} className="group-hover:-translate-y-0.5 group-hover:translate-x-0.5 transition-transform" /> Oven Fund</Link></li>
               </ul>
             </div>
           </div>

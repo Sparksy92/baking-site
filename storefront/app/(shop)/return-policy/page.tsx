@@ -42,7 +42,7 @@ export default async function ReturnPolicyPage() {
         </section>
 
         <section className="space-y-2">
-          <h2 className="text-lg font-bold text-earth">Non-Perishable Goods (Pantry &amp; Homestead Care)</h2>
+          <h2 className="text-lg font-bold text-earth">Non-Perishable Goods (Pantry &amp; Home &amp; Body Care)</h2>
           <p>
             Unused, unopened pantry preserves (jams, jellies, pickles, simmer pots) and hand-crafted body care products (tallow lotions, lip balms, salves, and herbal oils) in their original packaging can be returned or exchanged within 14 days of pickup. 
           </p>

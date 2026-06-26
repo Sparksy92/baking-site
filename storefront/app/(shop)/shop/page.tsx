@@ -75,7 +75,7 @@ function ShopContent() {
         <div className="border-t border-sand pt-8">
           {/* Homestead Ordering Notice */}
           <div className="bg-brand/5 border border-brand/20 rounded-2xl p-5 mb-8 text-sm text-muted-earth space-y-2">
-            <h3 className="font-bold text-earth">🌾 Homestead Selections &amp; Ordering Notes</h3>
+            <h3 className="font-bold text-earth">🌾 Bakery Selections &amp; Ordering Notes</h3>
             <ul className="list-disc list-inside space-y-1 text-xs">
               <li>Some prices are placeholder starting rates and will be finalized after your request is reviewed.</li>
               <li>Sourdough is prepared by preorder and is typically baked on weekends.</li>
