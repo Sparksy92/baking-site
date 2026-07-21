@@ -136,7 +136,7 @@ const FRAGMENT_SHADER = `
 `;
 
 /* ═══════════════════════════════════════════════════════════════════
-   CANVAS 2D — Elegant koi fish with realistic anatomy
+   CANVAS 2D — Photorealistic Koi Swimming Engine
    ═══════════════════════════════════════════════════════════════════ */
 
 interface Segment { x: number; y: number; }
@@ -151,29 +151,17 @@ class KoiFish {
   speed: number;
   targetSpeed: number;
   phase: number;
-  baseColor: string;
-  bodyGradColors: string[];
-  patchColor: string;
-  patchPositions: { segIdx: number; offset: number; size: number }[];
+  img: HTMLImageElement;
   sizeMultiplier: number;
   segments: Segment[];
   depth: number;
   targetDepth: number;
   mouthOpen: number;
-  // 16-segment body profile — head(wide) → torso(very thick) → tapered tail
-  static readonly BODY_PROFILE = [
-    13, 15.5, 17, 18, 17.5, 16.5, 15, 13, 11, 9, 7, 5, 3.5, 2.2, 1.0, 0.3,
-  ];
-  static readonly SEG_COUNT = 16;
-  static readonly SEG_SPACING = 14; // px base spacing between segments
 
-  constructor(x: number, y: number, config: {
-    baseColor: string;
-    bodyGradColors: string[];
-    patchColor: string;
-    patchCount: number;
-    sizeMultiplier: number;
-  }) {
+  static readonly SEG_COUNT = 18;
+  static readonly SEG_SPACING = 12; // px base spacing between segments
+
+  constructor(x: number, y: number, img: HTMLImageElement, sizeMultiplier: number) {
     this.x = x;
     this.y = y;
     this.angle = Math.random() * Math.PI * 2;
@@ -181,26 +169,14 @@ class KoiFish {
     this.speed = 0.5 + Math.random() * 0.35;
     this.targetSpeed = this.speed;
     this.phase = Math.random() * Math.PI * 2;
-    this.baseColor = config.baseColor;
-    this.bodyGradColors = config.bodyGradColors;
-    this.patchColor = config.patchColor;
-    this.sizeMultiplier = config.sizeMultiplier;
+    this.img = img;
+    this.sizeMultiplier = sizeMultiplier;
     this.depth = 0.12 + Math.random() * 0.3;
     this.targetDepth = this.depth;
     this.mouthOpen = 0;
 
-    // Generate organic patch positions spread across the long body
-    this.patchPositions = [];
-    for (let i = 0; i < config.patchCount; i++) {
-      this.patchPositions.push({
-        segIdx: 1 + Math.floor(Math.random() * 10),
-        offset: (Math.random() - 0.5) * 0.65,
-        size: 0.6 + Math.random() * 0.7,
-      });
-    }
-
     this.segments = [];
-    const spacing = KoiFish.SEG_SPACING * config.sizeMultiplier;
+    const spacing = KoiFish.SEG_SPACING * sizeMultiplier;
     for (let i = 0; i < KoiFish.SEG_COUNT; i++) {
       this.segments.push({ x: x - i * spacing, y });
     }
@@ -213,8 +189,8 @@ class KoiFish {
 
     if (dist < 180) {
       this.targetAngle = Math.atan2(this.y - mouseY, this.x - mouseX);
-      this.targetSpeed = 2.8;
-      this.targetDepth = 0.55;
+      this.targetSpeed = 2.6;
+      this.targetDepth = 0.5;
     } else {
       const activeFoods = foods.filter(f => !f.isEaten);
       let closestFood: Food | null = null;
@@ -236,7 +212,7 @@ class KoiFish {
 
         if (minDist < 20) {
           closestFood.isEaten = true;
-          this.targetSpeed = 3.2;
+          this.targetSpeed = 3.0;
           this.mouthOpen = 1;
           ripples.push({ x: closestFood.x, y: closestFood.y, radius: 2, maxRadius: 50, strength: 0.9, speed: 1.3 });
         }
@@ -265,15 +241,15 @@ class KoiFish {
     this.x += Math.cos(this.angle) * this.speed;
     this.y += Math.sin(this.angle) * this.speed;
 
-    // Undulating body chain with stronger rear wiggle
+    // Undulating body chain with natural S-curve tail sweep
     this.segments[0] = { x: this.x, y: this.y };
-    const wiggleAmp = 4.0 * this.sizeMultiplier;
+    const wiggleAmp = 3.5 * this.sizeMultiplier;
     const segLen = KoiFish.SEG_SPACING * this.sizeMultiplier;
     for (let i = 1; i < this.segments.length; i++) {
       const prev = this.segments[i - 1];
       const curr = this.segments[i];
       const t = i / (this.segments.length - 1); // 0..1 head to tail
-      const wiggle = Math.sin(this.phase + i * 0.5) * wiggleAmp * t * t; // Quadratic ramp
+      const wiggle = Math.sin(this.phase + i * 0.45) * wiggleAmp * t * t; // S-curve ramp
 
       let segAngle = this.angle;
       if (i > 1) {
@@ -292,11 +268,7 @@ class KoiFish {
       curr.y = prev.y + Math.sin(sAngle) * Math.min(sDist, segLen);
     }
 
-    this.phase += this.speed * 0.1;
-  }
-
-  private getSegRadius(i: number): number {
-    return (KoiFish.BODY_PROFILE[i] || 0) * this.sizeMultiplier;
+    this.phase += this.speed * 0.09;
   }
 
   private getSegAngle(i: number): number {
@@ -307,280 +279,65 @@ class KoiFish {
   }
 
   drawShadow(ctx: CanvasRenderingContext2D) {
+    if (!this.img || !this.img.complete || this.img.naturalWidth === 0) return;
     const shadowOffset = 14 + this.depth * 26;
-    const alpha = 0.22 - this.depth * 0.12;
+    const alpha = 0.25 - this.depth * 0.12;
+    const scale = 1.0 - this.depth * 0.12;
+    const s = (this.sizeMultiplier * 0.45) * scale;
+
     ctx.save();
-    ctx.fillStyle = `rgba(0, 30, 20, ${alpha})`;
-    ctx.filter = `blur(${(8 + this.depth * 14) * this.sizeMultiplier}px)`;
-    this.buildBodyPath(ctx, shadowOffset, shadowOffset + 6);
-    ctx.fill();
+    ctx.globalAlpha = alpha;
+    ctx.filter = `blur(${(8 + this.depth * 10)}px) brightness(0)`;
+
+    const numSlices = this.segments.length;
+    const imgH = this.img.naturalHeight;
+    const imgW = this.img.naturalWidth;
+    const sliceH = imgH / numSlices;
+
+    for (let i = numSlices - 1; i >= 0; i--) {
+      const seg = this.segments[i];
+      const segAngle = this.getSegAngle(i);
+      const sy = i * sliceH;
+      const dw = imgW * s;
+      const dh = sliceH * s * 1.15;
+
+      ctx.save();
+      ctx.translate(seg.x + shadowOffset, seg.y + shadowOffset + 6);
+      ctx.rotate(segAngle + Math.PI / 2);
+      ctx.drawImage(this.img, 0, sy, imgW, sliceH, -dw / 2, -dh / 2, dw, dh);
+      ctx.restore();
+    }
     ctx.filter = 'none';
     ctx.restore();
   }
 
-  private buildBodyPath(ctx: CanvasRenderingContext2D, offX = 0, offY = 0) {
-    const leftPts: Segment[] = [];
-    const rightPts: Segment[] = [];
-
-    for (let i = 0; i < this.segments.length; i++) {
-      const seg = this.segments[i];
-      const r = this.getSegRadius(i);
-      if (r <= 0.1) continue;
-      const a = this.getSegAngle(i);
-      leftPts.push({ x: seg.x + offX + Math.cos(a - Math.PI / 2) * r, y: seg.y + offY + Math.sin(a - Math.PI / 2) * r });
-      rightPts.push({ x: seg.x + offX + Math.cos(a + Math.PI / 2) * r, y: seg.y + offY + Math.sin(a + Math.PI / 2) * r });
-    }
-
-    ctx.beginPath();
-    // Rounded head cap
-    const headA = this.getSegAngle(0);
-    const headSeg = this.segments[0];
-    ctx.arc(headSeg.x + offX, headSeg.y + offY, this.getSegRadius(0), headA - Math.PI / 2, headA + Math.PI / 2, true);
-
-    // Left contour spline
-    for (let i = 0; i < leftPts.length - 1; i++) {
-      const mx = (leftPts[i].x + leftPts[i + 1].x) / 2;
-      const my = (leftPts[i].y + leftPts[i + 1].y) / 2;
-      ctx.quadraticCurveTo(leftPts[i].x, leftPts[i].y, mx, my);
-    }
-
-    // Tail tip
-    const tail = this.segments[this.segments.length - 1];
-    ctx.lineTo(tail.x + offX, tail.y + offY);
-
-    // Right contour spline (reversed)
-    for (let i = rightPts.length - 1; i > 0; i--) {
-      const mx = (rightPts[i].x + rightPts[i - 1].x) / 2;
-      const my = (rightPts[i].y + rightPts[i - 1].y) / 2;
-      ctx.quadraticCurveTo(rightPts[i].x, rightPts[i].y, mx, my);
-    }
-
-    ctx.closePath();
-  }
-
   draw(ctx: CanvasRenderingContext2D) {
-    ctx.save();
+    if (!this.img || !this.img.complete || this.img.naturalWidth === 0) return;
     const scale = 1.0 - this.depth * 0.12;
-    const alpha = 0.9 - this.depth * 0.2;
+    const alpha = 0.92 - this.depth * 0.2;
+    const s = (this.sizeMultiplier * 0.45) * scale;
+
+    ctx.save();
     ctx.globalAlpha = alpha;
 
-    const s = this.sizeMultiplier * scale; // shorthand
-    const head = this.segments[0];
-    const tail = this.segments[this.segments.length - 1];
-    const tailPrev = this.segments[this.segments.length - 2];
-    const tailAngle = Math.atan2(tail.y - tailPrev.y, tail.x - tailPrev.x);
-    const finWiggle = Math.sin(this.phase) * 0.22;
-    const tailSweep = Math.sin(this.phase) * 0.5;
+    const numSlices = this.segments.length;
+    const imgH = this.img.naturalHeight;
+    const imgW = this.img.naturalWidth;
+    const sliceH = imgH / numSlices;
 
-    // ── Dorsal fin (subtle ridge along segments 4-8) ──
-    ctx.fillStyle = this.bodyGradColors[1] || this.baseColor;
-    ctx.globalAlpha = alpha * 0.35;
-    ctx.beginPath();
-    const dS = this.segments[4];
-    const dM = this.segments[6];
-    const dE = this.segments[8];
-    const dA = this.getSegAngle(6);
-    ctx.moveTo(dS.x, dS.y);
-    ctx.quadraticCurveTo(
-      dM.x + Math.cos(dA - Math.PI / 2) * 5 * s,
-      dM.y + Math.sin(dA - Math.PI / 2) * 5 * s,
-      dE.x, dE.y
-    );
-    ctx.fill();
-    ctx.globalAlpha = alpha;
+    // Render texture slices along spine from tail to head
+    for (let i = numSlices - 1; i >= 0; i--) {
+      const seg = this.segments[i];
+      const segAngle = this.getSegAngle(i);
+      const sy = i * sliceH;
+      const dw = imgW * s;
+      const dh = sliceH * s * 1.18; // Slight overlap prevents seams during bending
 
-    // ── Pectoral fins (small, tucked against body, angled backward) ──
-    const pSeg = this.segments[2];
-    const pA = this.getSegAngle(2);
-    ctx.fillStyle = this.baseColor;
-    ctx.globalAlpha = alpha * 0.35;
-
-    for (const side of [-1, 1]) {
-      const pR = this.getSegRadius(2);
-      // Start from the edge of the body, not the center
-      const startX = pSeg.x + Math.cos(pA + side * Math.PI / 2) * pR * 0.8;
-      const startY = pSeg.y + Math.sin(pA + side * Math.PI / 2) * pR * 0.8;
-      ctx.beginPath();
-      ctx.moveTo(startX, startY);
-      ctx.quadraticCurveTo(
-        startX + Math.cos(pA + side * 1.2 + Math.PI * 0.85 + finWiggle * side * 0.3) * 14 * s,
-        startY + Math.sin(pA + side * 1.2 + Math.PI * 0.85 + finWiggle * side * 0.3) * 14 * s,
-        this.segments[4].x + Math.cos(this.getSegAngle(4) + side * Math.PI / 2) * this.getSegRadius(4) * 0.5,
-        this.segments[4].y + Math.sin(this.getSegAngle(4) + side * Math.PI / 2) * this.getSegRadius(4) * 0.5
-      );
-      ctx.fill();
-    }
-    ctx.globalAlpha = alpha;
-
-    // ── Tail fin (moderate, fan-shaped) ──
-    ctx.fillStyle = this.baseColor;
-    ctx.globalAlpha = alpha * 0.5;
-    for (const side of [-1, 1]) {
-      ctx.beginPath();
-      ctx.moveTo(tail.x, tail.y);
-      ctx.bezierCurveTo(
-        tail.x + Math.cos(tailAngle + Math.PI + side * 0.35 + tailSweep) * 20 * s,
-        tail.y + Math.sin(tailAngle + Math.PI + side * 0.35 + tailSweep) * 20 * s,
-        tail.x + Math.cos(tailAngle + Math.PI + side * 0.8 + tailSweep) * 28 * s,
-        tail.y + Math.sin(tailAngle + Math.PI + side * 0.8 + tailSweep) * 28 * s,
-        tail.x + Math.cos(tailAngle + Math.PI + side * 0.1 + tailSweep) * 14 * s,
-        tail.y + Math.sin(tailAngle + Math.PI + side * 0.1 + tailSweep) * 14 * s
-      );
-      ctx.closePath();
-      ctx.fill();
-    }
-    ctx.globalAlpha = alpha;
-
-    // ── Main body fill ──
-    this.buildBodyPath(ctx);
-    const bodyGrad = ctx.createLinearGradient(
-      head.x + Math.cos(this.angle) * 20, head.y + Math.sin(this.angle) * 20,
-      tail.x, tail.y
-    );
-    bodyGrad.addColorStop(0, this.bodyGradColors[0]);
-    bodyGrad.addColorStop(0.35, this.bodyGradColors[1]);
-    bodyGrad.addColorStop(1, this.bodyGradColors[2] || this.bodyGradColors[1]);
-    ctx.fillStyle = bodyGrad;
-    ctx.fill();
-
-    // ── Colour patches (Kohaku / Showa style) ──
-    if (this.patchColor) {
       ctx.save();
-      ctx.globalCompositeOperation = 'source-atop';
-      ctx.fillStyle = this.patchColor;
-      for (const patch of this.patchPositions) {
-        const seg = this.segments[patch.segIdx];
-        if (!seg) continue;
-        const r = this.getSegRadius(patch.segIdx) * patch.size;
-        const a = this.getSegAngle(patch.segIdx);
-        const ox = Math.cos(a + Math.PI / 2) * this.getSegRadius(patch.segIdx) * patch.offset;
-        const oy = Math.sin(a + Math.PI / 2) * this.getSegRadius(patch.segIdx) * patch.offset;
-        // Organic blotch — two overlapping ellipses
-        ctx.beginPath();
-        ctx.ellipse(seg.x + ox, seg.y + oy, r * 1.4, r * 0.9, a, 0, Math.PI * 2);
-        ctx.fill();
-        ctx.beginPath();
-        ctx.ellipse(seg.x + ox * 0.5 + Math.cos(a) * r * 0.4, seg.y + oy * 0.5 + Math.sin(a) * r * 0.4, r * 0.9, r * 0.7, a + 0.3, 0, Math.PI * 2);
-        ctx.fill();
-      }
+      ctx.translate(seg.x, seg.y);
+      ctx.rotate(segAngle + Math.PI / 2);
+      ctx.drawImage(this.img, 0, sy, imgW, sliceH, -dw / 2, -dh / 2, dw, dh);
       ctx.restore();
-    }
-
-    // ── Scale texture (crescent rows across body) ──
-    ctx.save();
-    ctx.globalCompositeOperation = 'source-atop';
-    ctx.strokeStyle = 'rgba(255,255,255,0.1)';
-    ctx.lineWidth = 0.7;
-    for (let i = 1; i < this.segments.length - 3; i++) {
-      const seg = this.segments[i];
-      const r = this.getSegRadius(i);
-      const a = this.getSegAngle(i);
-      // More scale rows for wider body
-      const rowCount = Math.max(3, Math.round(r / (4 * this.sizeMultiplier)));
-      for (let row = -rowCount; row <= rowCount; row++) {
-        const frac = row / (rowCount + 1);
-        const cx = seg.x + Math.cos(a + Math.PI / 2) * r * frac;
-        const cy = seg.y + Math.sin(a + Math.PI / 2) * r * frac;
-        ctx.beginPath();
-        ctx.arc(cx, cy, r * 0.18, a - 0.7, a + 0.7);
-        ctx.stroke();
-      }
-    }
-    ctx.restore();
-
-    // ── 3D cylindrical shading ──
-    ctx.save();
-    ctx.globalCompositeOperation = 'source-atop';
-    const perpA = this.angle + Math.PI / 2;
-    const maxR = this.getSegRadius(3); // widest point
-    const shadeGrad = ctx.createLinearGradient(
-      head.x + Math.cos(perpA) * maxR, head.y + Math.sin(perpA) * maxR,
-      head.x - Math.cos(perpA) * maxR, head.y - Math.sin(perpA) * maxR
-    );
-    shadeGrad.addColorStop(0, 'rgba(0,0,0,0.3)');
-    shadeGrad.addColorStop(0.25, 'rgba(255,255,255,0.06)');
-    shadeGrad.addColorStop(0.45, 'rgba(255,255,255,0.22)');
-    shadeGrad.addColorStop(0.55, 'rgba(255,255,255,0.22)');
-    shadeGrad.addColorStop(0.75, 'rgba(255,255,255,0.06)');
-    shadeGrad.addColorStop(1, 'rgba(0,0,0,0.35)');
-    ctx.fillStyle = shadeGrad;
-    this.buildBodyPath(ctx);
-    ctx.fill();
-    ctx.restore();
-
-    // ── Lateral line (faint streak along the midline) ──
-    ctx.save();
-    ctx.strokeStyle = 'rgba(0,0,0,0.08)';
-    ctx.lineWidth = 1.2;
-    ctx.beginPath();
-    ctx.moveTo(this.segments[1].x, this.segments[1].y);
-    for (let i = 2; i < this.segments.length - 2; i++) {
-      const seg = this.segments[i];
-      const next = this.segments[i + 1];
-      const mx = (seg.x + next.x) / 2;
-      const my = (seg.y + next.y) / 2;
-      ctx.quadraticCurveTo(seg.x, seg.y, mx, my);
-    }
-    ctx.stroke();
-    ctx.restore();
-
-    // ── Gill marks (operculum) ──
-    ctx.strokeStyle = 'rgba(0,0,0,0.18)';
-    ctx.lineWidth = 1.5;
-    const gillR = this.getSegRadius(0) * 0.85;
-    ctx.beginPath();
-    ctx.arc(head.x, head.y, gillR, this.angle - Math.PI / 2 - 0.45, this.angle - Math.PI / 2 + 0.45);
-    ctx.stroke();
-    ctx.beginPath();
-    ctx.arc(head.x, head.y, gillR, this.angle + Math.PI / 2 - 0.45, this.angle + Math.PI / 2 + 0.45);
-    ctx.stroke();
-
-    // ── Barbels (whiskers) ──
-    ctx.strokeStyle = this.bodyGradColors[0];
-    ctx.lineWidth = 1.2;
-    const noseX = head.x + Math.cos(this.angle) * this.getSegRadius(0);
-    const noseY = head.y + Math.sin(this.angle) * this.getSegRadius(0);
-    for (const side of [-1, 1]) {
-      ctx.beginPath();
-      ctx.moveTo(noseX, noseY);
-      ctx.quadraticCurveTo(
-        noseX + Math.cos(this.angle + side * 0.3) * 14 * s,
-        noseY + Math.sin(this.angle + side * 0.3) * 14 * s,
-        noseX + Math.cos(this.angle + side * 0.65) * 18 * s,
-        noseY + Math.sin(this.angle + side * 0.65) * 18 * s
-      );
-      ctx.stroke();
-    }
-
-    // ── Eyes (golden iris + black pupil + specular glint) ──
-    const eyeR = 2.8 * s;
-    for (const side of [-1, 1]) {
-      const ex = head.x + Math.cos(this.angle + side * 0.45) * this.getSegRadius(0) * 0.65;
-      const ey = head.y + Math.sin(this.angle + side * 0.45) * this.getSegRadius(0) * 0.65;
-      // Eye white
-      ctx.fillStyle = '#F5F0E0';
-      ctx.beginPath();
-      ctx.arc(ex, ey, eyeR * 1.15, 0, Math.PI * 2);
-      ctx.fill();
-      // Iris
-      const irisGrad = ctx.createRadialGradient(ex, ey, 0, ex, ey, eyeR);
-      irisGrad.addColorStop(0, '#DAA520');
-      irisGrad.addColorStop(0.6, '#B8860B');
-      irisGrad.addColorStop(1, '#6B4E0A');
-      ctx.fillStyle = irisGrad;
-      ctx.beginPath();
-      ctx.arc(ex, ey, eyeR, 0, Math.PI * 2);
-      ctx.fill();
-      // Pupil
-      ctx.fillStyle = '#0A0A0A';
-      ctx.beginPath();
-      ctx.arc(ex, ey, eyeR * 0.45, 0, Math.PI * 2);
-      ctx.fill();
-      // Specular highlight
-      ctx.fillStyle = 'rgba(255,255,255,0.9)';
-      ctx.beginPath();
-      ctx.arc(ex - eyeR * 0.22, ey - eyeR * 0.22, eyeR * 0.28, 0, Math.PI * 2);
-      ctx.fill();
     }
 
     ctx.restore();
@@ -678,19 +435,28 @@ export default function InteractivePondBackground() {
     resize();
     window.addEventListener('resize', resize);
 
-    // ── Fish species (5 majestic koi) ──
-    const species = [
-      { baseColor: '#E86F51', bodyGradColors: ['#F4A261', '#E86F51', '#C45A3B'], patchColor: '#FFFCF0', patchCount: 5, sizeMultiplier: 2.0 },
-      { baseColor: '#FFFCF0', bodyGradColors: ['#FFFCF0', '#FFF5E6', '#F0E4D0'], patchColor: '#D4513B', patchCount: 6, sizeMultiplier: 2.3 },
-      { baseColor: '#F4A261', bodyGradColors: ['#F4C78E', '#F4A261', '#D4894F'], patchColor: '', patchCount: 0, sizeMultiplier: 1.8 },
-      { baseColor: '#FFFCF0', bodyGradColors: ['#FFFCF0', '#FFF8F0', '#FAF0E6'], patchColor: '#1D3557', patchCount: 4, sizeMultiplier: 2.5 },
-      { baseColor: '#E9C46A', bodyGradColors: ['#F0D48A', '#E9C46A', '#C9A84E'], patchColor: '#E86F51', patchCount: 5, sizeMultiplier: 1.9 },
+    // ── Load Photorealistic Koi Assets ──
+    const assetUrls = [
+      '/images/home/koi-kohaku.png',
+      '/images/home/koi-showa.png',
+      '/images/home/koi-ogon.png',
+      '/images/home/koi-kohaku.png',
+      '/images/home/koi-showa.png',
     ];
 
-    fishRef.current = species.map(cfg => new KoiFish(
+    const scales = [1.0, 1.15, 0.9, 1.1, 0.95];
+
+    const loadedImages: HTMLImageElement[] = assetUrls.map((url) => {
+      const img = new Image();
+      img.src = url;
+      return img;
+    });
+
+    fishRef.current = loadedImages.map((img, idx) => new KoiFish(
       Math.random() * (width - 200) + 100,
       Math.random() * (height - 200) + 100,
-      cfg
+      img,
+      scales[idx]
     ));
 
     // ── Events ──
