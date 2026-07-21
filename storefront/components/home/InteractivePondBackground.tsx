@@ -372,117 +372,62 @@ class KoiFish {
     const finWiggle = Math.sin(this.phase) * 0.22;
     const tailSweep = Math.sin(this.phase) * 0.5;
 
-    // ── Dorsal fin (long ridge along segments 3-8) ──
+    // ── Dorsal fin (subtle ridge along segments 4-8) ──
     ctx.fillStyle = this.bodyGradColors[1] || this.baseColor;
-    ctx.globalAlpha = alpha * 0.45;
+    ctx.globalAlpha = alpha * 0.35;
     ctx.beginPath();
-    const dS = this.segments[3];
-    const dM = this.segments[5];
+    const dS = this.segments[4];
+    const dM = this.segments[6];
     const dE = this.segments[8];
-    const dA = this.getSegAngle(5);
+    const dA = this.getSegAngle(6);
     ctx.moveTo(dS.x, dS.y);
     ctx.quadraticCurveTo(
-      dM.x + Math.cos(dA - Math.PI / 2) * 18 * s,
-      dM.y + Math.sin(dA - Math.PI / 2) * 18 * s,
+      dM.x + Math.cos(dA - Math.PI / 2) * 5 * s,
+      dM.y + Math.sin(dA - Math.PI / 2) * 5 * s,
       dE.x, dE.y
     );
     ctx.fill();
     ctx.globalAlpha = alpha;
 
-    // ── Pectoral fins (large, flowing) ──
-    const pSeg = this.segments[3];
-    const pA = this.getSegAngle(3);
-    ctx.fillStyle = this.baseColor;
-    ctx.globalAlpha = alpha * 0.4;
-
-    for (const side of [-1, 1]) {
-      ctx.beginPath();
-      ctx.moveTo(pSeg.x, pSeg.y);
-      ctx.bezierCurveTo(
-        pSeg.x + Math.cos(pA + side * (Math.PI / 2 + 0.3) + finWiggle * side) * 32 * s,
-        pSeg.y + Math.sin(pA + side * (Math.PI / 2 + 0.3) + finWiggle * side) * 32 * s,
-        pSeg.x + Math.cos(pA + side * (Math.PI / 2 + 0.7) + finWiggle * side) * 44 * s,
-        pSeg.y + Math.sin(pA + side * (Math.PI / 2 + 0.7) + finWiggle * side) * 44 * s,
-        this.segments[6].x, this.segments[6].y
-      );
-      ctx.fill();
-      // Fin rays
-      ctx.strokeStyle = 'rgba(255,255,255,0.18)';
-      ctx.lineWidth = 0.8;
-      for (let r = 0.15; r < 0.8; r += 0.15) {
-        ctx.beginPath();
-        ctx.moveTo(pSeg.x, pSeg.y);
-        ctx.lineTo(
-          pSeg.x + Math.cos(pA + side * (Math.PI / 2 + r) + finWiggle * side) * 36 * s,
-          pSeg.y + Math.sin(pA + side * (Math.PI / 2 + r) + finWiggle * side) * 36 * s
-        );
-        ctx.stroke();
-      }
-    }
-    ctx.globalAlpha = alpha;
-
-    // ── Ventral fins (small, near segment 7) ──
-    const vSeg = this.segments[7];
-    const vA = this.getSegAngle(7);
+    // ── Pectoral fins (small, tucked against body, angled backward) ──
+    const pSeg = this.segments[2];
+    const pA = this.getSegAngle(2);
     ctx.fillStyle = this.baseColor;
     ctx.globalAlpha = alpha * 0.35;
+
     for (const side of [-1, 1]) {
+      const pR = this.getSegRadius(2);
+      // Start from the edge of the body, not the center
+      const startX = pSeg.x + Math.cos(pA + side * Math.PI / 2) * pR * 0.8;
+      const startY = pSeg.y + Math.sin(pA + side * Math.PI / 2) * pR * 0.8;
       ctx.beginPath();
-      ctx.moveTo(vSeg.x, vSeg.y);
-      ctx.bezierCurveTo(
-        vSeg.x + Math.cos(vA + side * (Math.PI / 2 + 0.2) + finWiggle * side * 0.5) * 16 * s,
-        vSeg.y + Math.sin(vA + side * (Math.PI / 2 + 0.2) + finWiggle * side * 0.5) * 16 * s,
-        vSeg.x + Math.cos(vA + side * (Math.PI / 2 + 0.5) + finWiggle * side * 0.5) * 22 * s,
-        vSeg.y + Math.sin(vA + side * (Math.PI / 2 + 0.5) + finWiggle * side * 0.5) * 22 * s,
-        this.segments[9].x, this.segments[9].y
+      ctx.moveTo(startX, startY);
+      ctx.quadraticCurveTo(
+        startX + Math.cos(pA + side * 1.2 + Math.PI * 0.85 + finWiggle * side * 0.3) * 14 * s,
+        startY + Math.sin(pA + side * 1.2 + Math.PI * 0.85 + finWiggle * side * 0.3) * 14 * s,
+        this.segments[4].x + Math.cos(this.getSegAngle(4) + side * Math.PI / 2) * this.getSegRadius(4) * 0.5,
+        this.segments[4].y + Math.sin(this.getSegAngle(4) + side * Math.PI / 2) * this.getSegRadius(4) * 0.5
       );
       ctx.fill();
     }
     ctx.globalAlpha = alpha;
 
-    // ── Anal fin (bottom, segments 9-11) ──
-    const aSeg = this.segments[10];
-    const aA = this.getSegAngle(10);
+    // ── Tail fin (moderate, fan-shaped) ──
     ctx.fillStyle = this.baseColor;
-    ctx.globalAlpha = alpha * 0.4;
-    ctx.beginPath();
-    ctx.moveTo(this.segments[9].x, this.segments[9].y);
-    ctx.quadraticCurveTo(
-      aSeg.x + Math.cos(aA + Math.PI / 2) * 12 * s,
-      aSeg.y + Math.sin(aA + Math.PI / 2) * 12 * s,
-      this.segments[12].x, this.segments[12].y
-    );
-    ctx.fill();
-    ctx.globalAlpha = alpha;
-
-    // ── Tail fin (large, forked, flowing) ──
-    ctx.fillStyle = this.baseColor;
-    ctx.globalAlpha = alpha * 0.55;
+    ctx.globalAlpha = alpha * 0.5;
     for (const side of [-1, 1]) {
       ctx.beginPath();
       ctx.moveTo(tail.x, tail.y);
       ctx.bezierCurveTo(
-        tail.x + Math.cos(tailAngle + Math.PI + side * 0.4 + tailSweep) * 32 * s,
-        tail.y + Math.sin(tailAngle + Math.PI + side * 0.4 + tailSweep) * 32 * s,
-        tail.x + Math.cos(tailAngle + Math.PI + side * 1.1 + tailSweep) * 42 * s,
-        tail.y + Math.sin(tailAngle + Math.PI + side * 1.1 + tailSweep) * 42 * s,
-        tail.x + Math.cos(tailAngle + Math.PI + side * 0.15 + tailSweep) * 20 * s,
-        tail.y + Math.sin(tailAngle + Math.PI + side * 0.15 + tailSweep) * 20 * s
+        tail.x + Math.cos(tailAngle + Math.PI + side * 0.35 + tailSweep) * 20 * s,
+        tail.y + Math.sin(tailAngle + Math.PI + side * 0.35 + tailSweep) * 20 * s,
+        tail.x + Math.cos(tailAngle + Math.PI + side * 0.8 + tailSweep) * 28 * s,
+        tail.y + Math.sin(tailAngle + Math.PI + side * 0.8 + tailSweep) * 28 * s,
+        tail.x + Math.cos(tailAngle + Math.PI + side * 0.1 + tailSweep) * 14 * s,
+        tail.y + Math.sin(tailAngle + Math.PI + side * 0.1 + tailSweep) * 14 * s
       );
       ctx.closePath();
       ctx.fill();
-    }
-    // Tail fin rays
-    ctx.strokeStyle = 'rgba(255,255,255,0.15)';
-    ctx.lineWidth = 0.7;
-    for (let r = -0.9; r <= 0.9; r += 0.2) {
-      ctx.beginPath();
-      ctx.moveTo(tail.x, tail.y);
-      ctx.lineTo(
-        tail.x + Math.cos(tailAngle + Math.PI + r + tailSweep) * 35 * s,
-        tail.y + Math.sin(tailAngle + Math.PI + r + tailSweep) * 35 * s
-      );
-      ctx.stroke();
     }
     ctx.globalAlpha = alpha;
 
