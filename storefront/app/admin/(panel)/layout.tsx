@@ -69,7 +69,7 @@ const SECTIONS: NavSection[] = [
       { label: 'RSS Feeds',      to: '/admin/social/rss',            icon: Rss },
       { label: 'Brand Persona',  to: '/admin/social/persona',        icon: Bot },
       { label: 'AI Models',      to: '/admin/social/ai-models',      icon: Cpu },
-      { label: 'Compliance',     to: '/admin/compliance',    icon: Shield },
+      { label: 'Compliance',     to: '/admin/compliance/policies',    icon: Shield },
     ],
   },
   {
