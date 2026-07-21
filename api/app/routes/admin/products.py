@@ -149,7 +149,7 @@ async def delete_product(
 
     if order_count > 0:
         await db.execute(
-            "UPDATE products SET is_active = 0, updated_at = CURRENT_TIMESTAMP WHERE id = ?",
+            "UPDATE products SET is_active = FALSE, updated_at = CURRENT_TIMESTAMP WHERE id = ?",
             (product_id,),
         )
         await db.commit()
@@ -301,7 +301,7 @@ async def upload_image(
         "SELECT COUNT(*) FROM product_images WHERE product_id = ?", (product_id,)
     )
     count = (await cursor.fetchone())[0]
-    is_primary = 1 if count == 0 else 0
+    is_primary = TRUE if count == 0 else 0
 
     url = f"/images/uploads/products/{filename}"
     cursor = await db.execute(
@@ -330,11 +330,11 @@ async def set_primary_image(
 
     # Clear existing primary
     await db.execute(
-        "UPDATE product_images SET is_primary = 0 WHERE product_id = ?", (product_id,)
+        "UPDATE product_images SET is_primary = FALSE WHERE product_id = ?", (product_id,)
     )
     # Set new primary
     await db.execute(
-        "UPDATE product_images SET is_primary = 1 WHERE id = ? AND product_id = ?", (image_id, product_id)
+        "UPDATE product_images SET is_primary = TRUE WHERE id = ? AND product_id = ?", (image_id, product_id)
     )
     await db.commit()
     return {"primary": True}

@@ -21,9 +21,9 @@ async def list_wishlist(
         SELECT w.id as wishlist_id, w.created_at as added_at,
                p.id as product_id, p.name, p.slug,
                (SELECT url FROM product_images WHERE product_id = p.id ORDER BY is_primary DESC, sort_order LIMIT 1) as image_url,
-               (SELECT MIN(pv.price_cents) FROM product_variants pv WHERE pv.product_id = p.id AND pv.is_active = 1) as min_price_cents
+               (SELECT MIN(pv.price_cents) FROM product_variants pv WHERE pv.product_id = p.id AND pv.is_active = TRUE) as min_price_cents
         FROM wishlist w
-        JOIN products p ON p.id = w.product_id AND p.is_active = 1
+        JOIN products p ON p.id = w.product_id AND p.is_active = TRUE
         WHERE w.customer_id = ?
         ORDER BY w.created_at DESC
     """, (customer_id,))
@@ -41,7 +41,7 @@ async def add_to_wishlist(
     customer_id = int(customer["sub"])
 
     # Verify product exists
-    cursor = await db.execute("SELECT id FROM products WHERE id = ? AND is_active = 1", (product_id,))
+    cursor = await db.execute("SELECT id FROM products WHERE id = ? AND is_active = TRUE", (product_id,))
     if not await cursor.fetchone():
         raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Product not found")
 

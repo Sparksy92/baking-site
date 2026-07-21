@@ -22,7 +22,7 @@ async def dispatch_event(event_type: str, payload: dict) -> None:
     try:
         async with db_connection() as db:
             cursor = await db.execute(
-                "SELECT * FROM webhooks WHERE is_active = 1"
+                "SELECT * FROM webhooks WHERE is_active = TRUE"
             )
             hooks = await cursor.fetchall()
 

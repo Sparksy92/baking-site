@@ -13,14 +13,14 @@ router = APIRouter(prefix="/bundles", tags=["bundles"])
 async def list_bundles(db: PostgresConnection = Depends(get_db)):
     """List active bundles."""
     cursor = await db.execute(
-        "SELECT id, name, slug, description, discount_type, discount_value FROM bundles WHERE is_active = 1 ORDER BY name"
+        "SELECT id, name, slug, description, discount_type, discount_value FROM bundles WHERE is_active = TRUE ORDER BY name"
     )
     bundles = []
     for b in await cursor.fetchall():
         item_cursor = await db.execute("""
             SELECT bi.quantity, p.name as product_name, p.slug as product_slug,
                    bi.default_variant_id,
-                   (SELECT MIN(price_cents) FROM product_variants WHERE product_id = p.id AND is_active = 1) as min_price_cents
+                   (SELECT MIN(price_cents) FROM product_variants WHERE product_id = p.id AND is_active = TRUE) as min_price_cents
             FROM bundle_items bi
             JOIN products p ON p.id = bi.product_id
             WHERE bi.bundle_id = ?
@@ -44,7 +44,7 @@ async def list_bundles(db: PostgresConnection = Depends(get_db)):
 async def get_bundle(slug: str, db: PostgresConnection = Depends(get_db)):
     """Get a single bundle by slug."""
     cursor = await db.execute(
-        "SELECT * FROM bundles WHERE slug = ? AND is_active = 1", (slug,)
+        "SELECT * FROM bundles WHERE slug = ? AND is_active = TRUE", (slug,)
     )
     bundle = await cursor.fetchone()
     if not bundle:
@@ -52,7 +52,7 @@ async def get_bundle(slug: str, db: PostgresConnection = Depends(get_db)):
 
     item_cursor = await db.execute("""
         SELECT bi.*, p.name as product_name, p.slug as product_slug,
-               (SELECT MIN(price_cents) FROM product_variants WHERE product_id = p.id AND is_active = 1) as min_price_cents
+               (SELECT MIN(price_cents) FROM product_variants WHERE product_id = p.id AND is_active = TRUE) as min_price_cents
         FROM bundle_items bi
         JOIN products p ON p.id = bi.product_id
         WHERE bi.bundle_id = ?

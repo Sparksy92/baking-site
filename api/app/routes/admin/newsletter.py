@@ -22,7 +22,7 @@ async def list_subscribers(
 ):
     """List newsletter subscribers with pagination."""
     offset = (page - 1) * limit
-    condition = "WHERE is_active = 1" if active_only else ""
+    condition = "WHERE is_active = TRUE" if active_only else ""
 
     cursor = await db.execute(f"SELECT COUNT(*) FROM newsletter_subscribers {condition}")
     row = await cursor.fetchone()
@@ -49,7 +49,7 @@ async def export_subscribers(
 ):
     """Export active newsletter subscribers as CSV."""
     cursor = await db.execute(
-        "SELECT email, source, created_at FROM newsletter_subscribers WHERE is_active = 1 ORDER BY created_at DESC"
+        "SELECT email, source, created_at FROM newsletter_subscribers WHERE is_active = TRUE ORDER BY created_at DESC"
     )
     rows = await cursor.fetchall()
 

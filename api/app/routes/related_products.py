@@ -25,11 +25,11 @@ async def get_related_products(
         SELECT rp.related_product_id, rp.relation_type, rp.score,
                p.id, p.name, p.slug, p.description,
                (SELECT url FROM product_images WHERE product_id = p.id ORDER BY is_primary DESC, sort_order LIMIT 1) as image_url,
-               (SELECT MIN(pv.price_cents) FROM product_variants pv WHERE pv.product_id = p.id AND pv.is_active = 1) as min_price_cents,
-               (SELECT MAX(pv.compare_at_price_cents) FROM product_variants pv WHERE pv.product_id = p.id AND pv.is_active = 1) as compare_at_price_cents,
-               (SELECT SUM(pv.stock_quantity) FROM product_variants pv WHERE pv.product_id = p.id AND pv.is_active = 1) as total_stock
+               (SELECT MIN(pv.price_cents) FROM product_variants pv WHERE pv.product_id = p.id AND pv.is_active = TRUE) as min_price_cents,
+               (SELECT MAX(pv.compare_at_price_cents) FROM product_variants pv WHERE pv.product_id = p.id AND pv.is_active = TRUE) as compare_at_price_cents,
+               (SELECT SUM(pv.stock_quantity) FROM product_variants pv WHERE pv.product_id = p.id AND pv.is_active = TRUE) as total_stock
         FROM related_products rp
-        JOIN products p ON p.id = rp.related_product_id AND p.is_active = 1
+        JOIN products p ON p.id = rp.related_product_id AND p.is_active = TRUE
         WHERE rp.product_id = ?
         ORDER BY rp.score DESC
         LIMIT ?
@@ -48,11 +48,11 @@ async def get_related_products(
     cursor = await db.execute(f"""
         SELECT p.id, p.name, p.slug, p.description,
                (SELECT url FROM product_images WHERE product_id = p.id ORDER BY is_primary DESC, sort_order LIMIT 1) as image_url,
-               (SELECT MIN(pv.price_cents) FROM product_variants pv WHERE pv.product_id = p.id AND pv.is_active = 1) as min_price_cents,
-               (SELECT MAX(pv.compare_at_price_cents) FROM product_variants pv WHERE pv.product_id = p.id AND pv.is_active = 1) as compare_at_price_cents,
-               (SELECT SUM(pv.stock_quantity) FROM product_variants pv WHERE pv.product_id = p.id AND pv.is_active = 1) as total_stock
+               (SELECT MIN(pv.price_cents) FROM product_variants pv WHERE pv.product_id = p.id AND pv.is_active = TRUE) as min_price_cents,
+               (SELECT MAX(pv.compare_at_price_cents) FROM product_variants pv WHERE pv.product_id = p.id AND pv.is_active = TRUE) as compare_at_price_cents,
+               (SELECT SUM(pv.stock_quantity) FROM product_variants pv WHERE pv.product_id = p.id AND pv.is_active = TRUE) as total_stock
         FROM products p
-        WHERE p.is_active = 1
+        WHERE p.is_active = TRUE
           AND p.id NOT IN ({placeholders})
           AND p.category_id = (SELECT category_id FROM products WHERE id = ?)
         ORDER BY p.is_featured DESC, RANDOM()

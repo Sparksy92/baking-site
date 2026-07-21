@@ -41,7 +41,7 @@ async def get_size_guide_for_product(
     if not guide:
         # 3. Default guide
         cursor = await db.execute(
-            "SELECT * FROM size_guides WHERE is_default = 1 LIMIT 1"
+            "SELECT * FROM size_guides WHERE is_default = TRUE LIMIT 1"
         )
         guide = await cursor.fetchone()
 

@@ -20,7 +20,7 @@ async def list_tags(db: PostgresConnection = Depends(get_db)):
         """SELECT t.id, t.name, t.slug, COUNT(pt.product_id) as product_count
            FROM tags t
            JOIN product_tags pt ON pt.tag_id = t.id
-           JOIN products p ON p.id = pt.product_id AND p.is_active = 1
+           JOIN products p ON p.id = pt.product_id AND p.is_active = TRUE
            GROUP BY t.id
            ORDER BY t.name"""
     )
@@ -43,7 +43,7 @@ async def list_products(
 ):
     """List products with optional filters."""
     offset = (page - 1) * limit
-    conditions = ["p.is_active = 1"]
+    conditions = ["p.is_active = TRUE"]
     params: list = []
 
     if category:
@@ -54,7 +54,7 @@ async def list_products(
         conditions.append("""p.id IN (
             SELECT cp.product_id FROM collection_products cp
             JOIN collections col ON col.id = cp.collection_id
-            WHERE col.slug = ? AND col.is_active = 1
+            WHERE col.slug = ? AND col.is_active = TRUE
         )""")
         params.append(collection)
 
@@ -98,7 +98,7 @@ async def list_products(
     sql = f"""
         SELECT p.id, p.name, p.slug, p.description, p.category_id,
                p.is_active, p.is_featured,
-               (SELECT MIN(pv.price_cents) FROM product_variants pv WHERE pv.product_id = p.id AND pv.is_active = 1) as min_price
+               (SELECT MIN(pv.price_cents) FROM product_variants pv WHERE pv.product_id = p.id AND pv.is_active = TRUE) as min_price
         FROM products p
         LEFT JOIN categories c ON c.id = p.category_id
         WHERE {where}
@@ -119,7 +119,7 @@ async def list_products(
 
         # Get variant price range + stock + compare_at
         var_cursor = await db.execute(
-            "SELECT MIN(price_cents) as min_p, MAX(price_cents) as max_p, SUM(stock_quantity) as total_stock, MAX(compare_at_price_cents) as compare_at FROM product_variants WHERE product_id = ? AND is_active = 1",
+            "SELECT MIN(price_cents) as min_p, MAX(price_cents) as max_p, SUM(stock_quantity) as total_stock, MAX(compare_at_price_cents) as compare_at FROM product_variants WHERE product_id = ? AND is_active = TRUE",
             (row["id"],),
         )
         var_info = await var_cursor.fetchone()
@@ -146,7 +146,7 @@ async def list_products(
 async def get_product(slug: str, db: PostgresConnection = Depends(get_db)):
     """Get a single product with variants and images."""
     cursor = await db.execute(
-        "SELECT * FROM products WHERE slug = ? AND is_active = 1", (slug,)
+        "SELECT * FROM products WHERE slug = ? AND is_active = TRUE", (slug,)
     )
     product = await cursor.fetchone()
 
@@ -167,7 +167,7 @@ async def get_product(slug: str, db: PostgresConnection = Depends(get_db)):
 
     # Variants
     var_cursor = await db.execute(
-        "SELECT * FROM product_variants WHERE product_id = ? AND is_active = 1 ORDER BY sort_order",
+        "SELECT * FROM product_variants WHERE product_id = ? AND is_active = TRUE ORDER BY sort_order",
         (product["id"],),
     )
     variant_rows = await var_cursor.fetchall()
@@ -230,8 +230,8 @@ async def list_categories(db: PostgresConnection = Depends(get_db)):
     cursor = await db.execute("""
         SELECT c.*, COUNT(p.id) as product_count
         FROM categories c
-        LEFT JOIN products p ON p.category_id = c.id AND p.is_active = 1
-        WHERE c.is_active = 1
+        LEFT JOIN products p ON p.category_id = c.id AND p.is_active = TRUE
+        WHERE c.is_active = TRUE
         GROUP BY c.id
         ORDER BY c.sort_order, c.name
     """)
@@ -252,8 +252,8 @@ async def get_category(slug: str, db: PostgresConnection = Depends(get_db)):
     cursor = await db.execute("""
         SELECT c.*, COUNT(p.id) as product_count
         FROM categories c
-        LEFT JOIN products p ON p.category_id = c.id AND p.is_active = 1
-        WHERE c.slug = ? AND c.is_active = 1
+        LEFT JOIN products p ON p.category_id = c.id AND p.is_active = TRUE
+        WHERE c.slug = ? AND c.is_active = TRUE
         GROUP BY c.id
     """, (slug,))
     row = await cursor.fetchone()
@@ -277,8 +277,8 @@ async def list_collections(db: PostgresConnection = Depends(get_db)):
         SELECT col.*, COUNT(cp.product_id) as product_count
         FROM collections col
         LEFT JOIN collection_products cp ON cp.collection_id = col.id
-        LEFT JOIN products p ON p.id = cp.product_id AND p.is_active = 1
-        WHERE col.is_active = 1
+        LEFT JOIN products p ON p.id = cp.product_id AND p.is_active = TRUE
+        WHERE col.is_active = TRUE
         GROUP BY col.id
         ORDER BY col.sort_order, col.name
     """)
@@ -296,7 +296,7 @@ async def list_collections(db: PostgresConnection = Depends(get_db)):
 @router.get("/collections/{slug}")
 async def get_collection(slug: str, db: PostgresConnection = Depends(get_db)):
     """Get collection details."""
-    cursor = await db.execute("SELECT * FROM collections WHERE slug = ? AND is_active = 1", (slug,))
+    cursor = await db.execute("SELECT * FROM collections WHERE slug = ? AND is_active = TRUE", (slug,))
     collection = await cursor.fetchone()
     if not collection:
         raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Collection not found")

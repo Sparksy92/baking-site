@@ -30,7 +30,7 @@ async def subscribe(
     try:
         await db.execute(
             """INSERT INTO newsletter_subscribers (email) VALUES (?)
-               ON CONFLICT(email) DO UPDATE SET is_active = 1""",
+               ON CONFLICT(email) DO UPDATE SET is_active = TRUE""",
             (body.email.lower(),),
         )
         await db.commit()
@@ -52,7 +52,7 @@ async def unsubscribe(
 ):
     """Unsubscribe an email from the newsletter."""
     result = await db.execute(
-        "UPDATE newsletter_subscribers SET is_active = 0 WHERE LOWER(email) = LOWER(?)",
+        "UPDATE newsletter_subscribers SET is_active = FALSE WHERE LOWER(email) = LOWER(?)",
         (body.email.lower(),),
     )
     await db.commit()

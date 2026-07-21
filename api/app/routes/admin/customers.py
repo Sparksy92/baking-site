@@ -340,12 +340,12 @@ async def update_customer(
             await db.execute(
                 """INSERT INTO newsletter_subscribers (email, is_active, source)
                    VALUES (?, 1, ?)
-                   ON CONFLICT (email) DO UPDATE SET is_active = 1, source = EXCLUDED.source""",
+                   ON CONFLICT (email) DO UPDATE SET is_active = TRUE, source = EXCLUDED.source""",
                 (customer["email"], updates.get("marketing_email_source") or "admin"),
             )
         elif updates["marketing_email_status"] in {"unsubscribed", "suppressed", "bounced"}:
             await db.execute(
-                "UPDATE newsletter_subscribers SET is_active = 0 WHERE LOWER(email) = LOWER(?)",
+                "UPDATE newsletter_subscribers SET is_active = FALSE WHERE LOWER(email) = LOWER(?)",
                 (customer["email"],),
             )
 
@@ -360,7 +360,7 @@ async def activate_customer(
     user: dict = Depends(require_admin),
 ):
     await _customer_exists(db, customer_id)
-    await db.execute("UPDATE customers SET is_active = 1, updated_at = CURRENT_TIMESTAMP WHERE id = ?", (customer_id,))
+    await db.execute("UPDATE customers SET is_active = TRUE, updated_at = CURRENT_TIMESTAMP WHERE id = ?", (customer_id,))
     await db.commit()
     return {"active": True}
 
@@ -372,7 +372,7 @@ async def deactivate_customer(
     user: dict = Depends(require_admin),
 ):
     await _customer_exists(db, customer_id)
-    await db.execute("UPDATE customers SET is_active = 0, updated_at = CURRENT_TIMESTAMP WHERE id = ?", (customer_id,))
+    await db.execute("UPDATE customers SET is_active = FALSE, updated_at = CURRENT_TIMESTAMP WHERE id = ?", (customer_id,))
     await db.commit()
     return {"active": False}
 

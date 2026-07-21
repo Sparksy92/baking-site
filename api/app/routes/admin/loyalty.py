@@ -44,7 +44,7 @@ async def create_rule(
     user: dict = Depends(require_admin),
 ):
     # Deactivate existing rules
-    await db.execute("UPDATE loyalty_rules SET is_active = 0")
+    await db.execute("UPDATE loyalty_rules SET is_active = FALSE")
 
     cursor = await db.execute(
         """INSERT INTO loyalty_rules (name, points_per_dollar, redemption_rate_cents, minimum_points_redeem)

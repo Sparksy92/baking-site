@@ -35,7 +35,7 @@ async def validate_checkout(db: PostgresConnection, body: CheckoutRequest, custo
                       p.is_preorder_only, p.is_weekend_only
                FROM product_variants pv
                JOIN products p ON p.id = pv.product_id
-               WHERE pv.id = ? AND pv.is_active = 1 AND p.is_active = 1""",
+               WHERE pv.id = ? AND pv.is_active = TRUE AND p.is_active = TRUE""",
             (item.variant_id,),
         )
         variant = await cursor.fetchone()

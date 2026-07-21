@@ -28,7 +28,7 @@ async def get_loyalty_balance(
 
     # Get active redemption rate
     cursor = await db.execute(
-        "SELECT redemption_rate_cents, minimum_points_redeem FROM loyalty_rules WHERE is_active = 1 LIMIT 1"
+        "SELECT redemption_rate_cents, minimum_points_redeem FROM loyalty_rules WHERE is_active = TRUE LIMIT 1"
     )
     rule = await cursor.fetchone()
 

@@ -66,18 +66,18 @@ async def dashboard_stats(
         SELECT p.name as product_name, pv.size, pv.color, pv.stock_quantity
         FROM product_variants pv
         JOIN products p ON p.id = pv.product_id
-        WHERE pv.stock_quantity <= 5 AND pv.is_active = 1 AND p.is_active = 1
+        WHERE pv.stock_quantity <= 5 AND pv.is_active = TRUE AND p.is_active = TRUE
         ORDER BY pv.stock_quantity ASC
         LIMIT 10
     """)
     low_stock = [dict(r) for r in await cursor.fetchall()]
 
     # Customer count
-    cursor = await db.execute("SELECT COUNT(*) FROM customers WHERE is_active = 1")
+    cursor = await db.execute("SELECT COUNT(*) FROM customers WHERE is_active = TRUE")
     customer_count = (await cursor.fetchone())[0]
 
     # Newsletter subscribers
-    cursor = await db.execute("SELECT COUNT(*) FROM newsletter_subscribers WHERE is_active = 1")
+    cursor = await db.execute("SELECT COUNT(*) FROM newsletter_subscribers WHERE is_active = TRUE")
     subscriber_count = (await cursor.fetchone())[0]
 
     return {

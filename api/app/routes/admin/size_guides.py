@@ -51,7 +51,7 @@ async def create_size_guide(
 
     # If setting as default, unset existing default
     if body.is_default:
-        await db.execute("UPDATE size_guides SET is_default = 0 WHERE is_default = 1")
+        await db.execute("UPDATE size_guides SET is_default = FALSE WHERE is_default = TRUE")
 
     cursor = await db.execute(
         """INSERT INTO size_guides (name, measurements_json, product_id, category_id, is_default)
@@ -88,7 +88,7 @@ async def update_size_guide(
             raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail="Invalid measurements JSON")
 
     if updates.get("is_default"):
-        await db.execute("UPDATE size_guides SET is_default = 0 WHERE is_default = 1")
+        await db.execute("UPDATE size_guides SET is_default = FALSE WHERE is_default = TRUE")
 
     set_clause = ", ".join(f"{k} = ?" for k in updates)
     values = list(updates.values()) + [guide_id]

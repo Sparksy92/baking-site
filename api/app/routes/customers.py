@@ -75,7 +75,7 @@ async def register(
         await db.execute(
             """INSERT INTO newsletter_subscribers (email, is_active, source)
                VALUES (?, 1, ?)
-               ON CONFLICT (email) DO UPDATE SET is_active = 1, source = EXCLUDED.source""",
+               ON CONFLICT (email) DO UPDATE SET is_active = TRUE, source = EXCLUDED.source""",
             (email, "account_register"),
         )
         await db.execute(
@@ -116,7 +116,7 @@ async def login(
 ):
     """Authenticate a customer."""
     cursor = await db.execute(
-        "SELECT * FROM customers WHERE LOWER(email) = LOWER(?) AND is_active = 1",
+        "SELECT * FROM customers WHERE LOWER(email) = LOWER(?) AND is_active = TRUE",
         (body.email,),
     )
     customer = await cursor.fetchone()
@@ -242,7 +242,7 @@ async def forgot_password(
 ):
     """Request a password reset email."""
     cursor = await db.execute(
-        "SELECT id, email, first_name FROM customers WHERE LOWER(email) = LOWER(?) AND is_active = 1",
+        "SELECT id, email, first_name FROM customers WHERE LOWER(email) = LOWER(?) AND is_active = TRUE",
         (body.email,),
     )
     customer = await cursor.fetchone()
@@ -270,7 +270,7 @@ async def reset_password(
 ):
     """Reset password using a token from the forgot-password email."""
     cursor = await db.execute(
-        "SELECT id, password_reset_expires FROM customers WHERE password_reset_token = ? AND is_active = 1",
+        "SELECT id, password_reset_expires FROM customers WHERE password_reset_token = ? AND is_active = TRUE",
         (body.token,),
     )
     customer = await cursor.fetchone()
@@ -320,7 +320,7 @@ async def create_address(
     # If this is the first address or marked as default, clear other defaults
     if body.is_default:
         await db.execute(
-            "UPDATE customer_addresses SET is_default = 0 WHERE customer_id = ?",
+            "UPDATE customer_addresses SET is_default = FALSE WHERE customer_id = ?",
             (customer_id,),
         )
 
@@ -329,7 +329,7 @@ async def create_address(
         "SELECT COUNT(*) FROM customer_addresses WHERE customer_id = ?", (customer_id,)
     )
     count = (await cursor.fetchone())[0]
-    is_default = 1 if count == 0 or body.is_default else 0
+    is_default = TRUE if count == 0 or body.is_default else 0
 
     cursor = await db.execute(
         """INSERT INTO customer_addresses
@@ -370,7 +370,7 @@ async def update_address(
     # Handle default flag
     if updates.get("is_default"):
         await db.execute(
-            "UPDATE customer_addresses SET is_default = 0 WHERE customer_id = ?",
+            "UPDATE customer_addresses SET is_default = FALSE WHERE customer_id = ?",
             (customer_id,),
         )
 
@@ -407,7 +407,7 @@ async def delete_address(
     # If we deleted the default, promote the most recent remaining address
     if addr["is_default"]:
         await db.execute(
-            """UPDATE customer_addresses SET is_default = 1
+            """UPDATE customer_addresses SET is_default = TRUE
                WHERE id = (SELECT id FROM customer_addresses WHERE customer_id = ? ORDER BY id DESC LIMIT 1)""",
             (customer_id,),
         )

@@ -31,7 +31,7 @@ async def evaluate_auto_discounts(
 
     cursor = await db.execute("""
         SELECT * FROM automatic_discounts
-        WHERE is_active = 1
+        WHERE is_active = TRUE
           AND (starts_at IS NULL OR starts_at <= ?)
           AND (expires_at IS NULL OR expires_at >= ?)
         ORDER BY priority DESC

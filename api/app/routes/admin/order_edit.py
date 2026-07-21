@@ -118,7 +118,7 @@ async def add_order_item(
         SELECT pv.*, p.name as product_name, p.slug as product_slug
         FROM product_variants pv
         JOIN products p ON p.id = pv.product_id
-        WHERE pv.id = ? AND pv.is_active = 1
+        WHERE pv.id = ? AND pv.is_active = TRUE
     """, (body.variant_id,))
     variant = await cursor.fetchone()
     if not variant:

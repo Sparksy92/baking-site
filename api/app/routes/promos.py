@@ -28,7 +28,7 @@ async def _validate_promo_code(
 ) -> PromoValidateResponse:
     """Core promo validation logic, reused by checkout."""
     cursor = await db.execute(
-        "SELECT * FROM promo_codes WHERE UPPER(code) = UPPER(?) AND is_active = 1",
+        "SELECT * FROM promo_codes WHERE UPPER(code) = UPPER(?) AND is_active = TRUE",
         (code.strip(),),
     )
     promo = await cursor.fetchone()

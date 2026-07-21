@@ -94,7 +94,7 @@ async def create_review(
     customer_id = int(customer["sub"])
 
     # Verify product exists
-    cursor = await db.execute("SELECT id FROM products WHERE id = ? AND is_active = 1", (product_id,))
+    cursor = await db.execute("SELECT id FROM products WHERE id = ? AND is_active = TRUE", (product_id,))
     if not await cursor.fetchone():
         raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Product not found")
 

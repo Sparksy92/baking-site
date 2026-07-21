@@ -117,7 +117,7 @@ async def add_to_cart(
 
     # Verify variant exists and is in stock
     cursor = await db.execute(
-        "SELECT id, stock_quantity FROM product_variants WHERE id = ? AND is_active = 1",
+        "SELECT id, stock_quantity FROM product_variants WHERE id = ? AND is_active = TRUE",
         (body.variant_id,),
     )
     variant = await cursor.fetchone()
