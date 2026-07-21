@@ -73,7 +73,7 @@ def _filters(
         params.append(marketing_status)
     if is_active is not None:
         conditions.append("c.is_active = ?")
-        params.append(1 if is_active else 0)
+        params.append(is_active)
     where = f"WHERE {' AND '.join(conditions)}" if conditions else ""
     return where, params
 

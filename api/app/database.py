@@ -97,17 +97,21 @@ class PostgresCursor:
             
         try:
             if is_insert and "RETURNING" in pg_query.upper():
+                in_tx = self.conn.is_in_transaction()
                 try:
-                    await self.conn.execute("SAVEPOINT _ret_id")
+                    if in_tx:
+                        await self.conn.execute("SAVEPOINT _ret_id")
                     row = await self.conn.fetchrow(pg_query, *args)
                     if row and 'id' in row:
                         self.lastrowid = row['id']
                     self.rowcount = 1 if row else 0
-                    await self.conn.execute("RELEASE SAVEPOINT _ret_id")
+                    if in_tx:
+                        await self.conn.execute("RELEASE SAVEPOINT _ret_id")
                 except asyncpg.exceptions.UndefinedColumnError:
                     # Table has no id column — roll back savepoint and retry without RETURNING id
-                    await self.conn.execute("ROLLBACK TO SAVEPOINT _ret_id")
-                    await self.conn.execute("RELEASE SAVEPOINT _ret_id")
+                    if in_tx:
+                        await self.conn.execute("ROLLBACK TO SAVEPOINT _ret_id")
+                        await self.conn.execute("RELEASE SAVEPOINT _ret_id")
                     pg_query_no_return = pg_query.replace(" RETURNING id", "")
                     await self.conn.execute(pg_query_no_return, *args)
                     self.rowcount = 1
@@ -141,27 +145,61 @@ class PostgresCursor:
         return res
 
 class PostgresConnection:
-    """PostgreSQL connection wrapper."""
+    """PostgreSQL connection wrapper simulating SQLite transaction model."""
     def __init__(self, conn: asyncpg.Connection):
         self.conn = conn
         self.row_factory = None # Ignored
+        self._transaction = None
 
     async def execute(self, query: str, args: tuple | list = None):
+        query_upper = query.strip().upper()
+        if query_upper in ("BEGIN", "BEGIN TRANSACTION", "BEGIN EXCLUSIVE"):
+            if not self._transaction and not self.conn.is_in_transaction():
+                self._transaction = self.conn.transaction()
+                await self._transaction.start()
+            return PostgresCursor(self.conn)
+        elif query_upper in ("COMMIT", "COMMIT TRANSACTION"):
+            await self.commit()
+            return PostgresCursor(self.conn)
+        elif query_upper in ("ROLLBACK", "ROLLBACK TRANSACTION"):
+            await self.rollback()
+            return PostgresCursor(self.conn)
+
+        is_modify = (
+            query_upper.startswith("INSERT") or 
+            query_upper.startswith("UPDATE") or 
+            query_upper.startswith("DELETE")
+        )
+        if is_modify and not self._transaction and not self.conn.is_in_transaction():
+            self._transaction = self.conn.transaction()
+            await self._transaction.start()
+
         cur = PostgresCursor(self.conn)
         await cur.execute(query, args)
         return cur
 
     async def executescript(self, script: str):
+        if not self._transaction and not self.conn.is_in_transaction():
+            self._transaction = self.conn.transaction()
+            await self._transaction.start()
         await self.conn.execute(script)
 
     async def commit(self):
-        pass  # asyncpg pool connections use autocommit outside explicit transactions
+        if self._transaction:
+            try:
+                await self._transaction.commit()
+            finally:
+                self._transaction = None
 
     async def rollback(self):
-        pass  # asyncpg pool connections use autocommit outside explicit transactions
+        if self._transaction:
+            try:
+                await self._transaction.rollback()
+            finally:
+                self._transaction = None
         
     async def close(self):
-        pass
+        await self.rollback()
 
 
 async def get_db() -> AsyncGenerator[PostgresConnection, None]:
@@ -172,8 +210,11 @@ async def get_db() -> AsyncGenerator[PostgresConnection, None]:
         _pool = await asyncpg.create_pool(settings.database_url, statement_cache_size=0)
 
     async with _pool.acquire() as conn:
-        async with conn.transaction():
-            yield PostgresConnection(conn)
+        db = PostgresConnection(conn)
+        try:
+            yield db
+        finally:
+            await db.close()
 
 
 @asynccontextmanager
@@ -190,8 +231,11 @@ async def db_connection() -> AsyncGenerator[PostgresConnection, None]:
         _pool = await asyncpg.create_pool(settings.database_url, statement_cache_size=0)
 
     async with _pool.acquire() as conn:
-        async with conn.transaction():
-            yield PostgresConnection(conn)
+        db = PostgresConnection(conn)
+        try:
+            yield db
+        finally:
+            await db.close()
 
 
 async def init_db() -> None:

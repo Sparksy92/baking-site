@@ -37,7 +37,7 @@ async def create_promo(
             (
                 body.code.upper().strip(), body.description, body.discount_type,
                 body.discount_value, body.minimum_order_cents,
-                body.max_uses, body.starts_at, body.expires_at, int(body.is_active),
+                body.max_uses, body.starts_at, body.expires_at, body.is_active,
             ),
         )
         await db.commit()
@@ -60,9 +60,6 @@ async def update_promo(
     updates = {k: v for k, v in body.model_dump().items() if v is not None}
     if not updates:
         raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail="No fields to update")
-
-    if "is_active" in updates:
-        updates["is_active"] = int(updates["is_active"])
 
     set_clause = ", ".join(f"{k} = ?" for k in updates)
     values = list(updates.values()) + [promo_id]

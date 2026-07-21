@@ -56,7 +56,7 @@ async def create_size_guide(
     cursor = await db.execute(
         """INSERT INTO size_guides (name, measurements_json, product_id, category_id, is_default)
            VALUES (?, ?, ?, ?, ?)""",
-        (body.name, body.measurements_json, body.product_id, body.category_id, int(body.is_default)),
+        (body.name, body.measurements_json, body.product_id, body.category_id, body.is_default),
     )
     await db.commit()
     return {"id": cursor.lastrowid, "name": body.name}
@@ -76,7 +76,7 @@ async def update_size_guide(
     updates = {}
     for k, v in body.model_dump().items():
         if v is not None:
-            updates[k] = int(v) if k == "is_default" else v
+            updates[k] = v
 
     if not updates:
         raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail="No fields")

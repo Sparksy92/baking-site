@@ -88,7 +88,7 @@ async def create_segment(
         cursor = await db.execute(
             """INSERT INTO customer_segments (name, slug, description, rules_json, is_auto)
                VALUES (?, ?, ?, ?, ?)""",
-            (body.name, body.slug, body.description, body.rules_json, int(body.is_auto)),
+            (body.name, body.slug, body.description, body.rules_json, body.is_auto),
         )
         await db.commit()
     except Exception:
@@ -111,7 +111,7 @@ async def update_segment(
     updates = {}
     for k, v in body.model_dump().items():
         if v is not None:
-            updates[k] = int(v) if k == "is_auto" else v
+            updates[k] = v
 
     if not updates:
         raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail="No fields")

@@ -91,6 +91,13 @@ class Settings(BaseSettings):
     meta_instagram_account_id: str = ""
     meta_app_secret: str = ""         # Used to verify webhook signatures (Meta App Secret from developer portal)
     meta_webhook_verify_token: str = "rez-hub-webhook-verify"  # Arbitrary string — must match what you set in Meta dashboard
+    social_token_encryption_key: str = "CHANGE_ME_SOCIAL_TOKEN_ENCRYPTION_KEY"
+    meta_app_id: str = ""
+    meta_redirect_uri: str = ""
+    meta_api_version: str = "v25.0"
+    meta_config_id: str = ""
+    meta_instagram_redirect_uri: str = ""
+    meta_threads_redirect_uri: str = ""
 
     # ── Integrations — AI ────────────────────────────────────────
     openai_api_key: str = ""
@@ -100,16 +107,34 @@ class Settings(BaseSettings):
     # ── Integrations — LinkedIn ──────────────────────────────────
     linkedin_client_id: str = ""
     linkedin_client_secret: str = ""
+    linkedin_api_version: str = "202601"
+    linkedin_redirect_uri: str = ""
 
     # ── Integrations — TikTok ────────────────────────────────────
     tiktok_client_key: str = ""
     tiktok_client_secret: str = ""
+    tiktok_api_base_url: str = "https://open.tiktokapis.com"
+    tiktok_redirect_uri: str = ""
+    tiktok_enable_direct_post: bool = True
 
     # ── Integrations — X / Twitter ───────────────────────────────
     x_api_key: str = ""
     x_api_secret: str = ""
     x_access_token: str = ""
     x_access_token_secret: str = ""
+    x_api_base_url: str = "https://api.x.com"
+    x_client_id: str = ""
+    x_redirect_uri: str = ""
+    x_enable_media_posts: bool = True
+
+    # ── Integrations — Pinterest ─────────────────────────────────
+    pinterest_client_id: str = ""
+    pinterest_client_secret: str = ""
+
+    # ── Integrations — YouTube ───────────────────────────────────
+    youtube_client_id: str = ""
+    youtube_client_secret: str = ""
+    youtube_redirect_uri: str = ""
 
     # ── App version ──────────────────────────────────────────────
     app_version: str = "0.1.0"

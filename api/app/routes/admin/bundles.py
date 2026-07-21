@@ -83,7 +83,7 @@ async def update_bundle(
     updates = {}
     for k, v in body.model_dump().items():
         if v is not None:
-            updates[k] = int(v) if k == "is_active" else v
+            updates[k] = v
 
     if not updates:
         raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail="No fields")

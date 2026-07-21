@@ -59,7 +59,7 @@ async def list_auto_discounts(
 
     if is_active is not None:
         conditions.append("is_active = ?")
-        params.append(int(is_active))
+        params.append(is_active)
 
     where = f"WHERE {' AND '.join(conditions)}" if conditions else ""
     cursor = await db.execute(
@@ -88,7 +88,7 @@ async def create_auto_discount(
          body.applies_to, body.applies_to_id,
          body.minimum_quantity, body.minimum_order_cents,
          body.max_discount_cents, body.starts_at, body.expires_at,
-         int(body.is_active), body.priority, int(body.stackable)),
+         body.is_active, body.priority, body.stackable),
     )
     await db.commit()
     return {"id": cursor.lastrowid}
@@ -119,11 +119,6 @@ async def update_auto_discount(
     updates = {k: v for k, v in body.model_dump().items() if v is not None}
     if not updates:
         raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail="No fields to update")
-
-    if "is_active" in updates:
-        updates["is_active"] = int(updates["is_active"])
-    if "stackable" in updates:
-        updates["stackable"] = int(updates["stackable"])
 
     set_clause = ", ".join(f"{k} = ?" for k in updates)
     values = list(updates.values()) + [discount_id]

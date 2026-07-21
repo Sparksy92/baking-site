@@ -60,7 +60,7 @@ async def list_products(
 
     if featured is not None:
         conditions.append("p.is_featured = ?")
-        params.append(1 if featured else 0)
+        params.append(featured)
 
     if tag:
         conditions.append("""p.id IN (
