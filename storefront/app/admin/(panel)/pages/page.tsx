@@ -503,7 +503,7 @@ export default function PagesPage() {
                     <p className="text-xs text-gray-400 mb-2 uppercase tracking-wide flex items-center gap-1.5"><Search size={11} /> Search result preview</p>
                     <div className="space-y-0.5">
                       <p className="text-xs text-green-700 truncate">
-                        badasselder.com › {form.page_type === 'blog_post' ? 'blog' : 'pages'} › {form.slug || 'your-slug'}
+                        example.com › {form.page_type === 'blog_post' ? 'blog' : 'pages'} › {form.slug || 'your-slug'}
                       </p>
                       <p className="text-base text-blue-700 hover:underline cursor-pointer truncate font-medium leading-snug">
                         {form.meta_title || form.title || 'Page Title'}

@@ -68,7 +68,7 @@ See `TODO.md` for the full feature breakdown. Summary:
 
 Decisions made during feature gap audit — captured to avoid re-litigating these.
 
-- **Turtle Island Supply is a separate fork** — not accommodated here. TIS (millions of products, multi-supplier, warehousing) requires a different catalog/search/inventory architecture. Fork this repo when ready and rebuild those layers. Everything else (auth, checkout, orders, email, webhooks, SEO, admin scaffolding) carries over cleanly.
+- **Example Supply is a separate fork** — not accommodated here. TIS (millions of products, multi-supplier, warehousing) requires a different catalog/search/inventory architecture. Fork this repo when ready and rebuild those layers. Everything else (auth, checkout, orders, email, webhooks, SEO, admin scaffolding) carries over cleanly.
 - **Live chat: not built into platform** — small brand clients won't staff a chat widget. Embed Tawk.to or Chatwoot as a per-client script tag on request. 10-minute add-on, not a platform feature.
 - **Inventory management: not needed at current client scale** — small-batch brands (10–50 products) manage stock fine through variant editing. Revisit when a client hits 200+ orders/month or multi-channel selling.
 - **Newsletter: capture-only is correct** — export to Brevo/Klaviyo/Mailchimp. Building a broadcast engine means owning CASL compliance, bounce handling, and deliverability. Wrong layer for this platform.

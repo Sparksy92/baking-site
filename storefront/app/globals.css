@@ -23,7 +23,7 @@
   }
 
   body {
-    font-family: 'Plus Jakarta Sans', 'Inter', system-ui, -apple-system, sans-serif;
+    font-family: var(--font-body, 'Plus Jakarta Sans', 'Inter', system-ui, -apple-system, sans-serif);
     -webkit-font-smoothing: antialiased;
     -moz-osx-font-smoothing: grayscale;
     background-color: var(--brand-background);
@@ -34,7 +34,7 @@
   }
 
   h1, h2, h3, h4, h5, h6 {
-    font-family: 'Playfair Display', Georgia, serif;
+    font-family: var(--font-heading, 'Playfair Display', Georgia, serif);
   }
 
   *:focus-visible {
@@ -122,7 +122,7 @@ a, button, input, select, textarea {
 }
 
 .section-heading {
-  font-family: 'Playfair Display', Georgia, serif;
+  font-family: var(--font-heading, 'Playfair Display', Georgia, serif);
   color: var(--brand-primary);
   font-size: clamp(2.25rem, 4.5vw, 3.25rem);
   font-weight: 800;

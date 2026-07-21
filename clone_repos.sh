@@ -1,0 +1,6 @@
+git clone https://oauth2:glpat-jPWXcXXqFRKH9EsInH6yum86MQp1OjcH.01.0w1qc8h5m@gitlab.turtleislandsupply.com/customers/badasselder-web.git "../badasselder-web"
+git clone https://oauth2:glpat-jPWXcXXqFRKH9EsInH6yum86MQp1OjcH.01.0w1qc8h5m@gitlab.turtleislandsupply.com/rezhub/clothing-ecommerce-baseline.git "../clothing-ecommerce-baseline"
+git clone https://oauth2:glpat-jPWXcXXqFRKH9EsInH6yum86MQp1OjcH.01.0w1qc8h5m@gitlab.turtleislandsupply.com/rezhub/lightweight-ecommerce-baseline.git "../lightweight-ecommerce-baseline"
+git clone https://oauth2:glpat-jPWXcXXqFRKH9EsInH6yum86MQp1OjcH.01.0w1qc8h5m@gitlab.turtleislandsupply.com/clancollection/clan-collection-ecommerce.git "../clan-collection-ecommerce"
+git clone https://oauth2:glpat-jPWXcXXqFRKH9EsInH6yum86MQp1OjcH.01.0w1qc8h5m@gitlab.turtleislandsupply.com/rezhub/rezhub-devops-baseline.git "../rezhub-devops-baseline"
+git clone https://oauth2:glpat-jPWXcXXqFRKH9EsInH6yum86MQp1OjcH.01.0w1qc8h5m@gitlab.turtleislandsupply.com/rezhub/ecommerce-baseline.git "../ecommerce-baseline"

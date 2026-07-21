@@ -11,8 +11,8 @@ def test_order_confirmation_template_renders():
     settings = Settings(brand_name="Test Brand", store_currency="CAD", store_domain="https://test.com")
     order_data = {
         "order_number": "TEST-123",
-        "customer_name": "Blair",
-        "customer_email": "blair@example.com",
+        "customer_name": "Support",
+        "customer_email": "support@example.com",
         "subtotal_cents": 10000,
         "shipping_cents": 1200,
         "tax_cents": 1456,
@@ -40,7 +40,7 @@ def test_shipping_notification_template_renders():
     settings = Settings(brand_name="Test Brand")
     order_data = {
         "order_number": "TEST-123",
-        "customer_name": "Blair",
+        "customer_name": "Support",
         "tracking_carrier": "Canada Post",
         "tracking_number": "1234567890"
     }
@@ -62,16 +62,16 @@ def test_order_cancelled_template_renders():
 
 def test_refund_confirmation_template_renders():
     settings = Settings(brand_name="Test Brand", store_currency="CAD")
-    order_data = {"order_number": "TEST-123", "customer_name": "Blair"}
+    order_data = {"order_number": "TEST-123", "customer_name": "Support"}
     
     html = refund_confirmation_template(order_data, 1500, settings)
     assert "Refund Processed" in html
-    assert "Blair" in html
+    assert "Support" in html
     assert "$15.00 CAD" in html
 
 def test_password_reset_template_renders():
     settings = Settings(brand_name="Test Brand")
-    html = password_reset_template("Blair", "https://test.com/reset", settings)
+    html = password_reset_template("Support", "https://test.com/reset", settings)
     assert "Password Reset" in html
-    assert "Blair" in html
+    assert "Support" in html
     assert "https://test.com/reset" in html

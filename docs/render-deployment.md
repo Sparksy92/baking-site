@@ -26,7 +26,7 @@ This guide details the steps and configuration required to deploy the full The A
   - `ADMIN_JWT_SECRET`: Generate a secure random string (e.g. `openssl rand -base64 32`).
   - `CUSTOMER_JWT_SECRET`: Generate a separate secure random string.
   - `CONTACT_EMAIL`: Owner's notification email address.
-  - `ETRANSFER_EMAIL`: Payment destination email (e.g. `hello@cedarandsagehomestead.ca`).
+  - `ETRANSFER_EMAIL`: Payment destination email (e.g. `hello@example.com`).
   - `STORE_DOMAIN`: The public URL of the storefront service (e.g., `https://cedar-sage-storefront.onrender.com`).
   - `CORS_ALLOWED_ORIGINS`: Comma-separated list of allowed origins (e.g., `https://cedar-sage-storefront.onrender.com`).
   - `DEV_MODE`: Set to `false` in production (this activates localhost guards to prevent booting with localhost store domains).

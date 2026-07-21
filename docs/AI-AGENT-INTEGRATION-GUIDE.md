@@ -370,7 +370,7 @@ def crisis_monitor():
 
 ```json
 {
-  "brand_name": "Turtle Island Supply",
+  "brand_name": "Example Supply",
   "brand_voice": "Bold, confident, streetwear aesthetic",
   "target_audience": "18-35 urban fashion enthusiasts",
   "key_messaging": ["Authentic", "Sustainable", "Community"],

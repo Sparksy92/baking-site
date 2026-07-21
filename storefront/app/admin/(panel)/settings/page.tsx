@@ -4,7 +4,7 @@ import { useEffect, useState } from 'react';
 import { api } from '@/lib/api';
 import { addToast } from '@/lib/toast';
 
-type SettingMeta = { label: string; hint?: string; type?: string; section: string };
+type SettingMeta = { label: string; hint?: string; type?: string; section: string; options?: { label: string; value: string }[] };
 
 const settingsMeta: Record<string, SettingMeta> = {
   brand_name:                   { section: 'Brand Identity',            label: 'Brand Name',                   hint: 'The display name of your store.' },
@@ -38,9 +38,19 @@ const settingsMeta: Record<string, SettingMeta> = {
   oven_fund_goal_2:             { section: 'Crowdfunding & Oven Fund',  label: 'Campaign 2 Target Goal ($)',   hint: 'Target goal in dollars, e.g. 5000', type: 'number' },
   oven_fund_current_amount_2:   { section: 'Crowdfunding & Oven Fund',  label: 'Campaign 2 Current Amount ($)', hint: 'Current amount raised in dollars, e.g. 750', type: 'number' },
   oven_fund_description_2:      { section: 'Crowdfunding & Oven Fund',  label: 'Campaign 2 Description',        hint: 'Description of Campaign 2 objectives.', type: 'textarea' },
+  theme_brand_primary:          { section: 'Theme & Appearance',        label: 'Primary Color',                 hint: 'Main brand color for buttons, headings, etc.', type: 'color' },
+  theme_brand_secondary:        { section: 'Theme & Appearance',        label: 'Secondary Color',               hint: 'Secondary elements.', type: 'color' },
+  theme_brand_accent:           { section: 'Theme & Appearance',        label: 'Accent Color',                  hint: 'Focus outlines and highlights.', type: 'color' },
+  theme_brand_background:       { section: 'Theme & Appearance',        label: 'Background Color',              hint: 'Main page background.', type: 'color' },
+  theme_brand_surface:          { section: 'Theme & Appearance',        label: 'Surface Color',                 hint: 'Cards and alternate background panels.', type: 'color' },
+  theme_brand_text:             { section: 'Theme & Appearance',        label: 'Main Text Color',               hint: 'Primary typography color.', type: 'color' },
+  theme_brand_text_muted:       { section: 'Theme & Appearance',        label: 'Muted Text Color',              hint: 'Secondary or less important text.', type: 'color' },
+  theme_brand_border:           { section: 'Theme & Appearance',        label: 'Border Color',                  hint: 'Borders for cards and inputs.', type: 'color' },
+  theme_font_heading:           { section: 'Theme & Appearance',        label: 'Heading Font',                  type: 'select', options: [{label: 'Playfair Display (Serif)', value: "'Playfair Display', Georgia, serif"}, {label: 'Plus Jakarta Sans (Modern Sans)', value: "'Plus Jakarta Sans', 'Inter', system-ui, -apple-system, sans-serif"}, {label: 'System Default (Fastest)', value: 'system-ui, -apple-system, sans-serif'}] },
+  theme_font_body:              { section: 'Theme & Appearance',        label: 'Body Font',                     type: 'select', options: [{label: 'Plus Jakarta Sans (Modern Sans)', value: "'Plus Jakarta Sans', 'Inter', system-ui, -apple-system, sans-serif"}, {label: 'Inter (Clean Sans)', value: "'Inter', system-ui, -apple-system, sans-serif"}, {label: 'System Default (Fastest)', value: 'system-ui, -apple-system, sans-serif'}, {label: 'Georgia (Serif)', value: 'Georgia, serif'}] },
 };
 
-const SECTION_ORDER = ['Brand Identity', 'SEO Defaults', 'Analytics & Verification', 'Store', 'Homestead Content', 'Crowdfunding & Oven Fund'];
+const SECTION_ORDER = ['Brand Identity', 'Theme & Appearance', 'SEO Defaults', 'Analytics & Verification', 'Store', 'Homestead Content', 'Crowdfunding & Oven Fund'];
 
 export default function AdminSettings() {
   const [settings, setSettings] = useState<{ key: string; value: string }[]>([]);
@@ -157,6 +167,35 @@ export default function AdminSettings() {
                       rows={5}
                       className="w-full px-4 py-2.5 rounded-lg border border-gray-200 focus:border-brand outline-none text-sm resize-none"
                     />
+                  ) : meta?.type === 'select' ? (
+                    <select
+                      id={`setting-${s.key}`}
+                      value={s.value}
+                      onChange={(e) => handleChange(s.key, e.target.value)}
+                      className="w-full px-4 py-2.5 rounded-lg border border-gray-200 focus:border-brand outline-none text-sm bg-white"
+                    >
+                      {meta.options?.map((opt) => (
+                        <option key={opt.value} value={opt.value}>{opt.label}</option>
+                      ))}
+                    </select>
+                  ) : meta?.type === 'color' ? (
+                    <div className="flex items-center gap-3">
+                      <input
+                        id={`setting-${s.key}`}
+                        type="color"
+                        value={s.value}
+                        onChange={(e) => handleChange(s.key, e.target.value)}
+                        className="w-10 h-10 rounded cursor-pointer border border-gray-200 p-0.5 bg-white"
+                      />
+                      <input
+                        type="text"
+                        value={s.value}
+                        onChange={(e) => handleChange(s.key, e.target.value)}
+                        className="flex-1 px-4 py-2 rounded-lg border border-gray-200 focus:border-brand outline-none text-sm uppercase font-mono"
+                        placeholder="#000000"
+                        maxLength={7}
+                      />
+                    </div>
                   ) : (
                     <input
                       id={`setting-${s.key}`}

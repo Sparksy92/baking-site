@@ -23,14 +23,14 @@ Because Vercel runs in a serverless environment, the database is not auto-initia
 If you prefer to initialize the database manually before your first login:
 1. Open your project on the [Neon Console](https://neon.tech).
 2. Go to the **SQL Editor** tab.
-3. Copy the schema definitions from [schema.sql](file:///c:/Projects/cedar-and-sage/storefront/db/schema.sql) and execute them.
-4. Copy the default values from [seed.sql](file:///c:/Projects/cedar-and-sage/storefront/db/seed.sql) and execute them.
+3. Copy the schema definitions from [schema.sql](file:///c:/Projects/example-store/storefront/db/schema.sql) and execute them.
+4. Copy the default values from [seed.sql](file:///c:/Projects/example-store/storefront/db/seed.sql) and execute them.
 
 ---
 
 ## 2. Vercel Deployment Setup
 
-1. Connect your GitHub repository `Sparksy92/cedar-and-sage` to your Vercel account.
+1. Connect your GitHub repository `Sparksy92/example-store` to your Vercel account.
 2. Create a new project pointing to the repo, and configure these **Project Settings**:
    - **Framework Preset**: `Next.js`
    - **Root Directory**: `storefront`
@@ -39,12 +39,12 @@ If you prefer to initialize the database manually before your first login:
 3. Add the following **Environment Variables** in the Vercel project settings:
    - `DATABASE_URL`: Your Neon Postgres connection string.
    - `ADMIN_SESSION_SECRET`: A secure random string of at least 32 characters (e.g. run `openssl rand -base64 32` to generate).
-   - `ADMIN_EMAIL`: The login email for the admin panel (e.g. `hello@cedarandsagehomestead.ca`).
+   - `ADMIN_EMAIL`: The login email for the admin panel (e.g. `hello@example.com`).
    - `ADMIN_PASSWORD_HASH`: The PBKDF2 hash of your desired administrator password (see generation instructions below).
-   - `CONTACT_EMAIL`: The email address where order notifications will be sent (e.g. `hello@cedarandsagehomestead.ca`).
-   - `ETRANSFER_EMAIL`: The payment email address (e.g. `payments@cedarandsagehomestead.ca`).
+   - `CONTACT_EMAIL`: The email address where order notifications will be sent (e.g. `hello@example.com`).
+   - `ETRANSFER_EMAIL`: The payment email address (e.g. `payments@example.com`).
    - `RESEND_API_KEY`: (Optional) Your Resend API key to send automated email alerts on bakes requests.
-   - `EMAIL_FROM`: The verified Resend email sender (e.g. `The Artisan Bakery <orders@cedarandsagehomestead.ca>`).
+   - `EMAIL_FROM`: The verified Resend email sender (e.g. `The Artisan Bakery <orders@example.com>`).
    - `NEXT_PUBLIC_SITE_NAME`: `The Artisan Bakery`
    - `NEXT_PUBLIC_SITE_URL`: Your Vercel generated URL or custom domain (e.g. `https://cedar-sage.vercel.app`).
 4. Click **Deploy**. Vercel will build and launch your serverless website.

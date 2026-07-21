@@ -54,7 +54,7 @@ export async function initDatabase(force: boolean = false) {
               updated_at TIMESTAMPTZ DEFAULT NOW()
           );
         `);
-        console.log('Ensuring all multi-goal Oven Fund, contact, and brand settings exist in site_settings...');
+        console.log('Ensuring all multi-goal Oven Fund, contact, brand, and theme settings exist in site_settings...');
         await p.query(`
           INSERT INTO site_settings (key, value) VALUES
           ('contact_email', 'hello@theartisanbakery.test'),
@@ -69,7 +69,17 @@ export async function initDatabase(force: boolean = false) {
           ('oven_fund_description_2', 'Build a traditional outdoor clay wood-fired brick oven and workbench prep area in the garden for seasonal community baking runs, rustic sourdough, flatbreads, and future workshops.'),
           ('brand_name', 'The Artisan Bakery'),
           ('brand_tagline', 'Fresh baking, pantry goods & handmade home and body care'),
-          ('brand_abbreviation', 'SSH')
+          ('brand_abbreviation', 'SSH'),
+          ('theme_brand_primary', '#6F7D5C'),
+          ('theme_brand_secondary', '#C8A2A8'),
+          ('theme_brand_accent', '#C8A2A8'),
+          ('theme_brand_background', '#FAF7F2'),
+          ('theme_brand_surface', '#F5EFE6'),
+          ('theme_brand_text', '#2B2522'),
+          ('theme_brand_text_muted', '#6B605A'),
+          ('theme_brand_border', '#E3DDD3'),
+          ('theme_font_heading', '''Playfair Display'', Georgia, serif'),
+          ('theme_font_body', '''Plus Jakarta Sans'', ''Inter'', system-ui, -apple-system, sans-serif')
           ON CONFLICT (key) DO NOTHING;
         `);
         
@@ -93,8 +103,8 @@ export async function initDatabase(force: boolean = false) {
           SET value = REPLACE(value, 'The Artisan Bakery', 'The Artisan Bakery') 
           WHERE value LIKE '%The Artisan Bakery%';
           UPDATE site_settings 
-          SET value = REPLACE(value, 'Cedar and Sage', 'The Artisan Bakery') 
-          WHERE value LIKE '%Cedar and Sage%';
+          SET value = REPLACE(value, 'Example Store', 'The Artisan Bakery') 
+          WHERE value LIKE '%Example Store%';
           UPDATE site_settings 
           SET value = REPLACE(value, 'Homestead Homestead', 'Homestead') 
           WHERE value LIKE '%Homestead Homestead%';

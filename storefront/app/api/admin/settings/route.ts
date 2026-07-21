@@ -37,8 +37,8 @@ export async function GET() {
     
     await query(`
       UPDATE site_settings 
-      SET value = REPLACE(value, 'Cedar and Sage', 'The Artisan Bakery') 
-      WHERE value LIKE '%Cedar and Sage%';
+      SET value = REPLACE(value, 'Example Store', 'The Artisan Bakery') 
+      WHERE value LIKE '%Example Store%';
     `);
 
     await query(`

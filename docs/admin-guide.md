@@ -132,7 +132,7 @@ When a customer requests custom orders, preorders, or quote-only items, it lands
 
 ---
 
-## 📞 When to Ask Blair for Help
+## 📞 When to Ask Support for Help
 - If customers report stripe payments are not completing or webhook integration fails.
 - If you need custom email template layouts modified.
 - If you want to configure automated SMS notifications.

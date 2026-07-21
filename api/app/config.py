@@ -10,7 +10,7 @@ from pydantic_settings import BaseSettings
 
 class Settings(BaseSettings):
     # ── Brand ────────────────────────────────────────────────────
-    brand_name: str = "Elder"
+    brand_name: str = "Example Store"
     brand_tagline: str = "Indigenous Streetwear"
     brand_color_primary: str = "#1A1A1A"
     brand_color_accent: str = "#C53030"

@@ -11,18 +11,18 @@
 
 ## Files Changed
 * **Modified**:
-  * [docs/phase-4-launch-readiness-report.md](file:///c:/Projects/cedar-and-sage/docs/phase-4-launch-readiness-report.md) *(Polished Oven Fund text formatting and updated default branch note)*
-  * [storefront/app/(shop)/checkout/page.tsx](file:///c:/Projects/cedar-and-sage/storefront/app/(shop)/checkout/page.tsx) *(Defaulted payment method to e-transfer, added textareas/inputs for desired date, pickup/delivery preference, preferred contact method, and allergies, and packaged them into checkout notes)*
-  * [storefront/app/(shop)/page.tsx](file:///c:/Projects/cedar-and-sage/storefront/app/(shop)/page.tsx) *(Added page-level SEO metadata)*
+  * [docs/phase-4-launch-readiness-report.md](file:///c:/Projects/example-store/docs/phase-4-launch-readiness-report.md) *(Polished Oven Fund text formatting and updated default branch note)*
+  * [storefront/app/(shop)/checkout/page.tsx](file:///c:/Projects/example-store/storefront/app/(shop)/checkout/page.tsx) *(Defaulted payment method to e-transfer, added textareas/inputs for desired date, pickup/delivery preference, preferred contact method, and allergies, and packaged them into checkout notes)*
+  * [storefront/app/(shop)/page.tsx](file:///c:/Projects/example-store/storefront/app/(shop)/page.tsx) *(Added page-level SEO metadata)*
 * **Created**:
-  * [storefront/app/(shop)/shop/layout.tsx](file:///c:/Projects/cedar-and-sage/storefront/app/(shop)/shop/layout.tsx) *(Metadata layout)*
-  * [storefront/app/(shop)/custom-orders/layout.tsx](file:///c:/Projects/cedar-and-sage/storefront/app/(shop)/custom-orders/layout.tsx) *(Metadata layout)*
-  * [storefront/app/(shop)/order-info/layout.tsx](file:///c:/Projects/cedar-and-sage/storefront/app/(shop)/order-info/layout.tsx) *(Metadata layout)*
-  * [storefront/app/(shop)/about/layout.tsx](file:///c:/Projects/cedar-and-sage/storefront/app/(shop)/about/layout.tsx) *(Metadata layout)*
-  * [storefront/app/(shop)/faq/layout.tsx](file:///c:/Projects/cedar-and-sage/storefront/app/(shop)/faq/layout.tsx) *(Metadata layout)*
-  * [storefront/app/(shop)/oven-fund/layout.tsx](file:///c:/Projects/cedar-and-sage/storefront/app/(shop)/oven-fund/layout.tsx) *(Metadata layout)*
-  * [storefront/app/(shop)/contact/layout.tsx](file:///c:/Projects/cedar-and-sage/storefront/app/(shop)/contact/layout.tsx) *(Metadata layout)*
-  * [docs/phase-5-final-polish-report.md](file:///c:/Projects/cedar-and-sage/docs/phase-5-final-polish-report.md) *(This report)*
+  * [storefront/app/(shop)/shop/layout.tsx](file:///c:/Projects/example-store/storefront/app/(shop)/shop/layout.tsx) *(Metadata layout)*
+  * [storefront/app/(shop)/custom-orders/layout.tsx](file:///c:/Projects/example-store/storefront/app/(shop)/custom-orders/layout.tsx) *(Metadata layout)*
+  * [storefront/app/(shop)/order-info/layout.tsx](file:///c:/Projects/example-store/storefront/app/(shop)/order-info/layout.tsx) *(Metadata layout)*
+  * [storefront/app/(shop)/about/layout.tsx](file:///c:/Projects/example-store/storefront/app/(shop)/about/layout.tsx) *(Metadata layout)*
+  * [storefront/app/(shop)/faq/layout.tsx](file:///c:/Projects/example-store/storefront/app/(shop)/faq/layout.tsx) *(Metadata layout)*
+  * [storefront/app/(shop)/oven-fund/layout.tsx](file:///c:/Projects/example-store/storefront/app/(shop)/oven-fund/layout.tsx) *(Metadata layout)*
+  * [storefront/app/(shop)/contact/layout.tsx](file:///c:/Projects/example-store/storefront/app/(shop)/contact/layout.tsx) *(Metadata layout)*
+  * [docs/phase-5-final-polish-report.md](file:///c:/Projects/example-store/docs/phase-5-final-polish-report.md) *(This report)*
 
 ## Copy/Content Fixes
 * **Shop Notice**: Added a prominent warning banner explaining start-at pricing modes, weekend preorders, quote-only cake restrictions, and manual e-transfer terms.
@@ -34,7 +34,7 @@
 * **Sub-Pages**: Added separate layout wrappers (`layout.tsx`) in subfolders for `shop`, `custom-orders`, `order-info`, `about`, `faq`, `oven-fund`, and `contact` to define custom SEO titles and meta descriptions for each page.
 
 ## Admin Guide Updates
-* Verified that [kirstin-admin-guide.md](file:///c:/Projects/cedar-and-sage/docs/kirstin-admin-guide.md) contains comprehensive instructions for:
+* Verified that [admin-admin-guide.md](file:///c:/Projects/example-store/docs/admin-admin-guide.md) contains comprehensive instructions for:
   - Changing product option prices.
   - Adding new menu items.
   - Setting sold out and hidden availability statuses.

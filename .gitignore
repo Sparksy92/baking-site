@@ -42,3 +42,5 @@ Thumbs.db
 htmlcov/
 .pytest_cache/
 reports/
+.vercel
+.env*

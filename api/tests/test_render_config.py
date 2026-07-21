@@ -62,4 +62,4 @@ async def test_production_localhost_guard():
         check_guard(Settings(dev_mode=False, store_domain="http://127.0.0.1:3000"))
 
     # Should pass fine if dev_mode=False and store_domain is a real domain
-    check_guard(Settings(dev_mode=False, store_domain="https://cedarandsagehomestead.ca"))
+    check_guard(Settings(dev_mode=False, store_domain="https://example.com"))

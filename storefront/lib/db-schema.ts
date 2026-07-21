@@ -141,7 +141,17 @@ A: Absolutely! Use the Custom Orders page to request birthday cakes, large bun c
 ('oven_fund_goal_2', '5000'),
 ('oven_fund_current_amount_2', '750'),
 ('oven_fund_description_2', 'Build a traditional outdoor clay wood-fired brick oven and workbench prep area in the garden for seasonal community baking runs, rustic sourdough, flatbreads, and future workshops.'),
-('store_announcement', 'Preorders for Saturday sourdough are open! Order by Wednesday 5 PM.')
+('store_announcement', 'Preorders for Saturday sourdough are open! Order by Wednesday 5 PM.'),
+('theme_brand_primary', '#6F7D5C'),
+('theme_brand_secondary', '#C8A2A8'),
+('theme_brand_accent', '#C8A2A8'),
+('theme_brand_background', '#FAF7F2'),
+('theme_brand_surface', '#F5EFE6'),
+('theme_brand_text', '#2B2522'),
+('theme_brand_text_muted', '#6B605A'),
+('theme_brand_border', '#E3DDD3'),
+('theme_font_heading', '''Playfair Display'', Georgia, serif'),
+('theme_font_body', '''Plus Jakarta Sans'', ''Inter'', system-ui, -apple-system, sans-serif')
 ON CONFLICT (key) DO NOTHING;
 
 `;

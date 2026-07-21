@@ -37,7 +37,7 @@ async def get_all_settings(
     """)
 
     await db.execute("UPDATE settings SET value = REPLACE(value, 'The Artisan Bakery', 'The Artisan Bakery') WHERE value LIKE '%The Artisan Bakery%'")
-    await db.execute("UPDATE settings SET value = REPLACE(value, 'Cedar and Sage', 'The Artisan Bakery') WHERE value LIKE '%Cedar and Sage%'")
+    await db.execute("UPDATE settings SET value = REPLACE(value, 'Example Store', 'The Artisan Bakery') WHERE value LIKE '%Example Store%'")
     await db.execute("UPDATE settings SET value = REPLACE(value, 'hello@theartisanbakery.test', 'hello@theartisanbakery.test') WHERE key = 'contact_email'")
     await db.execute("UPDATE settings SET value = REPLACE(value, 'hello@theartisanbakery.test', 'payments@theartisanbakery.test') WHERE key = 'etransfer_email' OR key = 'payment_instructions'")
     await db.execute("UPDATE settings SET value = REPLACE(value, 'payments@example.com', 'payments@theartisanbakery.test') WHERE value LIKE '%payments@example.com%'")
