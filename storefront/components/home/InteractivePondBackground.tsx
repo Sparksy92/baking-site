@@ -60,8 +60,8 @@ class Pebble {
     this.angle = Math.random() * Math.PI * 2;
     this.aspectRatio = 0.65 + Math.random() * 0.3;
     
-    // Sage stone color palette
-    const stoneColors = ['#4A5243', '#5D6656', '#3D4436', '#525B4C', '#353C2F', '#5E6659'];
+    // Warm earthy sage stone color palette
+    const stoneColors = ['#4E5340', '#5B624D', '#414736', '#545C47', '#393F2F', '#626B54', '#4B503D'];
     this.color = stoneColors[Math.floor(Math.random() * stoneColors.length)];
   }
 
@@ -72,19 +72,19 @@ class Pebble {
     ctx.rotate(this.angle);
 
     // Shadow
-    ctx.fillStyle = 'rgba(10, 16, 10, 0.4)';
+    ctx.fillStyle = 'rgba(10, 16, 10, 0.35)';
     ctx.beginPath();
     ctx.ellipse(3, 4, this.r, this.r * this.aspectRatio, 0, 0, Math.PI * 2);
     ctx.fill();
 
-    // 3D Spherical volume using offset radial gradient
+    // Soft 3D spherical shading (less harsh highlights)
     const grad = ctx.createRadialGradient(
-      -this.r * 0.25, -this.r * 0.25 * this.aspectRatio, this.r * 0.1,
+      -this.r * 0.2, -this.r * 0.2 * this.aspectRatio, this.r * 0.1,
       0, 0, this.r
     );
-    grad.addColorStop(0, '#98A392'); // Top highlight
-    grad.addColorStop(0.35, this.color);
-    grad.addColorStop(1, '#191E16'); // Bottom shadow
+    grad.addColorStop(0, '#868F7E'); // Soft top highlight
+    grad.addColorStop(0.4, this.color);
+    grad.addColorStop(1, '#1E2319'); // Bottom shadow
     
     ctx.fillStyle = grad;
     ctx.beginPath();
@@ -121,10 +121,8 @@ class Eelgrass {
   }
 
   draw(ctx: CanvasRenderingContext2D, ripples: Ripple[]) {
-    // Sway calculations
     const sway = Math.sin(this.phase) * this.swayWidth;
     
-    // Distort control points via refraction
     const refBase = getWaterRefraction(this.x, this.y, ripples);
     const refTip = getWaterRefraction(this.x + sway, this.y - this.height, ripples);
 
@@ -172,7 +170,6 @@ class LilyPad {
 
   drawShadow(ctx: CanvasRenderingContext2D) {
     ctx.save();
-    // Soft shadow cast onto the pond bottom
     ctx.translate(this.x + 16, this.y + 22 + this.bobOffset);
     ctx.rotate(this.angle);
     ctx.fillStyle = 'rgba(5, 12, 5, 0.4)';
@@ -189,7 +186,6 @@ class LilyPad {
     ctx.translate(this.x, this.y + this.bobOffset);
     ctx.rotate(this.angle);
 
-    // Leaf gradient
     const leafGrad = ctx.createRadialGradient(0, 0, 0, 0, 0, this.radius);
     leafGrad.addColorStop(0, '#5D8A4E');
     leafGrad.addColorStop(0.7, '#446E34');
@@ -202,7 +198,6 @@ class LilyPad {
     ctx.closePath();
     ctx.fill();
 
-    // Fine leaf veins
     ctx.strokeStyle = 'rgba(235, 230, 210, 0.16)';
     ctx.lineWidth = 1.3;
     const veinCount = 8;
@@ -259,11 +254,9 @@ class Petal {
       if (this.opacity <= 0 || this.size <= 0) return false;
     }
 
-    // Drift wind
     const windX = 0.25;
     const windY = 0.15;
 
-    // Mouse drift reaction
     const dx = this.x - mouseX;
     const dy = this.y - mouseY;
     const dist = Math.hypot(dx, dy);
@@ -292,7 +285,6 @@ class Petal {
     this.y += this.vy + windY;
     this.angle += this.spin;
 
-    // Reset when off bottom
     if (this.y > height + 20) {
       this.y = -20;
       this.x = Math.random() * width;
@@ -315,13 +307,11 @@ class Petal {
     ctx.translate(this.x, this.y);
     ctx.rotate(this.angle);
 
-    // Shadow
     ctx.fillStyle = 'rgba(15, 25, 15, 0.12)';
     ctx.beginPath();
     ctx.ellipse(3, 4, this.size, this.size * 0.6, 0, 0, Math.PI * 2);
     ctx.fill();
 
-    // Sakura / Leaf shape
     ctx.fillStyle = this.color;
     ctx.globalAlpha = this.opacity;
     ctx.beginPath();
@@ -364,7 +354,6 @@ class Firefly {
     this.pulsePhase += this.pulseSpeed;
     this.opacity = 0.3 + Math.sin(this.pulsePhase) * 0.4;
 
-    // Brownian motion targets
     if (Math.random() < 0.02) {
       this.targetX = this.x + (Math.random() - 0.5) * 130;
       this.targetY = this.y + (Math.random() - 0.5) * 130;
@@ -401,7 +390,6 @@ class Firefly {
 
   drawReflection(ctx: CanvasRenderingContext2D) {
     ctx.save();
-    // Draw soft reflections on the water surface directly below the fly
     ctx.fillStyle = `rgba(238, 225, 140, ${this.opacity * 0.12})`;
     ctx.beginPath();
     ctx.ellipse(this.x, this.y + 40, this.size * 3.0, this.size * 1.0, 0, 0, Math.PI * 2);
@@ -422,7 +410,6 @@ class Firefly {
     ctx.arc(this.x, this.y, glowRad, 0, Math.PI * 2);
     ctx.fill();
 
-    // Glowing core
     ctx.fillStyle = '#FFFFFF';
     ctx.globalAlpha = this.opacity * 0.95;
     ctx.beginPath();
@@ -444,7 +431,7 @@ class KoiFish {
   spotColor: string;
   sizeMultiplier: number;
   segments: Segment[];
-  depth: number; // 0.0 (surface) to 1.0 (deep bottom)
+  depth: number; 
   targetDepth: number;
 
   constructor(x: number, y: number, color: string, spotColor: string, sizeMultiplier = 1.0) {
@@ -462,8 +449,9 @@ class KoiFish {
     this.targetDepth = this.depth;
 
     this.segments = [];
+    // Increase fish segment length slightly for a more elongated realistic body shape
     for (let i = 0; i < 8; i++) {
-      this.segments.push({ x: x - i * 8 * sizeMultiplier, y: y });
+      this.segments.push({ x: x - i * 10 * sizeMultiplier, y: y });
     }
   }
 
@@ -473,12 +461,10 @@ class KoiFish {
     const dist = Math.hypot(dx, dy);
 
     if (dist < 150) {
-      // Dash away and dive deep
       this.targetAngle = Math.atan2(this.y - mouseY, this.x - mouseX);
       this.targetSpeed = 3.5;
-      this.targetDepth = 0.8; // Dive
+      this.targetDepth = 0.8; 
     } else {
-      // Seek food
       const activeFoods = foods.filter((f) => !f.isEaten);
       let closestFood: Food | null = null;
       let minDist = 350;
@@ -494,7 +480,7 @@ class KoiFish {
       if (closestFood) {
         this.targetAngle = Math.atan2(closestFood.y - this.y, closestFood.x - this.x);
         this.targetSpeed = 1.9 + Math.random() * 0.6;
-        this.targetDepth = 0.15; // Swim near surface to eat
+        this.targetDepth = 0.15; 
 
         if (minDist < 12) {
           closestFood.isEaten = true;
@@ -510,10 +496,9 @@ class KoiFish {
           });
         }
       } else {
-        // Wandering
         if (Math.random() < 0.015) {
           this.targetAngle = this.angle + (Math.random() - 0.5) * 1.5;
-          this.targetDepth = 0.2 + Math.random() * 0.5; // Random depth adjustments
+          this.targetDepth = 0.2 + Math.random() * 0.5; 
         }
         this.targetSpeed = 1.0 + Math.random() * 0.5;
       }
@@ -535,7 +520,7 @@ class KoiFish {
 
     this.segments[0] = { x: this.x, y: this.y };
 
-    const segLength = 8 * this.sizeMultiplier;
+    const segLength = 10 * this.sizeMultiplier;
     for (let i = 1; i < this.segments.length; i++) {
       const prev = this.segments[i - 1];
       const curr = this.segments[i];
@@ -553,11 +538,10 @@ class KoiFish {
     this.phase += this.speed * 0.14;
   }
 
-  // Draw projected shadow based on depth
   drawShadow(ctx: CanvasRenderingContext2D, ripples: Ripple[]) {
-    const shadowDist = 12 + this.depth * 22; // Deeper fish = further shadow
-    const shadowBlur = 8 + this.depth * 15;  // Deeper fish = blurrier shadow
-    const shadowAlpha = 0.5 - this.depth * 0.35; // Deeper fish = fainter shadow
+    const shadowDist = 12 + this.depth * 22; 
+    const shadowBlur = 8 + this.depth * 15;  
+    const shadowAlpha = 0.5 - this.depth * 0.35; 
 
     ctx.save();
     ctx.shadowColor = `rgba(5, 12, 5, ${shadowAlpha})`;
@@ -565,13 +549,12 @@ class KoiFish {
     ctx.shadowOffsetX = shadowDist * this.sizeMultiplier;
     ctx.shadowOffsetY = (shadowDist + 4) * this.sizeMultiplier;
 
-    // Build the silhouette path for the shadow
     this.buildBodyPath(ctx, ripples);
     ctx.fill();
     ctx.restore();
   }
 
-  // Helper method to build organic Bezier outline path
+  // Smooth quadratic spline math to outline the fish body (completely removes polygon straight lines)
   buildBodyPath(ctx: CanvasRenderingContext2D, ripples: Ripple[]) {
     const leftPoints: Segment[] = [];
     const rightPoints: Segment[] = [];
@@ -587,7 +570,6 @@ class KoiFish {
         segAngle = Math.atan2(seg.y - prev.y, seg.x - prev.x);
       }
 
-      // Add refraction to coordinate drawing
       const ref = getWaterRefraction(seg.x, seg.y, ripples);
 
       leftPoints.push({
@@ -603,19 +585,24 @@ class KoiFish {
     ctx.beginPath();
     ctx.moveTo(leftPoints[0].x, leftPoints[0].y);
 
-    // Left curve
-    for (let i = 1; i < leftPoints.length; i++) {
-      ctx.lineTo(leftPoints[i].x, leftPoints[i].y);
+    // Left spline curve using quadratic midpoints
+    for (let i = 0; i < leftPoints.length - 1; i++) {
+      const xc = (leftPoints[i].x + leftPoints[i + 1].x) / 2;
+      const yc = (leftPoints[i].y + leftPoints[i + 1].y) / 2;
+      ctx.quadraticCurveTo(leftPoints[i].x, leftPoints[i].y, xc, yc);
     }
-
-    // Tail tip loop
+    
+    // Connect to tail tip
     const tailTip = this.segments[this.segments.length - 1];
     const tailRef = getWaterRefraction(tailTip.x, tailTip.y, ripples);
     ctx.lineTo(tailTip.x + tailRef.rx, tailTip.y + tailRef.ry);
 
-    // Right curve back
-    for (let i = rightPoints.length - 1; i >= 0; i--) {
-      ctx.lineTo(rightPoints[i].x, rightPoints[i].y);
+    // Right spline curve going backwards
+    ctx.lineTo(rightPoints[rightPoints.length - 1].x, rightPoints[rightPoints.length - 1].y);
+    for (let i = rightPoints.length - 1; i > 0; i--) {
+      const xc = (rightPoints[i].x + rightPoints[i - 1].x) / 2;
+      const yc = (rightPoints[i].y + rightPoints[i - 1].y) / 2;
+      ctx.quadraticCurveTo(rightPoints[i].x, rightPoints[i].y, xc, yc);
     }
     ctx.closePath();
   }
@@ -624,22 +611,21 @@ class KoiFish {
     ctx.save();
     const head = this.segments[0];
     
-    // Scale body slightly down if diving to simulate Z-axis depth
     const scale = 1.0 - this.depth * 0.22;
     const refHead = getWaterRefraction(this.x, this.y, ripples);
     ctx.translate(refHead.rx * this.depth, refHead.ry * this.depth);
 
-    // Render transparent fin shadows/fins first
     const tailSeg = this.segments[this.segments.length - 1];
     const preTailSeg = this.segments[this.segments.length - 2];
     const tailAngle = Math.atan2(tailSeg.y - preTailSeg.y, tailSeg.x - preTailSeg.x);
     const refTail = getWaterRefraction(tailSeg.x, tailSeg.y, ripples);
 
     const finWiggle = Math.sin(this.phase) * 0.16;
+    const tailSweep = Math.sin(this.phase) * 0.4;
     ctx.fillStyle = this.color;
-    ctx.globalAlpha = (0.75 - this.depth * 0.2) * scale; // Fainter if deep
+    ctx.globalAlpha = (0.75 - this.depth * 0.2) * scale; 
 
-    // Pectoral Fins (Butterfly Style curve outline)
+    // Left pectoral
     ctx.beginPath();
     ctx.moveTo(this.segments[1].x + refHead.rx, this.segments[1].y + refHead.ry);
     ctx.bezierCurveTo(
@@ -651,7 +637,6 @@ class KoiFish {
     );
     ctx.fill();
 
-    // Fine fin rays (lines) inside Left pectoral
     ctx.strokeStyle = 'rgba(255, 255, 255, 0.2)';
     ctx.lineWidth = 0.8;
     for (let r = 0.1; r < 0.6; r += 0.1) {
@@ -664,7 +649,7 @@ class KoiFish {
       ctx.stroke();
     }
 
-    // Right pectoral fin
+    // Right pectoral
     ctx.beginPath();
     ctx.moveTo(this.segments[1].x + refHead.rx, this.segments[1].y + refHead.ry);
     ctx.bezierCurveTo(
@@ -676,8 +661,7 @@ class KoiFish {
     );
     ctx.fill();
 
-    // Right pectoral rays
-    for (let r = 0.1; r < 0.6; r += 0.1) {
+    for (let r = 0; r < 0.5; r += 0.1) {
       ctx.beginPath();
       ctx.moveTo(this.segments[1].x + refHead.rx, this.segments[1].y + refHead.ry);
       ctx.lineTo(
@@ -687,10 +671,7 @@ class KoiFish {
       ctx.stroke();
     }
 
-    // Long Butterfly Tail Lobes
-    const tailSweep = Math.sin(this.phase) * 0.4;
-    
-    // Left tail lobe
+    // Tail Lobe Left
     ctx.beginPath();
     ctx.moveTo(tailSeg.x + refTail.rx, tailSeg.y + refTail.ry);
     ctx.bezierCurveTo(
@@ -704,7 +685,7 @@ class KoiFish {
     ctx.closePath();
     ctx.fill();
 
-    // Right tail lobe
+    // Tail Lobe Right
     ctx.beginPath();
     ctx.moveTo(tailSeg.x + refTail.rx, tailSeg.y + refTail.ry);
     ctx.bezierCurveTo(
@@ -718,18 +699,15 @@ class KoiFish {
     ctx.closePath();
     ctx.fill();
 
-    // Reset alpha for solid body rendering
     ctx.globalAlpha = (1.0 - this.depth * 0.4) * scale; 
 
-    // Draw main Bezier silhouette
+    // Smooth spline body path
     this.buildBodyPath(ctx, ripples);
     ctx.fillStyle = this.color;
     ctx.fill();
 
-    // Draw scale shading & spine highlights using 3D source-atop masking
     ctx.globalCompositeOperation = 'source-atop';
     
-    // Perpendicular highlight gradient coordinates
     const gradAngle = this.angle + Math.PI / 2;
     const shadGrad = ctx.createLinearGradient(
       head.x + refHead.rx + Math.cos(gradAngle) * 8 * this.sizeMultiplier * scale,
@@ -737,10 +715,9 @@ class KoiFish {
       head.x + refHead.rx - Math.cos(gradAngle) * 8 * this.sizeMultiplier * scale,
       head.y + refHead.ry - Math.sin(gradAngle) * 8 * this.sizeMultiplier * scale
     );
-    // Dark left shadow -> Spine Highlight peak -> Dark right shadow (3D cylindrical volume)
     shadGrad.addColorStop(0, 'rgba(0, 0, 0, 0.35)');
     shadGrad.addColorStop(0.35, 'rgba(255, 255, 255, 0.15)');
-    shadGrad.addColorStop(0.5, 'rgba(255, 255, 255, 0.42)'); // Bright pearlescent spine glint
+    shadGrad.addColorStop(0.5, 'rgba(255, 255, 255, 0.42)'); 
     shadGrad.addColorStop(0.65, 'rgba(255, 255, 255, 0.15)');
     shadGrad.addColorStop(1, 'rgba(0, 0, 0, 0.45)');
 
@@ -748,9 +725,9 @@ class KoiFish {
     this.buildBodyPath(ctx, ripples);
     ctx.fill();
 
-    ctx.globalCompositeOperation = 'source-over'; // Reset blend mode
+    ctx.globalCompositeOperation = 'source-over'; 
 
-    // Draw eyes
+    // Eyes
     const eyeRadius = 1.3 * this.sizeMultiplier * scale;
     const eyeOffsetAngle = 0.55;
     ctx.fillStyle = '#000000';
@@ -821,24 +798,24 @@ export default function InteractivePondBackground() {
       );
     });
 
-    // Generate bobbing lily pads
-    lilyPadsRef.current = Array.from({ length: 4 }, () => {
+    // Generate bobbing lily pads (Enlarged for substantial realistic flora coverage)
+    lilyPadsRef.current = Array.from({ length: 6 }, () => {
       return new LilyPad(
         Math.random() * width,
         Math.random() * height,
-        40 + Math.random() * 20
+        55 + Math.random() * 25
       );
     });
 
-    // Fish configs (sage / terracotta / white / gold palette)
+    // Fish configs (Enlarged sizing parameters to look prominent and majestic)
     const fishColors = [
-      { body: '#E86F51', spot: '#264653', size: 1.25 },   
-      { body: '#F4A261', spot: '#E76F51', size: 0.95 },   
-      { body: '#E9C46A', spot: '#E76F51', size: 1.1 },    
-      { body: '#FFFFFF', spot: '#E76F51', size: 1.35 },    
-      { body: '#FFFFFF', spot: '#2A9D8F', size: 1.05 },   
-      { body: '#E86F51', spot: '', size: 0.8 },           
-      { body: '#C8A2A8', spot: '#FFFFFF', size: 1.15 },   
+      { body: '#E86F51', spot: '#264653', size: 2.1 },   
+      { body: '#F4A261', spot: '#E76F51', size: 1.8 },   
+      { body: '#E9C46A', spot: '#E76F51', size: 1.95 },    
+      { body: '#FFFFFF', spot: '#E76F51', size: 2.2 },    
+      { body: '#FFFFFF', spot: '#2A9D8F', size: 1.85 },   
+      { body: '#E86F51', spot: '', size: 1.5 },           
+      { body: '#C8A2A8', spot: '#FFFFFF', size: 2.0 },   
     ];
 
     fishRef.current = fishColors.map((cfg) => {
@@ -931,40 +908,34 @@ export default function InteractivePondBackground() {
     canvas.addEventListener('mouseleave', handleMouseLeave);
     canvas.addEventListener('click', handleMouseClick);
 
-    // Sunlight caustics light web rendering
+    // Sunlight caustics web rendering (wavy sine-wave curves replace blocky straight-segment polygons)
     const drawCaustics = (cCtx: CanvasRenderingContext2D, time: number) => {
       cCtx.save();
-      cCtx.strokeStyle = 'rgba(238, 228, 195, 0.04)';
-      cCtx.lineWidth = 1.6;
+      cCtx.strokeStyle = 'rgba(238, 235, 205, 0.055)';
+      cCtx.lineWidth = 2.2;
       cCtx.globalCompositeOperation = 'screen';
       
-      const cols = 9;
-      const rows = 7;
-      const cellW = width / cols;
-      const cellH = height / rows;
+      cCtx.shadowColor = 'rgba(238, 235, 205, 0.25)';
+      cCtx.shadowBlur = 4;
       
-      for (let i = 0; i <= cols; i++) {
+      // Horizontal wavy lines
+      for (let y = 0; y < height + 40; y += 45) {
         cCtx.beginPath();
-        for (let j = 0; j <= rows; j++) {
-          const xOffset = Math.sin(time * 0.0013 + j * 0.7) * 14 + Math.cos(time * 0.0008 + i * 0.4) * 9;
-          const yOffset = Math.cos(time * 0.0011 + i * 0.6) * 14 + Math.sin(time * 0.0009 + j * 0.5) * 9;
-          const px = i * cellW + xOffset;
-          const py = j * cellH + yOffset;
-          if (j === 0) cCtx.moveTo(px, py);
-          else cCtx.lineTo(px, py);
+        for (let x = 0; x < width + 40; x += 15) {
+          const yOffset = Math.sin(x * 0.015 + time * 0.02) * 7 + Math.cos(x * 0.007 - time * 0.015) * 5;
+          if (x === 0) cCtx.moveTo(x, y + yOffset);
+          else cCtx.lineTo(x, y + yOffset);
         }
         cCtx.stroke();
       }
       
-      for (let j = 0; j <= rows; j++) {
+      // Vertical wavy lines
+      for (let x = 0; x < width + 40; x += 45) {
         cCtx.beginPath();
-        for (let i = 0; i <= cols; i++) {
-          const xOffset = Math.sin(time * 0.0013 + j * 0.7) * 14 + Math.cos(time * 0.0008 + i * 0.4) * 9;
-          const yOffset = Math.cos(time * 0.0011 + i * 0.6) * 14 + Math.sin(time * 0.0009 + j * 0.5) * 9;
-          const px = i * cellW + xOffset;
-          const py = j * cellH + yOffset;
-          if (i === 0) cCtx.moveTo(px, py);
-          else cCtx.lineTo(px, py);
+        for (let y = 0; y < height + 40; y += 15) {
+          const xOffset = Math.sin(y * 0.015 + time * 0.02) * 7 + Math.cos(y * 0.007 - time * 0.015) * 5;
+          if (y === 0) cCtx.moveTo(x + xOffset, y);
+          else cCtx.lineTo(x + xOffset, y);
         }
         cCtx.stroke();
       }
