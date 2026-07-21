@@ -159,7 +159,7 @@ class KoiFish {
   mouthOpen: number;
 
   static readonly SEG_COUNT = 18;
-  static readonly SEG_SPACING = 12; // px base spacing between segments
+  static readonly SEG_SPACING = 20; // px base spacing between segments — matches uncompressed photo aspect ratio
 
   constructor(x: number, y: number, img: HTMLImageElement, sizeMultiplier: number) {
     this.x = x;
@@ -241,15 +241,15 @@ class KoiFish {
     this.x += Math.cos(this.angle) * this.speed;
     this.y += Math.sin(this.angle) * this.speed;
 
-    // Undulating body chain with natural S-curve tail sweep
+    // Undulating body chain with smooth, graceful S-curve tail sweep
     this.segments[0] = { x: this.x, y: this.y };
-    const wiggleAmp = 3.5 * this.sizeMultiplier;
+    const wiggleAmp = 2.8 * this.sizeMultiplier;
     const segLen = KoiFish.SEG_SPACING * this.sizeMultiplier;
     for (let i = 1; i < this.segments.length; i++) {
       const prev = this.segments[i - 1];
       const curr = this.segments[i];
       const t = i / (this.segments.length - 1); // 0..1 head to tail
-      const wiggle = Math.sin(this.phase + i * 0.45) * wiggleAmp * t * t; // S-curve ramp
+      const wiggle = Math.sin(this.phase + i * 0.38) * wiggleAmp * t * t; // Smooth S-curve ramp
 
       let segAngle = this.angle;
       if (i > 1) {
@@ -268,7 +268,7 @@ class KoiFish {
       curr.y = prev.y + Math.sin(sAngle) * Math.min(sDist, segLen);
     }
 
-    this.phase += this.speed * 0.09;
+    this.phase += this.speed * 0.07;
   }
 
   private getSegAngle(i: number): number {
@@ -283,7 +283,7 @@ class KoiFish {
     const shadowOffset = 14 + this.depth * 26;
     const alpha = 0.18 - this.depth * 0.08;
     const scale = 1.0 - this.depth * 0.12;
-    const s = (this.sizeMultiplier * 0.45) * scale;
+    const s = (this.sizeMultiplier * 0.70) * scale;
 
     ctx.save();
     ctx.globalAlpha = alpha;
@@ -298,7 +298,7 @@ class KoiFish {
       const segAngle = this.getSegAngle(i);
       const sy = i * sliceH;
       const dw = imgW * s;
-      const dh = sliceH * s * 1.15;
+      const dh = sliceH * s * 1.05;
 
       ctx.save();
       ctx.translate(seg.x + shadowOffset, seg.y + shadowOffset + 6);
@@ -313,7 +313,7 @@ class KoiFish {
     if (!this.img || !this.img.complete || this.img.naturalWidth === 0) return;
     const scale = 1.0 - this.depth * 0.12;
     const alpha = 0.92 - this.depth * 0.2;
-    const s = (this.sizeMultiplier * 0.45) * scale;
+    const s = (this.sizeMultiplier * 0.70) * scale;
 
     ctx.save();
     ctx.globalAlpha = alpha;
@@ -329,7 +329,7 @@ class KoiFish {
       const segAngle = this.getSegAngle(i);
       const sy = i * sliceH;
       const dw = imgW * s;
-      const dh = sliceH * s * 1.18; // Slight overlap prevents seams during bending
+      const dh = sliceH * s * 1.05; // Exact uncompressed ratio
 
       ctx.save();
       ctx.translate(seg.x, seg.y);
