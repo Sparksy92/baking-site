@@ -160,6 +160,12 @@ class KoiFish {
   depth: number;
   targetDepth: number;
   mouthOpen: number;
+  // 16-segment body profile — head(wide) → torso(very thick) → tapered tail
+  static readonly BODY_PROFILE = [
+    13, 15.5, 17, 18, 17.5, 16.5, 15, 13, 11, 9, 7, 5, 3.5, 2.2, 1.0, 0.3,
+  ];
+  static readonly SEG_COUNT = 16;
+  static readonly SEG_SPACING = 14; // px base spacing between segments
 
   constructor(x: number, y: number, config: {
     baseColor: string;
@@ -172,30 +178,31 @@ class KoiFish {
     this.y = y;
     this.angle = Math.random() * Math.PI * 2;
     this.targetAngle = this.angle;
-    this.speed = 0.6 + Math.random() * 0.4;
+    this.speed = 0.5 + Math.random() * 0.35;
     this.targetSpeed = this.speed;
     this.phase = Math.random() * Math.PI * 2;
     this.baseColor = config.baseColor;
     this.bodyGradColors = config.bodyGradColors;
     this.patchColor = config.patchColor;
     this.sizeMultiplier = config.sizeMultiplier;
-    this.depth = 0.15 + Math.random() * 0.35;
+    this.depth = 0.12 + Math.random() * 0.3;
     this.targetDepth = this.depth;
     this.mouthOpen = 0;
 
-    // Generate random patch positions
+    // Generate organic patch positions spread across the long body
     this.patchPositions = [];
     for (let i = 0; i < config.patchCount; i++) {
       this.patchPositions.push({
-        segIdx: 1 + Math.floor(Math.random() * 6),
-        offset: (Math.random() - 0.5) * 0.7,
-        size: 0.5 + Math.random() * 0.6,
+        segIdx: 1 + Math.floor(Math.random() * 10),
+        offset: (Math.random() - 0.5) * 0.65,
+        size: 0.6 + Math.random() * 0.7,
       });
     }
 
     this.segments = [];
-    for (let i = 0; i < 10; i++) {
-      this.segments.push({ x: x - i * 8 * config.sizeMultiplier, y });
+    const spacing = KoiFish.SEG_SPACING * config.sizeMultiplier;
+    for (let i = 0; i < KoiFish.SEG_COUNT; i++) {
+      this.segments.push({ x: x - i * spacing, y });
     }
   }
 
@@ -204,14 +211,14 @@ class KoiFish {
     const dy = mouseY - this.y;
     const dist = Math.hypot(dx, dy);
 
-    if (dist < 140) {
+    if (dist < 180) {
       this.targetAngle = Math.atan2(this.y - mouseY, this.x - mouseX);
-      this.targetSpeed = 3.0;
-      this.targetDepth = 0.6;
+      this.targetSpeed = 2.8;
+      this.targetDepth = 0.55;
     } else {
       const activeFoods = foods.filter(f => !f.isEaten);
       let closestFood: Food | null = null;
-      let minDist = 300;
+      let minDist = 400;
 
       for (const food of activeFoods) {
         const fDist = Math.hypot(food.x - this.x, food.y - this.y);
@@ -223,49 +230,50 @@ class KoiFish {
 
       if (closestFood) {
         this.targetAngle = Math.atan2(closestFood.y - this.y, closestFood.x - this.x);
-        this.targetSpeed = 1.6 + Math.random() * 0.4;
-        this.targetDepth = 0.1;
+        this.targetSpeed = 1.4 + Math.random() * 0.4;
+        this.targetDepth = 0.08;
         this.mouthOpen = Math.min(1, this.mouthOpen + 0.05);
 
-        if (minDist < 14) {
+        if (minDist < 20) {
           closestFood.isEaten = true;
-          this.targetSpeed = 3.5;
+          this.targetSpeed = 3.2;
           this.mouthOpen = 1;
-          ripples.push({ x: closestFood.x, y: closestFood.y, radius: 2, maxRadius: 40, strength: 0.9, speed: 1.3 });
+          ripples.push({ x: closestFood.x, y: closestFood.y, radius: 2, maxRadius: 50, strength: 0.9, speed: 1.3 });
         }
       } else {
         this.mouthOpen = Math.max(0, this.mouthOpen - 0.03);
-        if (Math.random() < 0.012) {
-          this.targetAngle = this.angle + (Math.random() - 0.5) * 1.2;
-          this.targetDepth = 0.15 + Math.random() * 0.4;
+        if (Math.random() < 0.01) {
+          this.targetAngle = this.angle + (Math.random() - 0.5) * 1.0;
+          this.targetDepth = 0.12 + Math.random() * 0.35;
         }
-        this.targetSpeed = 0.6 + Math.random() * 0.4;
+        this.targetSpeed = 0.5 + Math.random() * 0.35;
       }
     }
 
-    // Boundary avoidance
-    const margin = 70;
+    // Boundary avoidance — push away from edges
+    const margin = 120;
     if (this.x < margin) this.targetAngle = 0;
     else if (this.x > width - margin) this.targetAngle = Math.PI;
     if (this.y < margin) this.targetAngle = Math.PI / 2;
     else if (this.y > height - margin) this.targetAngle = -Math.PI / 2;
 
     const angleDiff = this.targetAngle - this.angle;
-    this.angle += Math.sin(angleDiff) * 0.06;
-    this.speed = this.speed * 0.95 + this.targetSpeed * 0.05;
+    this.angle += Math.sin(angleDiff) * 0.05;
+    this.speed = this.speed * 0.96 + this.targetSpeed * 0.04;
     this.depth = this.depth * 0.97 + this.targetDepth * 0.03;
 
     this.x += Math.cos(this.angle) * this.speed;
     this.y += Math.sin(this.angle) * this.speed;
 
-    // Undulating body chain
+    // Undulating body chain with stronger rear wiggle
     this.segments[0] = { x: this.x, y: this.y };
-    const wiggleAmp = 2.5 * this.sizeMultiplier;
+    const wiggleAmp = 4.0 * this.sizeMultiplier;
+    const segLen = KoiFish.SEG_SPACING * this.sizeMultiplier;
     for (let i = 1; i < this.segments.length; i++) {
       const prev = this.segments[i - 1];
       const curr = this.segments[i];
-      const segLen = 8 * this.sizeMultiplier;
-      const wiggle = Math.sin(this.phase + i * 0.65) * wiggleAmp * (i / this.segments.length);
+      const t = i / (this.segments.length - 1); // 0..1 head to tail
+      const wiggle = Math.sin(this.phase + i * 0.5) * wiggleAmp * t * t; // Quadratic ramp
 
       let segAngle = this.angle;
       if (i > 1) {
@@ -284,13 +292,11 @@ class KoiFish {
       curr.y = prev.y + Math.sin(sAngle) * Math.min(sDist, segLen);
     }
 
-    this.phase += this.speed * 0.12;
+    this.phase += this.speed * 0.1;
   }
 
   private getSegRadius(i: number): number {
-    // Realistic koi body profile: head → thick body → tapered tail
-    const profile = [6.5, 7.8, 8.2, 8.0, 7.2, 6.0, 4.5, 3.0, 1.8, 0.5];
-    return (profile[i] || 0) * this.sizeMultiplier;
+    return (KoiFish.BODY_PROFILE[i] || 0) * this.sizeMultiplier;
   }
 
   private getSegAngle(i: number): number {
@@ -301,12 +307,12 @@ class KoiFish {
   }
 
   drawShadow(ctx: CanvasRenderingContext2D) {
-    const shadowOffset = 10 + this.depth * 20;
-    const alpha = 0.25 - this.depth * 0.15;
+    const shadowOffset = 14 + this.depth * 26;
+    const alpha = 0.22 - this.depth * 0.12;
     ctx.save();
     ctx.fillStyle = `rgba(0, 30, 20, ${alpha})`;
-    ctx.filter = `blur(${(6 + this.depth * 10) * this.sizeMultiplier}px)`;
-    this.buildBodyPath(ctx, shadowOffset, shadowOffset + 4);
+    ctx.filter = `blur(${(8 + this.depth * 14) * this.sizeMultiplier}px)`;
+    this.buildBodyPath(ctx, shadowOffset, shadowOffset + 6);
     ctx.fill();
     ctx.filter = 'none';
     ctx.restore();
@@ -319,19 +325,19 @@ class KoiFish {
     for (let i = 0; i < this.segments.length; i++) {
       const seg = this.segments[i];
       const r = this.getSegRadius(i);
-      if (r <= 0) continue;
+      if (r <= 0.1) continue;
       const a = this.getSegAngle(i);
       leftPts.push({ x: seg.x + offX + Math.cos(a - Math.PI / 2) * r, y: seg.y + offY + Math.sin(a - Math.PI / 2) * r });
       rightPts.push({ x: seg.x + offX + Math.cos(a + Math.PI / 2) * r, y: seg.y + offY + Math.sin(a + Math.PI / 2) * r });
     }
 
     ctx.beginPath();
-    // Rounded head
+    // Rounded head cap
     const headA = this.getSegAngle(0);
     const headSeg = this.segments[0];
     ctx.arc(headSeg.x + offX, headSeg.y + offY, this.getSegRadius(0), headA - Math.PI / 2, headA + Math.PI / 2, true);
 
-    // Left side spline
+    // Left contour spline
     for (let i = 0; i < leftPts.length - 1; i++) {
       const mx = (leftPts[i].x + leftPts[i + 1].x) / 2;
       const my = (leftPts[i].y + leftPts[i + 1].y) / 2;
@@ -342,7 +348,7 @@ class KoiFish {
     const tail = this.segments[this.segments.length - 1];
     ctx.lineTo(tail.x + offX, tail.y + offY);
 
-    // Right side spline (reversed)
+    // Right contour spline (reversed)
     for (let i = rightPts.length - 1; i > 0; i--) {
       const mx = (rightPts[i].x + rightPts[i - 1].x) / 2;
       const my = (rightPts[i].y + rightPts[i - 1].y) / 2;
@@ -354,103 +360,140 @@ class KoiFish {
 
   draw(ctx: CanvasRenderingContext2D) {
     ctx.save();
-    const scale = 1.0 - this.depth * 0.15;
-    const alpha = 0.88 - this.depth * 0.25;
+    const scale = 1.0 - this.depth * 0.12;
+    const alpha = 0.9 - this.depth * 0.2;
     ctx.globalAlpha = alpha;
 
+    const s = this.sizeMultiplier * scale; // shorthand
     const head = this.segments[0];
     const tail = this.segments[this.segments.length - 1];
     const tailPrev = this.segments[this.segments.length - 2];
     const tailAngle = Math.atan2(tail.y - tailPrev.y, tail.x - tailPrev.x);
-    const finWiggle = Math.sin(this.phase) * 0.2;
-    const tailSweep = Math.sin(this.phase) * 0.45;
+    const finWiggle = Math.sin(this.phase) * 0.22;
+    const tailSweep = Math.sin(this.phase) * 0.5;
 
-    // ── Dorsal fin (top of body, segments 2-5) ──
+    // ── Dorsal fin (long ridge along segments 3-8) ──
     ctx.fillStyle = this.bodyGradColors[1] || this.baseColor;
-    ctx.globalAlpha = alpha * 0.5;
-    ctx.beginPath();
-    const dorsalStart = this.segments[2];
-    const dorsalEnd = this.segments[5];
-    const dorsalMid = this.segments[3];
-    const dorsalAngle = this.getSegAngle(3);
-    ctx.moveTo(dorsalStart.x, dorsalStart.y);
-    ctx.quadraticCurveTo(
-      dorsalMid.x + Math.cos(dorsalAngle - Math.PI / 2) * 14 * this.sizeMultiplier * scale,
-      dorsalMid.y + Math.sin(dorsalAngle - Math.PI / 2) * 14 * this.sizeMultiplier * scale,
-      dorsalEnd.x, dorsalEnd.y
-    );
-    ctx.fill();
-    ctx.globalAlpha = alpha;
-
-    // ── Pectoral fins ──
-    const pectSeg = this.segments[2];
-    const pectAngle = this.getSegAngle(2);
-    ctx.fillStyle = this.baseColor;
     ctx.globalAlpha = alpha * 0.45;
-
-    // Left pectoral
     ctx.beginPath();
-    ctx.moveTo(pectSeg.x, pectSeg.y);
-    ctx.bezierCurveTo(
-      pectSeg.x + Math.cos(pectAngle - Math.PI / 2 - 0.3 + finWiggle) * 22 * this.sizeMultiplier * scale,
-      pectSeg.y + Math.sin(pectAngle - Math.PI / 2 - 0.3 + finWiggle) * 22 * this.sizeMultiplier * scale,
-      pectSeg.x + Math.cos(pectAngle - Math.PI / 2 - 0.6 + finWiggle) * 30 * this.sizeMultiplier * scale,
-      pectSeg.y + Math.sin(pectAngle - Math.PI / 2 - 0.6 + finWiggle) * 30 * this.sizeMultiplier * scale,
-      this.segments[4].x, this.segments[4].y
+    const dS = this.segments[3];
+    const dM = this.segments[5];
+    const dE = this.segments[8];
+    const dA = this.getSegAngle(5);
+    ctx.moveTo(dS.x, dS.y);
+    ctx.quadraticCurveTo(
+      dM.x + Math.cos(dA - Math.PI / 2) * 18 * s,
+      dM.y + Math.sin(dA - Math.PI / 2) * 18 * s,
+      dE.x, dE.y
     );
     ctx.fill();
-
-    // Right pectoral
-    ctx.beginPath();
-    ctx.moveTo(pectSeg.x, pectSeg.y);
-    ctx.bezierCurveTo(
-      pectSeg.x + Math.cos(pectAngle + Math.PI / 2 + 0.3 - finWiggle) * 22 * this.sizeMultiplier * scale,
-      pectSeg.y + Math.sin(pectAngle + Math.PI / 2 + 0.3 - finWiggle) * 22 * this.sizeMultiplier * scale,
-      pectSeg.x + Math.cos(pectAngle + Math.PI / 2 + 0.6 - finWiggle) * 30 * this.sizeMultiplier * scale,
-      pectSeg.y + Math.sin(pectAngle + Math.PI / 2 + 0.6 - finWiggle) * 30 * this.sizeMultiplier * scale,
-      this.segments[4].x, this.segments[4].y
-    );
-    ctx.fill();
-
     ctx.globalAlpha = alpha;
 
-    // ── Tail fin (forked) ──
+    // ── Pectoral fins (large, flowing) ──
+    const pSeg = this.segments[3];
+    const pA = this.getSegAngle(3);
     ctx.fillStyle = this.baseColor;
-    ctx.globalAlpha = alpha * 0.6;
-    // Left lobe
+    ctx.globalAlpha = alpha * 0.4;
+
+    for (const side of [-1, 1]) {
+      ctx.beginPath();
+      ctx.moveTo(pSeg.x, pSeg.y);
+      ctx.bezierCurveTo(
+        pSeg.x + Math.cos(pA + side * (Math.PI / 2 + 0.3) + finWiggle * side) * 32 * s,
+        pSeg.y + Math.sin(pA + side * (Math.PI / 2 + 0.3) + finWiggle * side) * 32 * s,
+        pSeg.x + Math.cos(pA + side * (Math.PI / 2 + 0.7) + finWiggle * side) * 44 * s,
+        pSeg.y + Math.sin(pA + side * (Math.PI / 2 + 0.7) + finWiggle * side) * 44 * s,
+        this.segments[6].x, this.segments[6].y
+      );
+      ctx.fill();
+      // Fin rays
+      ctx.strokeStyle = 'rgba(255,255,255,0.18)';
+      ctx.lineWidth = 0.8;
+      for (let r = 0.15; r < 0.8; r += 0.15) {
+        ctx.beginPath();
+        ctx.moveTo(pSeg.x, pSeg.y);
+        ctx.lineTo(
+          pSeg.x + Math.cos(pA + side * (Math.PI / 2 + r) + finWiggle * side) * 36 * s,
+          pSeg.y + Math.sin(pA + side * (Math.PI / 2 + r) + finWiggle * side) * 36 * s
+        );
+        ctx.stroke();
+      }
+    }
+    ctx.globalAlpha = alpha;
+
+    // ── Ventral fins (small, near segment 7) ──
+    const vSeg = this.segments[7];
+    const vA = this.getSegAngle(7);
+    ctx.fillStyle = this.baseColor;
+    ctx.globalAlpha = alpha * 0.35;
+    for (const side of [-1, 1]) {
+      ctx.beginPath();
+      ctx.moveTo(vSeg.x, vSeg.y);
+      ctx.bezierCurveTo(
+        vSeg.x + Math.cos(vA + side * (Math.PI / 2 + 0.2) + finWiggle * side * 0.5) * 16 * s,
+        vSeg.y + Math.sin(vA + side * (Math.PI / 2 + 0.2) + finWiggle * side * 0.5) * 16 * s,
+        vSeg.x + Math.cos(vA + side * (Math.PI / 2 + 0.5) + finWiggle * side * 0.5) * 22 * s,
+        vSeg.y + Math.sin(vA + side * (Math.PI / 2 + 0.5) + finWiggle * side * 0.5) * 22 * s,
+        this.segments[9].x, this.segments[9].y
+      );
+      ctx.fill();
+    }
+    ctx.globalAlpha = alpha;
+
+    // ── Anal fin (bottom, segments 9-11) ──
+    const aSeg = this.segments[10];
+    const aA = this.getSegAngle(10);
+    ctx.fillStyle = this.baseColor;
+    ctx.globalAlpha = alpha * 0.4;
     ctx.beginPath();
-    ctx.moveTo(tail.x, tail.y);
-    ctx.bezierCurveTo(
-      tail.x + Math.cos(tailAngle + Math.PI - 0.5 + tailSweep) * 22 * this.sizeMultiplier * scale,
-      tail.y + Math.sin(tailAngle + Math.PI - 0.5 + tailSweep) * 22 * this.sizeMultiplier * scale,
-      tail.x + Math.cos(tailAngle + Math.PI - 1.0 + tailSweep) * 28 * this.sizeMultiplier * scale,
-      tail.y + Math.sin(tailAngle + Math.PI - 1.0 + tailSweep) * 28 * this.sizeMultiplier * scale,
-      tail.x + Math.cos(tailAngle + Math.PI) * 12 * this.sizeMultiplier * scale,
-      tail.y + Math.sin(tailAngle + Math.PI) * 12 * this.sizeMultiplier * scale
+    ctx.moveTo(this.segments[9].x, this.segments[9].y);
+    ctx.quadraticCurveTo(
+      aSeg.x + Math.cos(aA + Math.PI / 2) * 12 * s,
+      aSeg.y + Math.sin(aA + Math.PI / 2) * 12 * s,
+      this.segments[12].x, this.segments[12].y
     );
     ctx.fill();
-    // Right lobe
-    ctx.beginPath();
-    ctx.moveTo(tail.x, tail.y);
-    ctx.bezierCurveTo(
-      tail.x + Math.cos(tailAngle + Math.PI + 0.5 + tailSweep) * 22 * this.sizeMultiplier * scale,
-      tail.y + Math.sin(tailAngle + Math.PI + 0.5 + tailSweep) * 22 * this.sizeMultiplier * scale,
-      tail.x + Math.cos(tailAngle + Math.PI + 1.0 + tailSweep) * 28 * this.sizeMultiplier * scale,
-      tail.y + Math.sin(tailAngle + Math.PI + 1.0 + tailSweep) * 28 * this.sizeMultiplier * scale,
-      tail.x + Math.cos(tailAngle + Math.PI) * 12 * this.sizeMultiplier * scale,
-      tail.y + Math.sin(tailAngle + Math.PI) * 12 * this.sizeMultiplier * scale
-    );
-    ctx.fill();
+    ctx.globalAlpha = alpha;
+
+    // ── Tail fin (large, forked, flowing) ──
+    ctx.fillStyle = this.baseColor;
+    ctx.globalAlpha = alpha * 0.55;
+    for (const side of [-1, 1]) {
+      ctx.beginPath();
+      ctx.moveTo(tail.x, tail.y);
+      ctx.bezierCurveTo(
+        tail.x + Math.cos(tailAngle + Math.PI + side * 0.4 + tailSweep) * 32 * s,
+        tail.y + Math.sin(tailAngle + Math.PI + side * 0.4 + tailSweep) * 32 * s,
+        tail.x + Math.cos(tailAngle + Math.PI + side * 1.1 + tailSweep) * 42 * s,
+        tail.y + Math.sin(tailAngle + Math.PI + side * 1.1 + tailSweep) * 42 * s,
+        tail.x + Math.cos(tailAngle + Math.PI + side * 0.15 + tailSweep) * 20 * s,
+        tail.y + Math.sin(tailAngle + Math.PI + side * 0.15 + tailSweep) * 20 * s
+      );
+      ctx.closePath();
+      ctx.fill();
+    }
+    // Tail fin rays
+    ctx.strokeStyle = 'rgba(255,255,255,0.15)';
+    ctx.lineWidth = 0.7;
+    for (let r = -0.9; r <= 0.9; r += 0.2) {
+      ctx.beginPath();
+      ctx.moveTo(tail.x, tail.y);
+      ctx.lineTo(
+        tail.x + Math.cos(tailAngle + Math.PI + r + tailSweep) * 35 * s,
+        tail.y + Math.sin(tailAngle + Math.PI + r + tailSweep) * 35 * s
+      );
+      ctx.stroke();
+    }
     ctx.globalAlpha = alpha;
 
     // ── Main body fill ──
     this.buildBodyPath(ctx);
     const bodyGrad = ctx.createLinearGradient(
-      head.x + Math.cos(this.angle) * 10, head.y + Math.sin(this.angle) * 10,
+      head.x + Math.cos(this.angle) * 20, head.y + Math.sin(this.angle) * 20,
       tail.x, tail.y
     );
     bodyGrad.addColorStop(0, this.bodyGradColors[0]);
-    bodyGrad.addColorStop(0.4, this.bodyGradColors[1]);
+    bodyGrad.addColorStop(0.35, this.bodyGradColors[1]);
     bodyGrad.addColorStop(1, this.bodyGradColors[2] || this.bodyGradColors[1]);
     ctx.fillStyle = bodyGrad;
     ctx.fill();
@@ -467,27 +510,34 @@ class KoiFish {
         const a = this.getSegAngle(patch.segIdx);
         const ox = Math.cos(a + Math.PI / 2) * this.getSegRadius(patch.segIdx) * patch.offset;
         const oy = Math.sin(a + Math.PI / 2) * this.getSegRadius(patch.segIdx) * patch.offset;
+        // Organic blotch — two overlapping ellipses
         ctx.beginPath();
-        ctx.ellipse(seg.x + ox, seg.y + oy, r * 1.2, r * 0.85, a, 0, Math.PI * 2);
+        ctx.ellipse(seg.x + ox, seg.y + oy, r * 1.4, r * 0.9, a, 0, Math.PI * 2);
+        ctx.fill();
+        ctx.beginPath();
+        ctx.ellipse(seg.x + ox * 0.5 + Math.cos(a) * r * 0.4, seg.y + oy * 0.5 + Math.sin(a) * r * 0.4, r * 0.9, r * 0.7, a + 0.3, 0, Math.PI * 2);
         ctx.fill();
       }
       ctx.restore();
     }
 
-    // ── Scale texture ──
+    // ── Scale texture (crescent rows across body) ──
     ctx.save();
     ctx.globalCompositeOperation = 'source-atop';
-    ctx.strokeStyle = 'rgba(255,255,255,0.12)';
-    ctx.lineWidth = 0.6;
-    for (let i = 1; i < this.segments.length - 2; i++) {
+    ctx.strokeStyle = 'rgba(255,255,255,0.1)';
+    ctx.lineWidth = 0.7;
+    for (let i = 1; i < this.segments.length - 3; i++) {
       const seg = this.segments[i];
       const r = this.getSegRadius(i);
       const a = this.getSegAngle(i);
-      for (let row = -0.5; row <= 0.5; row += 0.25) {
-        const cx = seg.x + Math.cos(a + Math.PI / 2) * r * row;
-        const cy = seg.y + Math.sin(a + Math.PI / 2) * r * row;
+      // More scale rows for wider body
+      const rowCount = Math.max(3, Math.round(r / (4 * this.sizeMultiplier)));
+      for (let row = -rowCount; row <= rowCount; row++) {
+        const frac = row / (rowCount + 1);
+        const cx = seg.x + Math.cos(a + Math.PI / 2) * r * frac;
+        const cy = seg.y + Math.sin(a + Math.PI / 2) * r * frac;
         ctx.beginPath();
-        ctx.arc(cx, cy, r * 0.22, a - 0.8, a + 0.8);
+        ctx.arc(cx, cy, r * 0.18, a - 0.7, a + 0.7);
         ctx.stroke();
       }
     }
@@ -496,72 +546,95 @@ class KoiFish {
     // ── 3D cylindrical shading ──
     ctx.save();
     ctx.globalCompositeOperation = 'source-atop';
-    const sideAngle = this.angle + Math.PI / 2;
+    const perpA = this.angle + Math.PI / 2;
+    const maxR = this.getSegRadius(3); // widest point
     const shadeGrad = ctx.createLinearGradient(
-      head.x + Math.cos(sideAngle) * 10, head.y + Math.sin(sideAngle) * 10,
-      head.x - Math.cos(sideAngle) * 10, head.y - Math.sin(sideAngle) * 10
+      head.x + Math.cos(perpA) * maxR, head.y + Math.sin(perpA) * maxR,
+      head.x - Math.cos(perpA) * maxR, head.y - Math.sin(perpA) * maxR
     );
-    shadeGrad.addColorStop(0, 'rgba(0,0,0,0.28)');
-    shadeGrad.addColorStop(0.3, 'rgba(255,255,255,0.08)');
-    shadeGrad.addColorStop(0.5, 'rgba(255,255,255,0.25)');
-    shadeGrad.addColorStop(0.7, 'rgba(255,255,255,0.08)');
-    shadeGrad.addColorStop(1, 'rgba(0,0,0,0.32)');
+    shadeGrad.addColorStop(0, 'rgba(0,0,0,0.3)');
+    shadeGrad.addColorStop(0.25, 'rgba(255,255,255,0.06)');
+    shadeGrad.addColorStop(0.45, 'rgba(255,255,255,0.22)');
+    shadeGrad.addColorStop(0.55, 'rgba(255,255,255,0.22)');
+    shadeGrad.addColorStop(0.75, 'rgba(255,255,255,0.06)');
+    shadeGrad.addColorStop(1, 'rgba(0,0,0,0.35)');
     ctx.fillStyle = shadeGrad;
     this.buildBodyPath(ctx);
     ctx.fill();
     ctx.restore();
 
-    // ── Gill marks ──
-    ctx.strokeStyle = `rgba(0,0,0,0.15)`;
-    ctx.lineWidth = 1.0;
-    const gillR = 5.5 * this.sizeMultiplier * scale;
+    // ── Lateral line (faint streak along the midline) ──
+    ctx.save();
+    ctx.strokeStyle = 'rgba(0,0,0,0.08)';
+    ctx.lineWidth = 1.2;
     ctx.beginPath();
-    ctx.arc(head.x, head.y, gillR, this.angle - Math.PI / 2 - 0.4, this.angle - Math.PI / 2 + 0.4);
+    ctx.moveTo(this.segments[1].x, this.segments[1].y);
+    for (let i = 2; i < this.segments.length - 2; i++) {
+      const seg = this.segments[i];
+      const next = this.segments[i + 1];
+      const mx = (seg.x + next.x) / 2;
+      const my = (seg.y + next.y) / 2;
+      ctx.quadraticCurveTo(seg.x, seg.y, mx, my);
+    }
+    ctx.stroke();
+    ctx.restore();
+
+    // ── Gill marks (operculum) ──
+    ctx.strokeStyle = 'rgba(0,0,0,0.18)';
+    ctx.lineWidth = 1.5;
+    const gillR = this.getSegRadius(0) * 0.85;
+    ctx.beginPath();
+    ctx.arc(head.x, head.y, gillR, this.angle - Math.PI / 2 - 0.45, this.angle - Math.PI / 2 + 0.45);
     ctx.stroke();
     ctx.beginPath();
-    ctx.arc(head.x, head.y, gillR, this.angle + Math.PI / 2 - 0.4, this.angle + Math.PI / 2 + 0.4);
+    ctx.arc(head.x, head.y, gillR, this.angle + Math.PI / 2 - 0.45, this.angle + Math.PI / 2 + 0.45);
     ctx.stroke();
 
     // ── Barbels (whiskers) ──
     ctx.strokeStyle = this.bodyGradColors[0];
-    ctx.lineWidth = 1.0;
+    ctx.lineWidth = 1.2;
     const noseX = head.x + Math.cos(this.angle) * this.getSegRadius(0);
     const noseY = head.y + Math.sin(this.angle) * this.getSegRadius(0);
     for (const side of [-1, 1]) {
       ctx.beginPath();
       ctx.moveTo(noseX, noseY);
       ctx.quadraticCurveTo(
-        noseX + Math.cos(this.angle + side * 0.35) * 10 * this.sizeMultiplier * scale,
-        noseY + Math.sin(this.angle + side * 0.35) * 10 * this.sizeMultiplier * scale,
-        noseX + Math.cos(this.angle + side * 0.7) * 13 * this.sizeMultiplier * scale,
-        noseY + Math.sin(this.angle + side * 0.7) * 13 * this.sizeMultiplier * scale
+        noseX + Math.cos(this.angle + side * 0.3) * 14 * s,
+        noseY + Math.sin(this.angle + side * 0.3) * 14 * s,
+        noseX + Math.cos(this.angle + side * 0.65) * 18 * s,
+        noseY + Math.sin(this.angle + side * 0.65) * 18 * s
       );
       ctx.stroke();
     }
 
-    // ── Eyes (golden iris + black pupil + specular highlight) ──
-    const eyeR = 1.8 * this.sizeMultiplier * scale;
+    // ── Eyes (golden iris + black pupil + specular glint) ──
+    const eyeR = 2.8 * s;
     for (const side of [-1, 1]) {
-      const ex = head.x + Math.cos(this.angle + side * 0.5) * 4.5 * this.sizeMultiplier * scale;
-      const ey = head.y + Math.sin(this.angle + side * 0.5) * 4.5 * this.sizeMultiplier * scale;
+      const ex = head.x + Math.cos(this.angle + side * 0.45) * this.getSegRadius(0) * 0.65;
+      const ey = head.y + Math.sin(this.angle + side * 0.45) * this.getSegRadius(0) * 0.65;
+      // Eye white
+      ctx.fillStyle = '#F5F0E0';
+      ctx.beginPath();
+      ctx.arc(ex, ey, eyeR * 1.15, 0, Math.PI * 2);
+      ctx.fill();
       // Iris
       const irisGrad = ctx.createRadialGradient(ex, ey, 0, ex, ey, eyeR);
       irisGrad.addColorStop(0, '#DAA520');
-      irisGrad.addColorStop(0.5, '#B8860B');
-      irisGrad.addColorStop(1, '#8B6914');
+      irisGrad.addColorStop(0.6, '#B8860B');
+      irisGrad.addColorStop(1, '#6B4E0A');
       ctx.fillStyle = irisGrad;
       ctx.beginPath();
       ctx.arc(ex, ey, eyeR, 0, Math.PI * 2);
       ctx.fill();
       // Pupil
-      ctx.fillStyle = '#111';
+      ctx.fillStyle = '#0A0A0A';
       ctx.beginPath();
-      ctx.arc(ex, ey, eyeR * 0.5, 0, Math.PI * 2);
+      ctx.arc(ex, ey, eyeR * 0.45, 0, Math.PI * 2);
       ctx.fill();
-      // Specular
-      ctx.fillStyle = 'rgba(255,255,255,0.85)';
+      // Specular highlight
+      ctx.fillStyle = 'rgba(255,255,255,0.9)';
       ctx.beginPath();
-      ctx.arc(ex - eyeR * 0.2, ey - eyeR * 0.2, eyeR * 0.22, 0, Math.PI * 2);
+      ctx.arc(ex - eyeR * 0.22, ey - eyeR * 0.22, eyeR * 0.28, 0, Math.PI * 2);
       ctx.fill();
     }
 
@@ -660,14 +733,13 @@ export default function InteractivePondBackground() {
     resize();
     window.addEventListener('resize', resize);
 
-    // ── Fish species ──
+    // ── Fish species (5 majestic koi) ──
     const species = [
-      { baseColor: '#E86F51', bodyGradColors: ['#F4A261', '#E86F51', '#C45A3B'], patchColor: '#FFFCF0', patchCount: 4, sizeMultiplier: 2.2 },
-      { baseColor: '#FFFCF0', bodyGradColors: ['#FFFCF0', '#FFF5E6', '#F5E6D0'], patchColor: '#E86F51', patchCount: 5, sizeMultiplier: 2.0 },
-      { baseColor: '#F4A261', bodyGradColors: ['#F4C78E', '#F4A261', '#D4894F'], patchColor: '', patchCount: 0, sizeMultiplier: 1.7 },
-      { baseColor: '#FFFCF0', bodyGradColors: ['#FFFCF0', '#FFF8F0', '#FAF0E6'], patchColor: '#264653', patchCount: 3, sizeMultiplier: 2.4 },
-      { baseColor: '#2A9D8F', bodyGradColors: ['#3DB8A9', '#2A9D8F', '#1F7A6E'], patchColor: '#FFFCF0', patchCount: 3, sizeMultiplier: 1.6 },
-      { baseColor: '#E9C46A', bodyGradColors: ['#F0D48A', '#E9C46A', '#C9A84E'], patchColor: '#E86F51', patchCount: 4, sizeMultiplier: 1.9 },
+      { baseColor: '#E86F51', bodyGradColors: ['#F4A261', '#E86F51', '#C45A3B'], patchColor: '#FFFCF0', patchCount: 5, sizeMultiplier: 2.0 },
+      { baseColor: '#FFFCF0', bodyGradColors: ['#FFFCF0', '#FFF5E6', '#F0E4D0'], patchColor: '#D4513B', patchCount: 6, sizeMultiplier: 2.3 },
+      { baseColor: '#F4A261', bodyGradColors: ['#F4C78E', '#F4A261', '#D4894F'], patchColor: '', patchCount: 0, sizeMultiplier: 1.8 },
+      { baseColor: '#FFFCF0', bodyGradColors: ['#FFFCF0', '#FFF8F0', '#FAF0E6'], patchColor: '#1D3557', patchCount: 4, sizeMultiplier: 2.5 },
+      { baseColor: '#E9C46A', bodyGradColors: ['#F0D48A', '#E9C46A', '#C9A84E'], patchColor: '#E86F51', patchCount: 5, sizeMultiplier: 1.9 },
     ];
 
     fishRef.current = species.map(cfg => new KoiFish(
