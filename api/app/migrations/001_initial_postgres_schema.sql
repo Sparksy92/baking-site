@@ -5,7 +5,7 @@
 
 -- ── Categories ──────────────────────────────────────────────────
 
-CREATE TABLE categories (
+CREATE TABLE IF NOT EXISTS categories (
     id SERIAL PRIMARY KEY,
     name TEXT NOT NULL,
     slug TEXT NOT NULL UNIQUE,
@@ -17,12 +17,12 @@ CREATE TABLE categories (
     updated_at TEXT NOT NULL DEFAULT (CURRENT_TIMESTAMP)
 );
 
-CREATE INDEX idx_categories_slug ON categories(slug);
-CREATE INDEX idx_categories_active ON categories(is_active, sort_order);
+CREATE INDEX IF NOT EXISTS idx_categories_slug ON categories(slug);
+CREATE INDEX IF NOT EXISTS idx_categories_active ON categories(is_active, sort_order);
 
 -- ── Products ────────────────────────────────────────────────────
 
-CREATE TABLE products (
+CREATE TABLE IF NOT EXISTS products (
     id SERIAL PRIMARY KEY,
     name TEXT NOT NULL,
     slug TEXT NOT NULL UNIQUE,
@@ -35,13 +35,13 @@ CREATE TABLE products (
     updated_at TEXT NOT NULL DEFAULT (CURRENT_TIMESTAMP)
 );
 
-CREATE INDEX idx_products_slug ON products(slug);
-CREATE INDEX idx_products_category ON products(category_id, is_active, sort_order);
-CREATE INDEX idx_products_featured ON products(is_featured, is_active);
+CREATE INDEX IF NOT EXISTS idx_products_slug ON products(slug);
+CREATE INDEX IF NOT EXISTS idx_products_category ON products(category_id, is_active, sort_order);
+CREATE INDEX IF NOT EXISTS idx_products_featured ON products(is_featured, is_active);
 
 -- ── Product Variants (Size × Color) ────────────────────────────
 
-CREATE TABLE product_variants (
+CREATE TABLE IF NOT EXISTS product_variants (
     id SERIAL PRIMARY KEY,
     product_id INTEGER NOT NULL REFERENCES products(id) ON DELETE CASCADE,
     size TEXT NOT NULL,
@@ -57,12 +57,12 @@ CREATE TABLE product_variants (
     updated_at TEXT NOT NULL DEFAULT (CURRENT_TIMESTAMP)
 );
 
-CREATE INDEX idx_variants_product ON product_variants(product_id, is_active);
-CREATE INDEX idx_variants_sku ON product_variants(sku);
+CREATE INDEX IF NOT EXISTS idx_variants_product ON product_variants(product_id, is_active);
+CREATE INDEX IF NOT EXISTS idx_variants_sku ON product_variants(sku);
 
 -- ── Product Images ──────────────────────────────────────────────
 
-CREATE TABLE product_images (
+CREATE TABLE IF NOT EXISTS product_images (
     id SERIAL PRIMARY KEY,
     product_id INTEGER NOT NULL REFERENCES products(id) ON DELETE CASCADE,
     url TEXT NOT NULL,
@@ -72,11 +72,11 @@ CREATE TABLE product_images (
     created_at TEXT NOT NULL DEFAULT (CURRENT_TIMESTAMP)
 );
 
-CREATE INDEX idx_images_product ON product_images(product_id, sort_order);
+CREATE INDEX IF NOT EXISTS idx_images_product ON product_images(product_id, sort_order);
 
 -- ── Collections ─────────────────────────────────────────────────
 
-CREATE TABLE collections (
+CREATE TABLE IF NOT EXISTS collections (
     id SERIAL PRIMARY KEY,
     name TEXT NOT NULL,
     slug TEXT NOT NULL UNIQUE,
@@ -88,12 +88,12 @@ CREATE TABLE collections (
     updated_at TEXT NOT NULL DEFAULT (CURRENT_TIMESTAMP)
 );
 
-CREATE INDEX idx_collections_slug ON collections(slug);
-CREATE INDEX idx_collections_active ON collections(is_active, sort_order);
+CREATE INDEX IF NOT EXISTS idx_collections_slug ON collections(slug);
+CREATE INDEX IF NOT EXISTS idx_collections_active ON collections(is_active, sort_order);
 
 -- ── Collection ↔ Products (many-to-many) ────────────────────────
 
-CREATE TABLE collection_products (
+CREATE TABLE IF NOT EXISTS collection_products (
     collection_id INTEGER NOT NULL REFERENCES collections(id) ON DELETE CASCADE,
     product_id INTEGER NOT NULL REFERENCES products(id) ON DELETE CASCADE,
     sort_order INTEGER NOT NULL DEFAULT 0,
@@ -102,7 +102,7 @@ CREATE TABLE collection_products (
 
 -- ── Orders ──────────────────────────────────────────────────────
 
-CREATE TABLE orders (
+CREATE TABLE IF NOT EXISTS orders (
     id SERIAL PRIMARY KEY,
     order_number TEXT NOT NULL UNIQUE,
     status TEXT NOT NULL DEFAULT 'received',
@@ -131,14 +131,14 @@ CREATE TABLE orders (
     updated_at TEXT NOT NULL DEFAULT (CURRENT_TIMESTAMP)
 );
 
-CREATE INDEX idx_orders_number ON orders(order_number);
-CREATE INDEX idx_orders_status ON orders(status, created_at);
-CREATE INDEX idx_orders_date ON orders(created_at);
-CREATE INDEX idx_orders_email ON orders(customer_email);
+CREATE INDEX IF NOT EXISTS idx_orders_number ON orders(order_number);
+CREATE INDEX IF NOT EXISTS idx_orders_status ON orders(status, created_at);
+CREATE INDEX IF NOT EXISTS idx_orders_date ON orders(created_at);
+CREATE INDEX IF NOT EXISTS idx_orders_email ON orders(customer_email);
 
 -- ── Order Items ─────────────────────────────────────────────────
 
-CREATE TABLE order_items (
+CREATE TABLE IF NOT EXISTS order_items (
     id SERIAL PRIMARY KEY,
     order_id INTEGER NOT NULL REFERENCES orders(id) ON DELETE CASCADE,
     product_id INTEGER REFERENCES products(id) ON DELETE SET NULL,
@@ -151,11 +151,11 @@ CREATE TABLE order_items (
     line_total_cents INTEGER NOT NULL
 );
 
-CREATE INDEX idx_order_items_order ON order_items(order_id);
+CREATE INDEX IF NOT EXISTS idx_order_items_order ON order_items(order_id);
 
 -- ── Admin Users ─────────────────────────────────────────────────
 
-CREATE TABLE admin_users (
+CREATE TABLE IF NOT EXISTS admin_users (
     id SERIAL PRIMARY KEY,
     username TEXT NOT NULL UNIQUE,
     password_hash TEXT NOT NULL,
@@ -169,7 +169,7 @@ CREATE TABLE admin_users (
 
 -- ── Audit Log ───────────────────────────────────────────────────
 
-CREATE TABLE audit_log (
+CREATE TABLE IF NOT EXISTS audit_log (
     id SERIAL PRIMARY KEY,
     user_id INTEGER REFERENCES admin_users(id),
     username TEXT NOT NULL,
@@ -182,12 +182,12 @@ CREATE TABLE audit_log (
     created_at TEXT NOT NULL DEFAULT (CURRENT_TIMESTAMP)
 );
 
-CREATE INDEX idx_audit_date ON audit_log(created_at);
-CREATE INDEX idx_audit_entity ON audit_log(entity_type, entity_id);
+CREATE INDEX IF NOT EXISTS idx_audit_date ON audit_log(created_at);
+CREATE INDEX IF NOT EXISTS idx_audit_entity ON audit_log(entity_type, entity_id);
 
 -- ── Settings (key-value store) ──────────────────────────────────
 
-CREATE TABLE settings (
+CREATE TABLE IF NOT EXISTS settings (
     key TEXT PRIMARY KEY,
     value TEXT NOT NULL,
     updated_by TEXT,
@@ -205,7 +205,7 @@ INSERT INTO settings (key, value) VALUES
 -- From 002_promo_codes.sql
 -- Promo / Discount Codes
 
-CREATE TABLE promo_codes (
+CREATE TABLE IF NOT EXISTS promo_codes (
     id SERIAL PRIMARY KEY,
     code TEXT NOT NULL UNIQUE ,
     description TEXT,
@@ -221,8 +221,8 @@ CREATE TABLE promo_codes (
     updated_at TEXT NOT NULL DEFAULT (CURRENT_TIMESTAMP)
 );
 
-CREATE INDEX idx_promo_code ON promo_codes(code);
-CREATE INDEX idx_promo_active ON promo_codes(is_active, starts_at, expires_at);
+CREATE INDEX IF NOT EXISTS idx_promo_code ON promo_codes(code);
+CREATE INDEX IF NOT EXISTS idx_promo_active ON promo_codes(is_active, starts_at, expires_at);
 
 -- Track which orders used which promo
 ALTER TABLE orders ADD COLUMN promo_code TEXT;
@@ -263,7 +263,7 @@ ALTER TABLE orders ADD COLUMN cancelled_at TEXT;
 -- From 006_customer_accounts.sql
 -- Customer accounts: registration, login, addresses, order linkage
 
-CREATE TABLE customers (
+CREATE TABLE IF NOT EXISTS customers (
     id SERIAL PRIMARY KEY,
     email TEXT NOT NULL UNIQUE ,
     password_hash TEXT NOT NULL,
@@ -278,10 +278,10 @@ CREATE TABLE customers (
     updated_at TEXT NOT NULL DEFAULT (CURRENT_TIMESTAMP)
 );
 
-CREATE UNIQUE INDEX idx_customers_email ON customers(email);
-CREATE INDEX idx_customers_active ON customers(is_active);
+CREATE UNIQUE INDEX IF NOT EXISTS idx_customers_email ON customers(email);
+CREATE INDEX IF NOT EXISTS idx_customers_active ON customers(is_active);
 
-CREATE TABLE customer_addresses (
+CREATE TABLE IF NOT EXISTS customer_addresses (
     id SERIAL PRIMARY KEY,
     customer_id INTEGER NOT NULL REFERENCES customers(id) ON DELETE CASCADE,
     label TEXT NOT NULL DEFAULT 'Home',
@@ -299,11 +299,11 @@ CREATE TABLE customer_addresses (
     updated_at TEXT NOT NULL DEFAULT (CURRENT_TIMESTAMP)
 );
 
-CREATE INDEX idx_customer_addresses_customer ON customer_addresses(customer_id);
+CREATE INDEX IF NOT EXISTS idx_customer_addresses_customer ON customer_addresses(customer_id);
 
 -- Link orders to customers (nullable — guest orders remain unlinked)
 ALTER TABLE orders ADD COLUMN customer_id INTEGER REFERENCES customers(id);
-CREATE INDEX idx_orders_customer ON orders(customer_id);
+CREATE INDEX IF NOT EXISTS idx_orders_customer ON orders(customer_id);
 
 
 -- From 007_refunds.sql
@@ -350,7 +350,7 @@ CREATE INDEX IF NOT EXISTS idx_reviews_customer ON product_reviews(customer_id);
 -- Related products (manual picks + algorithmic via co-purchase)
 -- Admin can manually set related products; system also auto-generates from order data
 
-CREATE TABLE related_products (
+CREATE TABLE IF NOT EXISTS related_products (
     id SERIAL PRIMARY KEY,
     product_id INTEGER NOT NULL REFERENCES products(id) ON DELETE CASCADE,
     related_product_id INTEGER NOT NULL REFERENCES products(id) ON DELETE CASCADE,
@@ -360,8 +360,8 @@ CREATE TABLE related_products (
     UNIQUE(product_id, related_product_id)
 );
 
-CREATE INDEX idx_related_product ON related_products(product_id, score DESC);
-CREATE INDEX idx_related_type ON related_products(relation_type);
+CREATE INDEX IF NOT EXISTS idx_related_product ON related_products(product_id, score DESC);
+CREATE INDEX IF NOT EXISTS idx_related_type ON related_products(relation_type);
 
 
 -- From 011_variant_images.sql
@@ -371,14 +371,14 @@ CREATE INDEX idx_related_type ON related_products(relation_type);
 
 ALTER TABLE product_images ADD COLUMN variant_id INTEGER REFERENCES product_variants(id) ON DELETE SET NULL;
 
-CREATE INDEX idx_images_variant ON product_images(variant_id);
+CREATE INDEX IF NOT EXISTS idx_images_variant ON product_images(variant_id);
 
 
 -- From 012_back_in_stock.sql
 -- Back-in-stock notification subscriptions
 -- Customers (or guest emails) subscribe to be notified when a variant is restocked
 
-CREATE TABLE back_in_stock_subscriptions (
+CREATE TABLE IF NOT EXISTS back_in_stock_subscriptions (
     id SERIAL PRIMARY KEY,
     email TEXT NOT NULL,
     variant_id INTEGER NOT NULL REFERENCES product_variants(id) ON DELETE CASCADE,
@@ -388,15 +388,15 @@ CREATE TABLE back_in_stock_subscriptions (
     UNIQUE(email, variant_id)  -- One subscription per email per variant
 );
 
-CREATE INDEX idx_bis_variant ON back_in_stock_subscriptions(variant_id, notified_at);
-CREATE INDEX idx_bis_email ON back_in_stock_subscriptions(email);
+CREATE INDEX IF NOT EXISTS idx_bis_variant ON back_in_stock_subscriptions(variant_id, notified_at);
+CREATE INDEX IF NOT EXISTS idx_bis_email ON back_in_stock_subscriptions(email);
 
 
 -- From 013_automatic_discounts.sql
 -- Automatic discounts — applied without a code based on rules
 -- Types: percentage_off, fixed_off, buy_x_get_y
 
-CREATE TABLE automatic_discounts (
+CREATE TABLE IF NOT EXISTS automatic_discounts (
     id SERIAL PRIMARY KEY,
     name TEXT NOT NULL,
     discount_type TEXT NOT NULL DEFAULT 'percentage',  -- 'percentage' | 'fixed_cents' | 'buy_x_get_y'
@@ -417,15 +417,15 @@ CREATE TABLE automatic_discounts (
     updated_at TEXT NOT NULL DEFAULT (CURRENT_TIMESTAMP)
 );
 
-CREATE INDEX idx_auto_discount_active ON automatic_discounts(is_active, starts_at, expires_at);
-CREATE INDEX idx_auto_discount_applies ON automatic_discounts(applies_to, applies_to_id);
+CREATE INDEX IF NOT EXISTS idx_auto_discount_active ON automatic_discounts(is_active, starts_at, expires_at);
+CREATE INDEX IF NOT EXISTS idx_auto_discount_applies ON automatic_discounts(applies_to, applies_to_id);
 
 
 -- From 014_abandoned_carts.sql
 -- Server-side cart persistence for abandoned cart recovery
 -- Carts are created when a customer starts checkout or is logged in
 
-CREATE TABLE carts (
+CREATE TABLE IF NOT EXISTS carts (
     id SERIAL PRIMARY KEY,
     cart_token TEXT NOT NULL UNIQUE,                 -- UUID token stored in cookie
     customer_id INTEGER REFERENCES customers(id) ON DELETE SET NULL,
@@ -441,7 +441,7 @@ CREATE TABLE carts (
     updated_at TEXT NOT NULL DEFAULT (CURRENT_TIMESTAMP)
 );
 
-CREATE TABLE cart_items (
+CREATE TABLE IF NOT EXISTS cart_items (
     id SERIAL PRIMARY KEY,
     cart_id INTEGER NOT NULL REFERENCES carts(id) ON DELETE CASCADE,
     variant_id INTEGER NOT NULL REFERENCES product_variants(id) ON DELETE CASCADE,
@@ -450,17 +450,17 @@ CREATE TABLE cart_items (
     UNIQUE(cart_id, variant_id)
 );
 
-CREATE INDEX idx_carts_token ON carts(cart_token);
-CREATE INDEX idx_carts_customer ON carts(customer_id);
-CREATE INDEX idx_carts_status ON carts(status, last_activity_at);
-CREATE INDEX idx_carts_abandoned ON carts(status, reminder_sent_1h, last_activity_at);
-CREATE INDEX idx_cart_items_cart ON cart_items(cart_id);
+CREATE INDEX IF NOT EXISTS idx_carts_token ON carts(cart_token);
+CREATE INDEX IF NOT EXISTS idx_carts_customer ON carts(customer_id);
+CREATE INDEX IF NOT EXISTS idx_carts_status ON carts(status, last_activity_at);
+CREATE INDEX IF NOT EXISTS idx_carts_abandoned ON carts(status, reminder_sent_1h, last_activity_at);
+CREATE INDEX IF NOT EXISTS idx_cart_items_cart ON cart_items(cart_id);
 
 
 -- From 015_fulfillments.sql
 -- Partial fulfillment support: multiple shipments per order
 
-CREATE TABLE fulfillments (
+CREATE TABLE IF NOT EXISTS fulfillments (
     id SERIAL PRIMARY KEY,
     order_id INTEGER NOT NULL REFERENCES orders(id) ON DELETE CASCADE,
     tracking_number TEXT,
@@ -473,7 +473,7 @@ CREATE TABLE fulfillments (
     updated_at TEXT NOT NULL DEFAULT (CURRENT_TIMESTAMP)
 );
 
-CREATE TABLE fulfillment_items (
+CREATE TABLE IF NOT EXISTS fulfillment_items (
     id SERIAL PRIMARY KEY,
     fulfillment_id INTEGER NOT NULL REFERENCES fulfillments(id) ON DELETE CASCADE,
     order_item_id INTEGER NOT NULL REFERENCES order_items(id) ON DELETE CASCADE,
@@ -481,8 +481,8 @@ CREATE TABLE fulfillment_items (
     UNIQUE(fulfillment_id, order_item_id)
 );
 
-CREATE INDEX idx_fulfillments_order ON fulfillments(order_id);
-CREATE INDEX idx_fulfillment_items_fulfillment ON fulfillment_items(fulfillment_id);
+CREATE INDEX IF NOT EXISTS idx_fulfillments_order ON fulfillments(order_id);
+CREATE INDEX IF NOT EXISTS idx_fulfillment_items_fulfillment ON fulfillment_items(fulfillment_id);
 
 
 -- From 016_staff_roles.sql
@@ -501,7 +501,7 @@ ALTER TABLE admin_users ADD COLUMN invite_accepted_at TEXT;
 -- From 017_blog_pages.sql
 -- Blog / CMS pages
 
-CREATE TABLE pages (
+CREATE TABLE IF NOT EXISTS pages (
     id SERIAL PRIMARY KEY,
     title TEXT NOT NULL,
     slug TEXT NOT NULL UNIQUE,
@@ -520,34 +520,34 @@ CREATE TABLE pages (
     updated_at TEXT NOT NULL DEFAULT (CURRENT_TIMESTAMP)
 );
 
-CREATE INDEX idx_pages_slug ON pages(slug);
-CREATE INDEX idx_pages_type_status ON pages(page_type, status);
-CREATE INDEX idx_pages_published ON pages(published_at);
+CREATE INDEX IF NOT EXISTS idx_pages_slug ON pages(slug);
+CREATE INDEX IF NOT EXISTS idx_pages_type_status ON pages(page_type, status);
+CREATE INDEX IF NOT EXISTS idx_pages_published ON pages(published_at);
 
 
 -- From 018_product_tags.sql
 -- Product tags for filtering and organization
 
-CREATE TABLE tags (
+CREATE TABLE IF NOT EXISTS tags (
     id SERIAL PRIMARY KEY,
     name TEXT NOT NULL UNIQUE,
     slug TEXT NOT NULL UNIQUE,
     created_at TEXT NOT NULL DEFAULT (CURRENT_TIMESTAMP)
 );
 
-CREATE TABLE product_tags (
+CREATE TABLE IF NOT EXISTS product_tags (
     product_id INTEGER NOT NULL REFERENCES products(id) ON DELETE CASCADE,
     tag_id INTEGER NOT NULL REFERENCES tags(id) ON DELETE CASCADE,
     PRIMARY KEY (product_id, tag_id)
 );
 
-CREATE INDEX idx_product_tags_tag ON product_tags(tag_id);
+CREATE INDEX IF NOT EXISTS idx_product_tags_tag ON product_tags(tag_id);
 
 
 -- From 019_customer_segments.sql
 -- Customer segments for targeted marketing
 
-CREATE TABLE customer_segments (
+CREATE TABLE IF NOT EXISTS customer_segments (
     id SERIAL PRIMARY KEY,
     name TEXT NOT NULL,
     slug TEXT NOT NULL UNIQUE,
@@ -558,20 +558,20 @@ CREATE TABLE customer_segments (
     updated_at TEXT NOT NULL DEFAULT (CURRENT_TIMESTAMP)
 );
 
-CREATE TABLE customer_segment_members (
+CREATE TABLE IF NOT EXISTS customer_segment_members (
     segment_id INTEGER NOT NULL REFERENCES customer_segments(id) ON DELETE CASCADE,
     customer_id INTEGER NOT NULL REFERENCES customers(id) ON DELETE CASCADE,
     added_at TEXT NOT NULL DEFAULT (CURRENT_TIMESTAMP),
     PRIMARY KEY (segment_id, customer_id)
 );
 
-CREATE INDEX idx_segment_members_customer ON customer_segment_members(customer_id);
+CREATE INDEX IF NOT EXISTS idx_segment_members_customer ON customer_segment_members(customer_id);
 
 
 -- From 020_size_guide.sql
 -- Size guide per product or category
 
-CREATE TABLE size_guides (
+CREATE TABLE IF NOT EXISTS size_guides (
     id SERIAL PRIMARY KEY,
     name TEXT NOT NULL,
     measurements_json TEXT NOT NULL,  -- JSON: [{"size":"S","chest_cm":88,"length_cm":70}, ...]
@@ -586,7 +586,7 @@ CREATE TABLE size_guides (
 -- From 021_gift_cards.sql
 -- Gift cards
 
-CREATE TABLE gift_cards (
+CREATE TABLE IF NOT EXISTS gift_cards (
     id SERIAL PRIMARY KEY,
     code TEXT NOT NULL UNIQUE,
     initial_balance_cents INTEGER NOT NULL,
@@ -602,7 +602,7 @@ CREATE TABLE gift_cards (
     updated_at TEXT NOT NULL DEFAULT (CURRENT_TIMESTAMP)
 );
 
-CREATE TABLE gift_card_transactions (
+CREATE TABLE IF NOT EXISTS gift_card_transactions (
     id SERIAL PRIMARY KEY,
     gift_card_id INTEGER NOT NULL REFERENCES gift_cards(id) ON DELETE CASCADE,
     amount_cents INTEGER NOT NULL,  -- negative = redemption, positive = load
@@ -611,8 +611,8 @@ CREATE TABLE gift_card_transactions (
     created_at TEXT NOT NULL DEFAULT (CURRENT_TIMESTAMP)
 );
 
-CREATE INDEX idx_gift_cards_code ON gift_cards(code);
-CREATE INDEX idx_gc_transactions_card ON gift_card_transactions(gift_card_id);
+CREATE INDEX IF NOT EXISTS idx_gift_cards_code ON gift_cards(code);
+CREATE INDEX IF NOT EXISTS idx_gc_transactions_card ON gift_card_transactions(gift_card_id);
 
 
 -- From 022_loyalty_points.sql
@@ -621,7 +621,7 @@ CREATE INDEX idx_gc_transactions_card ON gift_card_transactions(gift_card_id);
 ALTER TABLE customers ADD COLUMN loyalty_points INTEGER NOT NULL DEFAULT 0;
 ALTER TABLE customers ADD COLUMN lifetime_points INTEGER NOT NULL DEFAULT 0;
 
-CREATE TABLE loyalty_transactions (
+CREATE TABLE IF NOT EXISTS loyalty_transactions (
     id SERIAL PRIMARY KEY,
     customer_id INTEGER NOT NULL REFERENCES customers(id) ON DELETE CASCADE,
     points INTEGER NOT NULL,  -- positive = earned, negative = redeemed
@@ -630,7 +630,7 @@ CREATE TABLE loyalty_transactions (
     created_at TEXT NOT NULL DEFAULT (CURRENT_TIMESTAMP)
 );
 
-CREATE TABLE loyalty_rules (
+CREATE TABLE IF NOT EXISTS loyalty_rules (
     id SERIAL PRIMARY KEY,
     name TEXT NOT NULL,
     points_per_dollar INTEGER NOT NULL DEFAULT 1,  -- Points earned per dollar spent
@@ -640,13 +640,13 @@ CREATE TABLE loyalty_rules (
     created_at TEXT NOT NULL DEFAULT (CURRENT_TIMESTAMP)
 );
 
-CREATE INDEX idx_loyalty_transactions_customer ON loyalty_transactions(customer_id);
+CREATE INDEX IF NOT EXISTS idx_loyalty_transactions_customer ON loyalty_transactions(customer_id);
 
 
 -- From 023_product_bundles.sql
 -- Product bundles (buy together at a discount)
 
-CREATE TABLE bundles (
+CREATE TABLE IF NOT EXISTS bundles (
     id SERIAL PRIMARY KEY,
     name TEXT NOT NULL,
     slug TEXT NOT NULL UNIQUE,
@@ -658,7 +658,7 @@ CREATE TABLE bundles (
     updated_at TEXT NOT NULL DEFAULT (CURRENT_TIMESTAMP)
 );
 
-CREATE TABLE bundle_items (
+CREATE TABLE IF NOT EXISTS bundle_items (
     id SERIAL PRIMARY KEY,
     bundle_id INTEGER NOT NULL REFERENCES bundles(id) ON DELETE CASCADE,
     product_id INTEGER NOT NULL REFERENCES products(id) ON DELETE CASCADE,
@@ -667,7 +667,7 @@ CREATE TABLE bundle_items (
     UNIQUE(bundle_id, product_id)
 );
 
-CREATE INDEX idx_bundle_items_bundle ON bundle_items(bundle_id);
+CREATE INDEX IF NOT EXISTS idx_bundle_items_bundle ON bundle_items(bundle_id);
 
 
 -- From 024_utm_tracking.sql
@@ -681,7 +681,7 @@ ALTER TABLE orders ADD COLUMN utm_campaign TEXT;
 -- From 025_events.sql
 -- Server-side event log for analytics / conversion funnel
 
-CREATE TABLE events (
+CREATE TABLE IF NOT EXISTS events (
     id SERIAL PRIMARY KEY,
     event_type TEXT NOT NULL,  -- 'product_viewed', 'add_to_cart', 'checkout_started', 'checkout_completed'
     session_id TEXT,
@@ -695,15 +695,15 @@ CREATE TABLE events (
     created_at TEXT NOT NULL DEFAULT (CURRENT_TIMESTAMP)
 );
 
-CREATE INDEX idx_events_type ON events(event_type, created_at);
-CREATE INDEX idx_events_session ON events(session_id);
-CREATE INDEX idx_events_created ON events(created_at);
+CREATE INDEX IF NOT EXISTS idx_events_type ON events(event_type, created_at);
+CREATE INDEX IF NOT EXISTS idx_events_session ON events(session_id);
+CREATE INDEX IF NOT EXISTS idx_events_created ON events(created_at);
 
 
 -- From 026_returns.sql
 -- Return / exchange requests
 
-CREATE TABLE return_requests (
+CREATE TABLE IF NOT EXISTS return_requests (
     id SERIAL PRIMARY KEY,
     order_id INTEGER NOT NULL REFERENCES orders(id) ON DELETE CASCADE,
     customer_id INTEGER REFERENCES customers(id),
@@ -717,7 +717,7 @@ CREATE TABLE return_requests (
     updated_at TEXT NOT NULL DEFAULT (CURRENT_TIMESTAMP)
 );
 
-CREATE TABLE return_items (
+CREATE TABLE IF NOT EXISTS return_items (
     id SERIAL PRIMARY KEY,
     return_request_id INTEGER NOT NULL REFERENCES return_requests(id) ON DELETE CASCADE,
     order_item_id INTEGER NOT NULL REFERENCES order_items(id),
@@ -725,15 +725,15 @@ CREATE TABLE return_items (
     reason TEXT
 );
 
-CREATE INDEX idx_return_requests_order ON return_requests(order_id);
-CREATE INDEX idx_return_requests_status ON return_requests(status);
-CREATE INDEX idx_return_items_request ON return_items(return_request_id);
+CREATE INDEX IF NOT EXISTS idx_return_requests_order ON return_requests(order_id);
+CREATE INDEX IF NOT EXISTS idx_return_requests_status ON return_requests(status);
+CREATE INDEX IF NOT EXISTS idx_return_items_request ON return_items(return_request_id);
 
 
 -- From 027_webhooks.sql
 -- Outbound event webhooks
 
-CREATE TABLE webhooks (
+CREATE TABLE IF NOT EXISTS webhooks (
     id SERIAL PRIMARY KEY,
     url TEXT NOT NULL,
     events TEXT NOT NULL,  -- comma-separated: 'order.completed,customer.created'
@@ -743,7 +743,7 @@ CREATE TABLE webhooks (
     updated_at TEXT NOT NULL DEFAULT (CURRENT_TIMESTAMP)
 );
 
-CREATE TABLE webhook_deliveries (
+CREATE TABLE IF NOT EXISTS webhook_deliveries (
     id SERIAL PRIMARY KEY,
     webhook_id INTEGER NOT NULL REFERENCES webhooks(id) ON DELETE CASCADE,
     event_type TEXT NOT NULL,
@@ -754,8 +754,8 @@ CREATE TABLE webhook_deliveries (
     created_at TEXT NOT NULL DEFAULT (CURRENT_TIMESTAMP)
 );
 
-CREATE INDEX idx_webhook_deliveries_webhook ON webhook_deliveries(webhook_id);
-CREATE INDEX idx_webhook_deliveries_created ON webhook_deliveries(created_at);
+CREATE INDEX IF NOT EXISTS idx_webhook_deliveries_webhook ON webhook_deliveries(webhook_id);
+CREATE INDEX IF NOT EXISTS idx_webhook_deliveries_created ON webhook_deliveries(created_at);
 
 
 -- From 028_product_weight.sql

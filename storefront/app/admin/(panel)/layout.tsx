@@ -154,7 +154,10 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
 
   function toggleSection(id: string) {
     setOpenSections((prev) => {
-      const next = { ...prev, [id]: !prev[id] };
+      const section = SECTIONS.find((s) => s.id === id);
+      const hasActive = section ? section.items.some((i) => pathname.startsWith(i.to)) : false;
+      const currentIsOpen = prev[id] !== undefined ? prev[id] : hasActive;
+      const next = { ...prev, [id]: !currentIsOpen };
       try { localStorage.setItem(LS_KEY, JSON.stringify(next)); } catch {}
       return next;
     });
@@ -201,7 +204,7 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
 
           {SECTIONS.map((section) => {
             const hasActive = section.items.some((i) => pathname.startsWith(i.to));
-            const isOpen = !!openSections[section.id] || hasActive;
+            const isOpen = openSections[section.id] !== undefined ? openSections[section.id] : hasActive;
             const SectionIcon = section.icon as any;
             return (
               <div key={section.id} className="pt-1">

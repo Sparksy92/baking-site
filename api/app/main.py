@@ -55,9 +55,13 @@ from app.routes.admin import (
     customers as admin_customers,
     social as admin_social,
     order_requests as admin_order_requests,
+    media as admin_media,
+    compliance as admin_compliance,
 )
-from app.routes import agent_api, content_library, linkinbio, social_inbox, platform_variations, rss
+from app.routes import agent_api, content_library, linkinbio, social_inbox, platform_variations, rss, social_facebook, social_instagram, social_linkedin, social_tiktok, social_x, social_pinterest, influencer_portal, social_youtube, social_threads
 from app.services.rss_service import check_all_feeds
+from app.services.engagement_sync_service import poll_tiktok_pending_posts
+from app.services.analytics_sync_service import sync_all_platform_metrics
 
 logger = logging.getLogger(__name__)
 
@@ -154,6 +158,43 @@ async def lifespan(app: FastAPI):
                 logger.error(f"Background retry checker error: {e}", exc_info=True)
             await asyncio.sleep(300)  # 5 minutes
 
+    async def _background_tiktok_poll():
+        """Poll TikTok publish_id status every 15 minutes."""
+        await asyncio.sleep(90)
+        while True:
+            try:
+                resolved = await poll_tiktok_pending_posts()
+                if resolved:
+                    logger.info(f"TikTok poll: {resolved} post(s) resolved")
+            except Exception as e:
+                logger.error(f"Background TikTok poll error: {e}", exc_info=True)
+            await asyncio.sleep(900)  # 15 minutes
+
+    async def _background_ab_test_autocomplete():
+        """Auto-complete expired A/B tests every 30 minutes."""
+        await asyncio.sleep(120)
+        while True:
+            try:
+                from app.services.ab_test_service import auto_complete_expired_tests
+                completed = await auto_complete_expired_tests()
+                if completed:
+                    logger.info(f"A/B test auto-complete: {completed} test(s) completed")
+            except Exception as e:
+                logger.error(f"Background A/B test auto-complete error: {e}", exc_info=True)
+            await asyncio.sleep(1800)  # 30 minutes
+
+    async def _background_analytics_sync():
+        """Sync TikTok + YouTube post metrics every 6 hours."""
+        await asyncio.sleep(300)  # 5 min after startup
+        while True:
+            try:
+                result = await sync_all_platform_metrics()
+                if result["total_synced"] or result["total_failed"]:
+                    logger.info(f"Analytics sync: {result}")
+            except Exception as e:
+                logger.error(f"Background analytics sync error: {e}", exc_info=True)
+            await asyncio.sleep(21600)  # 6 hours
+
     await init_db()
     logger.info("Database initialized")
 
@@ -166,6 +207,9 @@ async def lifespan(app: FastAPI):
             asyncio.ensure_future(_background_engagement_sync()),
             asyncio.ensure_future(_background_rss_check()),
             asyncio.ensure_future(_background_retry_checker()),
+            asyncio.ensure_future(_background_tiktok_poll()),
+            asyncio.ensure_future(_background_ab_test_autocomplete()),
+            asyncio.ensure_future(_background_analytics_sync()),
         ]
 
     yield
@@ -281,6 +325,8 @@ def create_app() -> FastAPI:
     app.include_router(admin_store_credit.router, prefix="/api")
     app.include_router(admin_social.router, prefix="/api")
     app.include_router(admin_order_requests.router, prefix="/api")
+    app.include_router(admin_media.router, prefix="/api")
+    app.include_router(admin_compliance.router, prefix="/api/admin")
 
     # ── Competitive Gap Features ────────────────────────────────
     app.include_router(content_library.router, prefix="/api")
@@ -289,6 +335,15 @@ def create_app() -> FastAPI:
     app.include_router(social_inbox.router, prefix="/api")
     app.include_router(platform_variations.router, prefix="/api")
     app.include_router(rss.router, prefix="/api")
+    app.include_router(social_facebook.router, prefix="/api")
+    app.include_router(social_instagram.router, prefix="/api")
+    app.include_router(social_linkedin.router, prefix="/api")
+    app.include_router(social_tiktok.router, prefix="/api")
+    app.include_router(social_x.router, prefix="/api")
+    app.include_router(social_pinterest.router, prefix="/api")
+    app.include_router(influencer_portal.router, prefix="/api")
+    app.include_router(social_youtube.router, prefix="/api")
+    app.include_router(social_threads.router, prefix="/api")
 
     # ── Agent API (AI integration boundary) ─────────────────────
     app.include_router(agent_api.router)
@@ -305,6 +360,12 @@ def create_app() -> FastAPI:
     media_library_dir = uploads_dir.parent / "media"
     media_library_dir.mkdir(parents=True, exist_ok=True)
     app.mount("/media/library", StaticFiles(directory=str(media_library_dir)), name="media-library")
+
+    social_media_dir = uploads_dir.parent / "social-media"
+    social_media_dir.mkdir(parents=True, exist_ok=True)
+    app.mount("/media/social", StaticFiles(directory=str(social_media_dir)), name="media-social")
+
+    app.mount("/media", StaticFiles(directory=str(media_library_dir)), name="media-v2")
 
     return app
 

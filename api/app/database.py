@@ -169,7 +169,7 @@ async def get_db() -> AsyncGenerator[PostgresConnection, None]:
     global _pool
     if not _pool:
         settings = get_settings()
-        _pool = await asyncpg.create_pool(settings.database_url)
+        _pool = await asyncpg.create_pool(settings.database_url, statement_cache_size=0)
 
     async with _pool.acquire() as conn:
         async with conn.transaction():
@@ -187,7 +187,7 @@ async def db_connection() -> AsyncGenerator[PostgresConnection, None]:
     global _pool
     if not _pool:
         settings = get_settings()
-        _pool = await asyncpg.create_pool(settings.database_url)
+        _pool = await asyncpg.create_pool(settings.database_url, statement_cache_size=0)
 
     async with _pool.acquire() as conn:
         async with conn.transaction():
@@ -208,7 +208,7 @@ async def init_db() -> None:
             pass
         _pool = None
 
-    _pool = await asyncpg.create_pool(settings.database_url)
+    _pool = await asyncpg.create_pool(settings.database_url, statement_cache_size=0)
 
     async with _pool.acquire() as conn:
         await _run_migrations(conn)
