@@ -45,105 +45,6 @@ function getWaterRefraction(x: number, y: number, ripples: Ripple[]) {
   return { rx, ry };
 }
 
-class Pebble {
-  x: number;
-  y: number;
-  r: number;
-  color: string;
-  angle: number;
-  aspectRatio: number;
-
-  constructor(x: number, y: number, r: number) {
-    this.x = x;
-    this.y = y;
-    this.r = r;
-    this.angle = Math.random() * Math.PI * 2;
-    this.aspectRatio = 0.65 + Math.random() * 0.3;
-    
-    // Warm earthy sage stone color palette
-    const stoneColors = ['#4E5340', '#5B624D', '#414736', '#545C47', '#393F2F', '#626B54', '#4B503D'];
-    this.color = stoneColors[Math.floor(Math.random() * stoneColors.length)];
-  }
-
-  draw(ctx: CanvasRenderingContext2D, ripples: Ripple[]) {
-    const ref = getWaterRefraction(this.x, this.y, ripples);
-    ctx.save();
-    ctx.translate(this.x + ref.rx, this.y + ref.ry);
-    ctx.rotate(this.angle);
-
-    // Shadow
-    ctx.fillStyle = 'rgba(10, 16, 10, 0.35)';
-    ctx.beginPath();
-    ctx.ellipse(3, 4, this.r, this.r * this.aspectRatio, 0, 0, Math.PI * 2);
-    ctx.fill();
-
-    // Soft 3D spherical shading (less harsh highlights)
-    const grad = ctx.createRadialGradient(
-      -this.r * 0.2, -this.r * 0.2 * this.aspectRatio, this.r * 0.1,
-      0, 0, this.r
-    );
-    grad.addColorStop(0, '#868F7E'); // Soft top highlight
-    grad.addColorStop(0.4, this.color);
-    grad.addColorStop(1, '#1E2319'); // Bottom shadow
-    
-    ctx.fillStyle = grad;
-    ctx.beginPath();
-    ctx.ellipse(0, 0, this.r, this.r * this.aspectRatio, 0, 0, Math.PI * 2);
-    ctx.fill();
-
-    ctx.restore();
-  }
-}
-
-class Eelgrass {
-  x: number;
-  y: number;
-  height: number;
-  phase: number;
-  swaySpeed: number;
-  swayWidth: number;
-  color: string;
-
-  constructor(x: number, y: number) {
-    this.x = x;
-    this.y = y;
-    this.height = 110 + Math.random() * 90;
-    this.phase = Math.random() * Math.PI * 2;
-    this.swaySpeed = 0.012 + Math.random() * 0.008;
-    this.swayWidth = 12 + Math.random() * 15;
-    
-    const greens = ['rgba(79, 107, 72, 0.18)', 'rgba(64, 89, 58, 0.15)', 'rgba(92, 120, 84, 0.20)'];
-    this.color = greens[Math.floor(Math.random() * greens.length)];
-  }
-
-  update() {
-    this.phase += this.swaySpeed;
-  }
-
-  draw(ctx: CanvasRenderingContext2D, ripples: Ripple[]) {
-    const sway = Math.sin(this.phase) * this.swayWidth;
-    
-    const refBase = getWaterRefraction(this.x, this.y, ripples);
-    const refTip = getWaterRefraction(this.x + sway, this.y - this.height, ripples);
-
-    ctx.save();
-    ctx.strokeStyle = this.color;
-    ctx.lineWidth = 5 * (this.height / 200);
-    ctx.lineCap = 'round';
-    
-    ctx.beginPath();
-    ctx.moveTo(this.x + refBase.rx, this.y + refBase.ry);
-    ctx.quadraticCurveTo(
-      this.x + sway * 0.5 + (refBase.rx + refTip.rx) * 0.5, 
-      this.y - this.height * 0.5 + (refBase.ry + refTip.ry) * 0.5,
-      this.x + sway + refTip.rx, 
-      this.y - this.height + refTip.ry
-    );
-    ctx.stroke();
-    ctx.restore();
-  }
-}
-
 class LilyPad {
   x: number;
   y: number;
@@ -449,7 +350,6 @@ class KoiFish {
     this.targetDepth = this.depth;
 
     this.segments = [];
-    // Increase fish segment length slightly for a more elongated realistic body shape
     for (let i = 0; i < 8; i++) {
       this.segments.push({ x: x - i * 10 * sizeMultiplier, y: y });
     }
@@ -554,7 +454,6 @@ class KoiFish {
     ctx.restore();
   }
 
-  // Smooth quadratic spline math to outline the fish body (completely removes polygon straight lines)
   buildBodyPath(ctx: CanvasRenderingContext2D, ripples: Ripple[]) {
     const leftPoints: Segment[] = [];
     const rightPoints: Segment[] = [];
@@ -701,7 +600,6 @@ class KoiFish {
 
     ctx.globalAlpha = (1.0 - this.depth * 0.4) * scale; 
 
-    // Smooth spline body path
     this.buildBodyPath(ctx, ripples);
     ctx.fillStyle = this.color;
     ctx.fill();
@@ -757,8 +655,6 @@ export default function InteractivePondBackground() {
   const mouseRef = useRef({ x: -1000, y: -1000, lastX: -1000, lastY: -1000 });
   const ripplesRef = useRef<Ripple[]>([]);
   const fishRef = useRef<KoiFish[]>([]);
-  const pebblesRef = useRef<Pebble[]>([]);
-  const reedsRef = useRef<Eelgrass[]>([]);
   const lilyPadsRef = useRef<LilyPad[]>([]);
   const petalsRef = useRef<Petal[]>([]);
   const firefliesRef = useRef<Firefly[]>([]);
@@ -774,31 +670,8 @@ export default function InteractivePondBackground() {
     let animationFrameId: number;
     let width = (canvas.width = canvas.offsetWidth);
     let height = (canvas.height = canvas.offsetHeight);
-    let globalTime = 0;
 
-    // Generate static river stones
-    const tempPebbles: Pebble[] = [];
-    const stoneCount = 55;
-    for (let i = 0; i < stoneCount; i++) {
-      tempPebbles.push(
-        new Pebble(
-          Math.random() * width,
-          Math.random() * height,
-          15 + Math.random() * 25
-        )
-      );
-    }
-    pebblesRef.current = tempPebbles;
-
-    // Generate swaying eelgrass weeds
-    reedsRef.current = Array.from({ length: 15 }, () => {
-      return new Eelgrass(
-        Math.random() * width,
-        height - Math.random() * 80
-      );
-    });
-
-    // Generate bobbing lily pads (Enlarged for substantial realistic flora coverage)
+    // Generate bobbing lily pads
     lilyPadsRef.current = Array.from({ length: 6 }, () => {
       return new LilyPad(
         Math.random() * width,
@@ -807,7 +680,7 @@ export default function InteractivePondBackground() {
       );
     });
 
-    // Fish configs (Enlarged sizing parameters to look prominent and majestic)
+    // Majestic Koi Fish sizing parameters
     const fishColors = [
       { body: '#E86F51', spot: '#264653', size: 2.1 },   
       { body: '#F4A261', spot: '#E76F51', size: 1.8 },   
@@ -908,67 +781,12 @@ export default function InteractivePondBackground() {
     canvas.addEventListener('mouseleave', handleMouseLeave);
     canvas.addEventListener('click', handleMouseClick);
 
-    // Sunlight caustics web rendering (wavy sine-wave curves replace blocky straight-segment polygons)
-    const drawCaustics = (cCtx: CanvasRenderingContext2D, time: number) => {
-      cCtx.save();
-      cCtx.strokeStyle = 'rgba(238, 235, 205, 0.055)';
-      cCtx.lineWidth = 2.2;
-      cCtx.globalCompositeOperation = 'screen';
-      
-      cCtx.shadowColor = 'rgba(238, 235, 205, 0.25)';
-      cCtx.shadowBlur = 4;
-      
-      // Horizontal wavy lines
-      for (let y = 0; y < height + 40; y += 45) {
-        cCtx.beginPath();
-        for (let x = 0; x < width + 40; x += 15) {
-          const yOffset = Math.sin(x * 0.015 + time * 0.02) * 7 + Math.cos(x * 0.007 - time * 0.015) * 5;
-          if (x === 0) cCtx.moveTo(x, y + yOffset);
-          else cCtx.lineTo(x, y + yOffset);
-        }
-        cCtx.stroke();
-      }
-      
-      // Vertical wavy lines
-      for (let x = 0; x < width + 40; x += 45) {
-        cCtx.beginPath();
-        for (let y = 0; y < height + 40; y += 15) {
-          const xOffset = Math.sin(y * 0.015 + time * 0.02) * 7 + Math.cos(y * 0.007 - time * 0.015) * 5;
-          if (y === 0) cCtx.moveTo(x + xOffset, y);
-          else cCtx.lineTo(x + xOffset, y);
-        }
-        cCtx.stroke();
-      }
-      cCtx.restore();
-    };
-
     // Main animation loop
     const animate = () => {
-      globalTime++;
-      
-      // 1. Water Background deep gradient
-      const grad = ctx.createLinearGradient(0, 0, width, height);
-      grad.addColorStop(0, '#535F44'); 
-      grad.addColorStop(0.5, '#424D35'); 
-      grad.addColorStop(1, '#343E2A'); 
-      ctx.fillStyle = grad;
-      ctx.fillRect(0, 0, width, height);
+      // Clear canvas to make it transparent, overlaying on the MP4 background video
+      ctx.clearRect(0, 0, width, height);
 
-      // 2. Draw Pebbles (bottom layer)
-      pebblesRef.current.forEach((stone) => {
-        stone.draw(ctx, ripplesRef.current);
-      });
-
-      // 3. Draw Sunlight Caustics on the bottom bed
-      drawCaustics(ctx, globalTime);
-
-      // 4. Update and Draw Reeds
-      reedsRef.current.forEach((reed) => {
-        reed.update();
-        reed.draw(ctx, ripplesRef.current);
-      });
-
-      // 5. Lily pad shadows on bottom
+      // 1. Lily pad shadows on bottom
       lilyPadsRef.current.forEach((pad) => {
         pad.update();
         pad.drawShadow(ctx);
@@ -976,12 +794,12 @@ export default function InteractivePondBackground() {
 
       const mouse = mouseRef.current;
 
-      // 6. Koi Fish shadows on bottom
+      // 2. Koi Fish shadows on bottom
       fishRef.current.forEach((fish) => {
         fish.drawShadow(ctx, ripplesRef.current);
       });
 
-      // 7. Update and Draw Food Pellets
+      // 3. Update and Draw Food Pellets
       foodsRef.current = foodsRef.current.filter((food) => {
         if (food.isEaten) return false;
         food.age++;
@@ -1006,30 +824,30 @@ export default function InteractivePondBackground() {
         return true;
       });
 
-      // 8. Update and Draw Koi Fish
+      // 4. Update and Draw Koi Fish
       fishRef.current.forEach((fish) => {
         fish.update(width, height, mouse.x, mouse.y, foodsRef.current, ripplesRef.current);
         fish.draw(ctx, ripplesRef.current);
       });
 
-      // 9. Firefly reflections on water surface
+      // 5. Firefly reflections on water surface
       firefliesRef.current.forEach((firefly) => {
         firefly.drawReflection(ctx);
       });
 
-      // 10. Update and Draw Lily Pads (surface layer)
+      // 6. Update and Draw Lily Pads (surface layer)
       lilyPadsRef.current.forEach((pad) => {
         pad.draw(ctx);
       });
 
-      // 11. Update and Draw Sakura Petals
+      // 7. Update and Draw Sakura Petals
       petalsRef.current = petalsRef.current.filter((petal) => {
         const keep = petal.update(width, height, mouse.x, mouse.y, ripplesRef.current);
         if (keep) petal.draw(ctx);
         return keep;
       });
 
-      // 12. Update and Draw Water Ripples
+      // 8. Update and Draw Water Ripples
       ripplesRef.current = ripplesRef.current.filter((ripple) => {
         ripple.radius += ripple.speed;
         ripple.strength = 1.0 - ripple.radius / ripple.maxRadius;
@@ -1053,17 +871,11 @@ export default function InteractivePondBackground() {
         return true;
       });
 
-      // 13. Update and Draw Bioluminescent Fireflies (air layer)
+      // 9. Update and Draw Bioluminescent Fireflies (air layer)
       firefliesRef.current.forEach((firefly) => {
         firefly.update(width, height, mouse.x, mouse.y);
         firefly.draw(ctx);
       });
-
-      // 14. Sun glare sheer
-      ctx.fillStyle = 'rgba(255, 255, 255, 0.015)';
-      ctx.beginPath();
-      ctx.ellipse(width * 0.7, height * 0.3, width * 0.3, height * 0.2, Math.PI / 6, 0, Math.PI * 2);
-      ctx.fill();
 
       animationFrameId = requestAnimationFrame(animate);
     };
@@ -1082,10 +894,23 @@ export default function InteractivePondBackground() {
   }, []);
 
   return (
-    <canvas
-      ref={canvasRef}
-      className="absolute inset-0 w-full h-full object-cover pointer-events-auto"
-      style={{ mixBlendMode: 'normal' }}
-    />
+    <div className="absolute inset-0 w-full h-full overflow-hidden">
+      <video
+        autoPlay
+        muted
+        loop
+        playsInline
+        className="absolute inset-0 w-full h-full object-cover pointer-events-none"
+      >
+        <source src="/images/home/water-loop.mp4" type="video/mp4" />
+      </video>
+      {/* Brand Sage Tint Overlay to blend the video into the artisan branding colors */}
+      <div className="absolute inset-0 bg-[#343E2A]/25 mix-blend-multiply pointer-events-none" />
+      <canvas
+        ref={canvasRef}
+        className="absolute inset-0 w-full h-full object-cover pointer-events-auto"
+        style={{ mixBlendMode: 'normal' }}
+      />
+    </div>
   );
 }
