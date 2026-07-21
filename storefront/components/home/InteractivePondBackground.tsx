@@ -524,7 +524,7 @@ class KoiFish {
     ctx.fillStyle = this.color;
     ctx.globalAlpha = (0.75 - this.depth * 0.2) * scale; 
 
-    // Left pectoral
+    // Left pectoral fin (Butterfly Style)
     ctx.beginPath();
     ctx.moveTo(this.segments[1].x + refHead.rx, this.segments[1].y + refHead.ry);
     ctx.bezierCurveTo(
@@ -536,7 +536,8 @@ class KoiFish {
     );
     ctx.fill();
 
-    ctx.strokeStyle = 'rgba(255, 255, 255, 0.2)';
+    // Left pectoral rays
+    ctx.strokeStyle = 'rgba(255, 255, 255, 0.25)';
     ctx.lineWidth = 0.8;
     for (let r = 0.1; r < 0.6; r += 0.1) {
       ctx.beginPath();
@@ -548,7 +549,7 @@ class KoiFish {
       ctx.stroke();
     }
 
-    // Right pectoral
+    // Right pectoral fin
     ctx.beginPath();
     ctx.moveTo(this.segments[1].x + refHead.rx, this.segments[1].y + refHead.ry);
     ctx.bezierCurveTo(
@@ -560,7 +561,8 @@ class KoiFish {
     );
     ctx.fill();
 
-    for (let r = 0; r < 0.5; r += 0.1) {
+    // Right pectoral rays
+    for (let r = 0.1; r < 0.6; r += 0.1) {
       ctx.beginPath();
       ctx.moveTo(this.segments[1].x + refHead.rx, this.segments[1].y + refHead.ry);
       ctx.lineTo(
@@ -600,10 +602,65 @@ class KoiFish {
 
     ctx.globalAlpha = (1.0 - this.depth * 0.4) * scale; 
 
+    // Smooth spline body path
     this.buildBodyPath(ctx, ripples);
     ctx.fillStyle = this.color;
     ctx.fill();
 
+    // Organic spots overlay masked to the body
+    if (this.spotColor) {
+      ctx.save();
+      ctx.fillStyle = this.spotColor;
+      ctx.globalCompositeOperation = 'source-atop';
+      
+      // Draw 3 organic blotches along segments
+      for (let j = 0; j < 3; j++) {
+        const segIdx = 2 + j * 2;
+        if (segIdx < this.segments.length) {
+          const seg = this.segments[segIdx];
+          const refSeg = getWaterRefraction(seg.x, seg.y, ripples);
+          const radius = (8 - segIdx * 0.85) * this.sizeMultiplier * scale * 1.35;
+          
+          ctx.beginPath();
+          ctx.arc(seg.x + refSeg.rx - 2 * scale, seg.y + refSeg.ry + 1 * scale, radius * 0.85, 0, Math.PI * 2);
+          ctx.arc(seg.x + refSeg.rx + 3 * scale, seg.y + refSeg.ry - 2 * scale, radius * 0.6, 0, Math.PI * 2);
+          ctx.fill();
+        }
+      }
+      ctx.restore();
+    }
+
+    // Draw realistic scale texture (semi-transparent white crescent lines)
+    ctx.save();
+    ctx.globalAlpha = 0.16;
+    ctx.strokeStyle = '#FFFFFF';
+    ctx.lineWidth = 0.8;
+    ctx.globalCompositeOperation = 'source-atop'; // Limit strictly to fish body outline
+    for (let i = 1; i < this.segments.length - 1; i++) {
+      const seg = this.segments[i];
+      const radius = (8 - i * 0.85) * this.sizeMultiplier * scale;
+      if (radius <= 0) continue;
+      
+      let segAngle = this.angle;
+      const prev = this.segments[i - 1];
+      segAngle = Math.atan2(seg.y - prev.y, seg.x - prev.x);
+      
+      const perpAngle = segAngle + Math.PI / 2;
+      const refSeg = getWaterRefraction(seg.x, seg.y, ripples);
+      
+      for (let offset = -0.6; offset <= 0.6; offset += 0.3) {
+        const cx = seg.x + refSeg.rx + Math.cos(perpAngle) * radius * offset;
+        const cy = seg.y + refSeg.ry + Math.sin(perpAngle) * radius * offset;
+        
+        ctx.beginPath();
+        ctx.arc(cx, cy, radius * 0.35, segAngle - 0.7, segAngle + 0.7);
+        ctx.stroke();
+      }
+    }
+    ctx.restore();
+
+    // Cylindrical 3D shading
+    ctx.save();
     ctx.globalCompositeOperation = 'source-atop';
     
     const gradAngle = this.angle + Math.PI / 2;
@@ -622,28 +679,76 @@ class KoiFish {
     ctx.fillStyle = shadGrad;
     this.buildBodyPath(ctx, ripples);
     ctx.fill();
+    ctx.restore();
 
-    ctx.globalCompositeOperation = 'source-over'; 
-
-    // Eyes
-    const eyeRadius = 1.3 * this.sizeMultiplier * scale;
-    const eyeOffsetAngle = 0.55;
-    ctx.fillStyle = '#000000';
-    
+    // Draw gills (operculum curves)
+    ctx.strokeStyle = 'rgba(0, 0, 0, 0.18)';
+    ctx.lineWidth = 1.0;
     ctx.beginPath();
-    ctx.arc(
-      head.x + refHead.rx + Math.cos(this.angle - eyeOffsetAngle) * 5 * this.sizeMultiplier * scale,
-      head.y + refHead.ry + Math.sin(this.angle - eyeOffsetAngle) * 5 * this.sizeMultiplier * scale,
-      eyeRadius, 0, Math.PI * 2
+    ctx.arc(head.x + refHead.rx, head.y + refHead.ry, 6 * this.sizeMultiplier * scale, this.angle - Math.PI/2 - 0.35, this.angle - Math.PI/2 + 0.35);
+    ctx.stroke();
+    ctx.beginPath();
+    ctx.arc(head.x + refHead.rx, head.y + refHead.ry, 6 * this.sizeMultiplier * scale, this.angle + Math.PI/2 - 0.35, this.angle + Math.PI/2 + 0.35);
+    ctx.stroke();
+
+    // Whiskers (Barbels)
+    ctx.strokeStyle = this.color;
+    ctx.lineWidth = 1.2;
+    ctx.beginPath();
+    ctx.moveTo(head.x + refHead.rx + Math.cos(this.angle) * 8 * this.sizeMultiplier * scale, head.y + refHead.ry + Math.sin(this.angle) * 8 * this.sizeMultiplier * scale);
+    ctx.quadraticCurveTo(
+      head.x + refHead.rx + Math.cos(this.angle - 0.4) * 14 * this.sizeMultiplier * scale,
+      head.y + refHead.ry + Math.sin(this.angle - 0.4) * 14 * this.sizeMultiplier * scale,
+      head.x + refHead.rx + Math.cos(this.angle - 0.65) * 16 * this.sizeMultiplier * scale,
+      head.y + refHead.ry + Math.sin(this.angle - 0.65) * 16 * this.sizeMultiplier * scale
     );
+    ctx.stroke();
+
+    ctx.beginPath();
+    ctx.moveTo(head.x + refHead.rx + Math.cos(this.angle) * 8 * this.sizeMultiplier * scale, head.y + refHead.ry + Math.sin(this.angle) * 8 * this.sizeMultiplier * scale);
+    ctx.quadraticCurveTo(
+      head.x + refHead.rx + Math.cos(this.angle + 0.4) * 14 * this.sizeMultiplier * scale,
+      head.y + refHead.ry + Math.sin(this.angle + 0.4) * 14 * this.sizeMultiplier * scale,
+      head.x + refHead.rx + Math.cos(this.angle + 0.65) * 16 * this.sizeMultiplier * scale,
+      head.y + refHead.ry + Math.sin(this.angle + 0.65) * 16 * this.sizeMultiplier * scale
+    );
+    ctx.stroke();
+
+    // Eyes with golden iris, black pupil, and white specular reflection highlights
+    const eyeRadius = 1.6 * this.sizeMultiplier * scale;
+    const eyeOffsetAngle = 0.55;
+    const eyeX1 = head.x + refHead.rx + Math.cos(this.angle - eyeOffsetAngle) * 5 * this.sizeMultiplier * scale;
+    const eyeY1 = head.y + refHead.ry + Math.sin(this.angle - eyeOffsetAngle) * 5 * this.sizeMultiplier * scale;
+    
+    // Left eye details
+    ctx.fillStyle = '#E9C46A'; 
+    ctx.beginPath();
+    ctx.arc(eyeX1, eyeY1, eyeRadius, 0, Math.PI * 2);
+    ctx.fill();
+    ctx.fillStyle = '#000000'; 
+    ctx.beginPath();
+    ctx.arc(eyeX1, eyeY1, eyeRadius * 0.6, 0, Math.PI * 2);
+    ctx.fill();
+    ctx.fillStyle = '#FFFFFF'; 
+    ctx.beginPath();
+    ctx.arc(eyeX1 - eyeRadius * 0.25, eyeY1 - eyeRadius * 0.25, eyeRadius * 0.25, 0, Math.PI * 2);
     ctx.fill();
 
+    // Right eye details
+    const eyeX2 = head.x + refHead.rx + Math.cos(this.angle + eyeOffsetAngle) * 5 * this.sizeMultiplier * scale;
+    const eyeY2 = head.y + refHead.ry + Math.sin(this.angle + eyeOffsetAngle) * 5 * this.sizeMultiplier * scale;
+
+    ctx.fillStyle = '#E9C46A'; 
     ctx.beginPath();
-    ctx.arc(
-      head.x + refHead.rx + Math.cos(this.angle + eyeOffsetAngle) * 5 * this.sizeMultiplier * scale,
-      head.y + refHead.ry + Math.sin(this.angle + eyeOffsetAngle) * 5 * this.sizeMultiplier * scale,
-      eyeRadius, 0, Math.PI * 2
-    );
+    ctx.arc(eyeX2, eyeY2, eyeRadius, 0, Math.PI * 2);
+    ctx.fill();
+    ctx.fillStyle = '#000000'; 
+    ctx.beginPath();
+    ctx.arc(eyeX2, eyeY2, eyeRadius * 0.6, 0, Math.PI * 2);
+    ctx.fill();
+    ctx.fillStyle = '#FFFFFF'; 
+    ctx.beginPath();
+    ctx.arc(eyeX2 - eyeRadius * 0.25, eyeY2 - eyeRadius * 0.25, eyeRadius * 0.25, 0, Math.PI * 2);
     ctx.fill();
 
     ctx.restore();
@@ -783,7 +888,6 @@ export default function InteractivePondBackground() {
 
     // Main animation loop
     const animate = () => {
-      // Clear canvas to make it transparent, overlaying on the MP4 background video
       ctx.clearRect(0, 0, width, height);
 
       // 1. Lily pad shadows on bottom
