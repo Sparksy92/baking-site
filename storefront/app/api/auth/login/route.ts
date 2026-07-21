@@ -52,8 +52,9 @@ export async function POST(req: NextRequest) {
     // 2. Try authenticating with python backend first to sync session/cookies
     let backendCookie = null;
     let backendSuccess = false;
+    const apiUrl = process.env.API_URL || 'http://localhost:8100';
     try {
-      const backendRes = await fetch('http://localhost:8100/api/auth/login', {
+      const backendRes = await fetch(`${apiUrl}/api/auth/login`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ username, password }),
