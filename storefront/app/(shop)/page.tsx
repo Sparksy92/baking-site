@@ -1,6 +1,5 @@
 import type { Metadata } from 'next';
 import Link from 'next/link';
-import Image from 'next/image';
 
 import { apiFetch } from '@/lib/api-server';
 import { type ProductListItem } from '@/lib/api';
@@ -12,6 +11,7 @@ import { brandConfig } from '@/config/brand.config';
 import { ArrowRight, Leaf, HeartHandshake, Truck, Shield, HelpCircle } from 'lucide-react';
 
 import InteractiveKitchenScene from '@/components/home/InteractiveKitchenScene';
+import InteractivePondBackground from '@/components/home/InteractivePondBackground';
 
 export const dynamic = 'force-dynamic';
 
@@ -51,17 +51,12 @@ export default async function Home() {
 
       {/* Hero */}
       <section className="relative isolate overflow-hidden bg-brand text-white py-20 sm:py-28 lg:py-36 border-b border-sand/30">
-        {/* Background Image */}
-        <Image
-          src="/images/hero/homestead_landscape.png"
-          alt="The Artisan Bakery Outdoor Landscape"
-          fill
-          priority
-          className="absolute inset-0 object-cover opacity-35 mix-blend-multiply pointer-events-none"
-        />
-        <div className="absolute inset-0 bg-gradient-to-r from-brand via-brand/90 to-brand/70" />
-        <div className="absolute inset-0 bg-[radial-gradient(ellipse_at_top_right,rgba(200,162,168,0.2),transparent_55%)]" aria-hidden="true" />
-        <div className="grain" aria-hidden="true" />
+        {/* Interactive Pond Background */}
+        <InteractivePondBackground />
+        
+        <div className="absolute inset-0 bg-gradient-to-r from-brand/90 via-brand/60 to-transparent pointer-events-none" />
+        <div className="absolute inset-0 bg-[radial-gradient(ellipse_at_top_right,rgba(200,162,168,0.15),transparent_55%)] pointer-events-none" aria-hidden="true" />
+        <div className="grain pointer-events-none" aria-hidden="true" />
 
         <div className="relative z-10 site-shell flex flex-col justify-center min-h-[60vh]">
           <div className="max-w-3xl">

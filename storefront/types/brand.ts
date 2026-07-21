@@ -184,7 +184,7 @@ export interface BrandStat {
 }
 
 export interface BrandSeo {
-  /** Short uppercase abbreviation shown as watermark/accent e.g. "TERRA", "DFL", "CC" */
+  /** Short uppercase abbreviation shown as watermark/accent e.g. "TAB", "BAK", "ART" */
   abbreviation: string
   /** ISO 4217 currency code e.g. "CAD", "USD" */
   currency: string
