@@ -1,12 +1,12 @@
 import { BrandConfig } from '../types/brand';
 
 export const brandConfig: BrandConfig = {
-  id: 'sage-and-sweetgrass-homestead',
+  id: 'the-artisan-bakery',
   metadata: {
-    name: 'Sage & Sweetgrass Homestead',
+    name: 'The Artisan Bakery',
     tagline: 'Fresh baking, pantry goods & handmade home and body care',
     description: 'Homemade fresh baking, desserts, pantry goods, jams, pickled goods, handmade tallow lotions, lip balms, salves, and herbal oils.',
-    siteName: 'Sage & Sweetgrass Homestead',
+    siteName: 'The Artisan Bakery',
     baseUrl: 'https://yourdomain.com',
     locale: 'en-CA',
     defaultRegion: 'ca',
@@ -85,7 +85,7 @@ export const brandConfig: BrandConfig = {
     ],
   },
   content: {
-    copyright: '© {year} Sage & Sweetgrass Homestead. All rights reserved.',
+    copyright: '© {year} The Artisan Bakery. All rights reserved.',
     poweredBy: '',
     pages: {},
   },
@@ -101,7 +101,7 @@ export const brandConfig: BrandConfig = {
   ],
   socialLinks: [],
   seo: {
-    abbreviation: 'SSH',
+    abbreviation: 'TAB',
     currency: 'CAD',
     twitterHandle: '',
     googleVerification: '',

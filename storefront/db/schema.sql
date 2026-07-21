@@ -1,4 +1,4 @@
--- Sage & Sweetgrass Homestead Vercel-Lite Database Schema
+-- The Artisan Bakery Vercel-Lite Database Schema
 
 CREATE TABLE IF NOT EXISTS categories (
     id SERIAL PRIMARY KEY,

@@ -66,7 +66,7 @@ export async function POST(req: NextRequest) {
       console.warn("Backend auth failed or unreachable:", err);
     }
 
-    const adminEmail = process.env.ADMIN_EMAIL || 'admin@sageandsweetgrass.ca';
+    const adminEmail = process.env.ADMIN_EMAIL || 'admin@theartisanbakery.test';
     const expectedHash = process.env.ADMIN_PASSWORD_HASH || DEFAULT_PASSWORD_HASH;
 
     // 3. Resolve matching criteria

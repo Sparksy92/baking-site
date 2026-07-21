@@ -1,6 +1,6 @@
-# Cedar & Sage Homestead: Phase 4 Launch Readiness Report
+# The Artisan Bakery: Phase 4 Launch Readiness Report
 
-This report documents the results of the Launch-Readiness Self-Service Acceptance Tests performed on the integrated Cedar & Sage Homestead commerce system.
+This report documents the results of the Launch-Readiness Self-Service Acceptance Tests performed on the integrated The Artisan Bakery commerce system.
 
 ---
 
@@ -32,7 +32,7 @@ This report documents the results of the Launch-Readiness Self-Service Acceptanc
 ---
 
 ## 🚀 Readiness Verdict
-The Cedar & Sage Homestead platform is **Launch Ready** for the self-service storefront and administration panel. Kirstin has full capabilities to manage catalog items, toggle pricing and preorder flags, configure shop instructions, and process custom quotes without technical assistance.
+The The Artisan Bakery platform is **Launch Ready** for the self-service storefront and administration panel. our baker has full capabilities to manage catalog items, toggle pricing and preorder flags, configure shop instructions, and process custom quotes without technical assistance.
 
 ---
 

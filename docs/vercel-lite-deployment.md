@@ -1,6 +1,6 @@
-# Cedar & Sage Homestead Vercel-Lite Deployment Guide
+# The Artisan Bakery Vercel-Lite Deployment Guide
 
-This guide details the deployment of the simplified, serverless Next.js-only Cedar & Sage Homestead website on Vercel with Neon Postgres.
+This guide details the deployment of the simplified, serverless Next.js-only The Artisan Bakery website on Vercel with Neon Postgres.
 
 ---
 
@@ -44,8 +44,8 @@ If you prefer to initialize the database manually before your first login:
    - `CONTACT_EMAIL`: The email address where order notifications will be sent (e.g. `hello@cedarandsagehomestead.ca`).
    - `ETRANSFER_EMAIL`: The payment email address (e.g. `payments@cedarandsagehomestead.ca`).
    - `RESEND_API_KEY`: (Optional) Your Resend API key to send automated email alerts on bakes requests.
-   - `EMAIL_FROM`: The verified Resend email sender (e.g. `Cedar & Sage Homestead <orders@cedarandsagehomestead.ca>`).
-   - `NEXT_PUBLIC_SITE_NAME`: `Cedar & Sage Homestead`
+   - `EMAIL_FROM`: The verified Resend email sender (e.g. `The Artisan Bakery <orders@cedarandsagehomestead.ca>`).
+   - `NEXT_PUBLIC_SITE_NAME`: `The Artisan Bakery`
    - `NEXT_PUBLIC_SITE_URL`: Your Vercel generated URL or custom domain (e.g. `https://cedar-sage.vercel.app`).
 4. Click **Deploy**. Vercel will build and launch your serverless website.
 
@@ -99,6 +99,6 @@ Copy the printed 128-character hex string and paste it as the value for `ADMIN_P
 ## 6. Limitations of the Vercel-Lite Version
 
 - **No FastAPI Backend**: This branch operates entirely serverless within Next.js. The `api/` directory is not deployed.
-- **No Stripe Checkout**: Orders are request-based only. Payments are completed manually via e-transfer or on pickup, suitable for Kirstin's small-batch homestead operations.
+- **No Stripe Checkout**: Orders are request-based only. Payments are completed manually via e-transfer or on pickup, suitable for our baker's small-batch homestead operations.
 - **No File Uploads**: Administrative uploads are not supported on Vercel's serverless environment in this phase. Images must be added to the repository static assets or linked via external `image_url` strings in the product form.
 - **Bakery Ordering Model**: Built strictly around order inquiries rather than instant cart checkout, preventing overselling and allowing scheduling.

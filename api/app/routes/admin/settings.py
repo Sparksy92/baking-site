@@ -24,11 +24,11 @@ async def get_all_settings(
     # 1. Run self-healing database updates on settings table
     await db.execute("""
       INSERT INTO settings (key, value) VALUES
-      ('brand_name', 'Sage & Sweetgrass Homestead'),
+      ('brand_name', 'The Artisan Bakery'),
       ('brand_tagline', 'Fresh baking, pantry goods & handmade home and body care'),
       ('brand_abbreviation', 'SSH'),
-      ('contact_email', 'hello@sageandsweetgrass.ca'),
-      ('etransfer_email', 'payments@sageandsweetgrass.ca')
+      ('contact_email', 'hello@theartisanbakery.test'),
+      ('etransfer_email', 'payments@theartisanbakery.test')
       ON CONFLICT (key) DO UPDATE
       SET value = EXCLUDED.value
       WHERE settings.value = 'Automated Brand' 
@@ -36,11 +36,11 @@ async def get_all_settings(
          OR settings.value LIKE '%Cedar%'
     """)
 
-    await db.execute("UPDATE settings SET value = REPLACE(value, 'Cedar & Sage', 'Sage & Sweetgrass Homestead') WHERE value LIKE '%Cedar & Sage%'")
-    await db.execute("UPDATE settings SET value = REPLACE(value, 'Cedar and Sage', 'Sage & Sweetgrass Homestead') WHERE value LIKE '%Cedar and Sage%'")
-    await db.execute("UPDATE settings SET value = REPLACE(value, 'kirstinsparks@hotmail.com', 'hello@sageandsweetgrass.ca') WHERE key = 'contact_email'")
-    await db.execute("UPDATE settings SET value = REPLACE(value, 'kirstinsparks@hotmail.com', 'payments@sageandsweetgrass.ca') WHERE key = 'etransfer_email' OR key = 'payment_instructions'")
-    await db.execute("UPDATE settings SET value = REPLACE(value, 'payments@example.com', 'payments@sageandsweetgrass.ca') WHERE value LIKE '%payments@example.com%'")
+    await db.execute("UPDATE settings SET value = REPLACE(value, 'The Artisan Bakery', 'The Artisan Bakery') WHERE value LIKE '%The Artisan Bakery%'")
+    await db.execute("UPDATE settings SET value = REPLACE(value, 'Cedar and Sage', 'The Artisan Bakery') WHERE value LIKE '%Cedar and Sage%'")
+    await db.execute("UPDATE settings SET value = REPLACE(value, 'hello@theartisanbakery.test', 'hello@theartisanbakery.test') WHERE key = 'contact_email'")
+    await db.execute("UPDATE settings SET value = REPLACE(value, 'hello@theartisanbakery.test', 'payments@theartisanbakery.test') WHERE key = 'etransfer_email' OR key = 'payment_instructions'")
+    await db.execute("UPDATE settings SET value = REPLACE(value, 'payments@example.com', 'payments@theartisanbakery.test') WHERE value LIKE '%payments@example.com%'")
     await db.execute("UPDATE settings SET value = REPLACE(value, 'family-run homestead kitchen', 'family-run kitchen') WHERE value LIKE '%family-run homestead kitchen%'")
     await db.execute("UPDATE settings SET value = REPLACE(value, 'small-batch homestead kitchen', 'small-batch kitchen') WHERE value LIKE '%small-batch homestead kitchen%'")
 

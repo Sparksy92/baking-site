@@ -25,7 +25,7 @@ describe('formatCents', () => {
 
 describe('brandName', () => {
   it('returns brand config name', () => {
-    expect(brandName()).toBe('Sage & Sweetgrass Homestead');
+    expect(brandName()).toBe('The Artisan Bakery');
   });
 });
 

@@ -12,7 +12,7 @@ export const dynamic = 'force-dynamic';
 export function generateMetadata(): Metadata {
   return {
     title: 'Homestead Journal & Recipes',
-    description: 'Stories, baking guides, traditional recipes, and reflections from Sage & Sweetgrass Homestead.',
+    description: 'Stories, baking guides, traditional recipes, and reflections from The Artisan Bakery.',
     alternates: { canonical: `${siteUrl()}/blog` },
   };
 }
@@ -60,7 +60,7 @@ export default async function BlogPage({ searchParams }: { searchParams: Promise
         <div className="grain" aria-hidden="true" />
         <div className="relative site-shell py-16 md:py-24 text-center">
           <p className="section-kicker mb-4">{blogSectionName}</p>
-          <h1 className="text-5xl md:text-7xl font-serif font-bold tracking-[-0.03em] leading-[0.9]">Sage & Sweetgrass Notes</h1>
+          <h1 className="text-5xl md:text-7xl font-serif font-bold tracking-[-0.03em] leading-[0.9]">The Artisan Bakery Notes</h1>
           <p className="mt-6 text-lg text-white/55 max-w-2xl mx-auto leading-relaxed">
             Reflections on slow living, artisan baking, and building a homestead from the ground up.
           </p>

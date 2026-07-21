@@ -112,8 +112,8 @@ export async function POST(req: NextRequest) {
 
     // 3. Send notification email via Resend
     const resendApiKey = process.env.RESEND_API_KEY;
-    const contactEmail = process.env.CONTACT_EMAIL || 'hello@sageandsweetgrass.ca';
-    const emailFrom = process.env.EMAIL_FROM || 'Sage & Sweetgrass Homestead <orders@sageandsweetgrass.ca>';
+    const contactEmail = process.env.CONTACT_EMAIL || 'hello@theartisanbakery.test';
+    const emailFrom = process.env.EMAIL_FROM || 'The Artisan Bakery <orders@sageandsweetgrass.ca>';
 
     if (resendApiKey) {
       try {

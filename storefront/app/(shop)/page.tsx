@@ -16,8 +16,8 @@ import InteractiveKitchenScene from '@/components/home/InteractiveKitchenScene';
 export const dynamic = 'force-dynamic';
 
 export const metadata: Metadata = {
-  title: 'Sage & Sweetgrass Homestead | Fresh Baking & Handcrafted Goods',
-  description: 'Fresh breads, sourdough preorders, desserts, pantry goods, and handmade home and body care products from Sage & Sweetgrass Homestead.',
+  title: 'The Artisan Bakery | Fresh Baking & Handcrafted Goods',
+  description: 'Fresh breads, sourdough preorders, desserts, pantry goods, and handmade home and body care products from The Artisan Bakery.',
 };
 
 export default async function Home() {
@@ -54,7 +54,7 @@ export default async function Home() {
         {/* Background Image */}
         <Image
           src="/images/hero/homestead_landscape.png"
-          alt="Sage & Sweetgrass Homestead Outdoor Landscape"
+          alt="The Artisan Bakery Outdoor Landscape"
           fill
           priority
           className="absolute inset-0 object-cover opacity-35 mix-blend-multiply pointer-events-none"
@@ -68,7 +68,7 @@ export default async function Home() {
             {/* Eyebrow */}
             <div className="mb-6 flex flex-wrap items-center gap-3">
               <span className="inline-flex items-center rounded-full border border-white/20 bg-white/5 px-4 py-2 text-[10px] font-bold uppercase tracking-[0.25em] text-white/95">
-                Sage & Sweetgrass Homestead
+                The Artisan Bakery
               </span>
             </div>
 
@@ -76,7 +76,7 @@ export default async function Home() {
             <h1 className="font-serif font-black leading-[1.05] tracking-[-0.01em] text-white">
               <span className="block text-[clamp(2.25rem,6.5vw,5rem)]">Fresh baking from</span>
               <span className="block text-[clamp(2.25rem,6.5vw,5rem)] text-brand-secondary italic font-normal">
-                Sage & Sweetgrass Homestead
+                The Artisan Bakery
               </span>
             </h1>
 

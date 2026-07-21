@@ -351,7 +351,7 @@ export default function OvenFundPage() {
             <div className="bg-[#FAF8F5] border border-[#EBE3D5] rounded-2xl p-5">
               <span className="font-bold text-[#4E3629] text-sm block mb-1">💸 Interac E-Transfer</span>
               <p className="text-xs text-[#6B5A50] leading-relaxed">
-                Send your contribution to <span className="font-semibold text-[#8C6D58] break-all">{settings?.etransfer_email || 'payments@sageandsweetgrass.ca'}</span> (please add &quot;Oven Fund&quot; in the transfer notes).
+                Send your contribution to <span className="font-semibold text-[#8C6D58] break-all">{settings?.etransfer_email || 'payments@theartisanbakery.test'}</span> (please add &quot;Oven Fund&quot; in the transfer notes).
               </p>
             </div>
             <div className="bg-[#FAF8F5] border border-[#EBE3D5] rounded-2xl p-5">
@@ -366,7 +366,7 @@ export default function OvenFundPage() {
           <div className="max-w-xl mx-auto bg-[#F59E0B]/5 border border-[#F59E0B]/20 rounded-2xl p-4 flex gap-3 text-left mb-8">
             <Info size={20} className="text-[#D97706] shrink-0 mt-0.5" />
             <p className="text-xs text-[#8F5B1E] leading-relaxed font-medium">
-              Oven Fund contributions are voluntary support for Sage & Sweetgrass Homestead equipment and growth. They are not charitable donations and no charitable tax receipt will be issued.
+              Oven Fund contributions are voluntary support for The Artisan Bakery equipment and growth. They are not charitable donations and no charitable tax receipt will be issued.
             </p>
           </div>
 

@@ -1,4 +1,4 @@
-# Cedar & Sage Homestead Website
+# The Artisan Bakery Website
 
 A warm, professional baking, desserts, pantry goods, and handmade homestead care website converted from the Clothing Ecommerce Baseline. Built for request-based orders, small-batch management, and total admin self-service.
 

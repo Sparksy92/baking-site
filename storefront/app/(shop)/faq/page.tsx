@@ -48,7 +48,7 @@ export default function FaqPage() {
     faqs = [
       {
         q: 'How do I place an order?',
-        a: 'Browse our menu, select your items, and submit an order request. Kirstin will review it and reach out to confirm pickup/delivery and payment details.',
+        a: 'Browse our menu, select your items, and submit an order request. our baker will review it and reach out to confirm pickup/delivery and payment details.',
       },
       {
         q: 'Are prices final?',

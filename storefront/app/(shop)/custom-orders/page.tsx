@@ -85,7 +85,7 @@ function CustomOrdersForm() {
             </div>
             <h1 className="text-3xl font-black text-earth tracking-tight">Request Received!</h1>
             <p className="text-muted-earth text-sm leading-relaxed">
-              Thank you for submitting your custom order request. Kirstin will review the details and reach out to you within 24 hours to confirm availability, options, and final pricing.
+              Thank you for submitting your custom order request. our baker will review the details and reach out to you within 24 hours to confirm availability, options, and final pricing.
             </p>
             <div className="border-t border-sand/40 pt-6 mt-6">
               <Link href="/shop" className="inline-flex items-center gap-2 bg-brand text-white px-6 py-3 rounded-xl text-sm font-bold hover:bg-brand/90 transition-all hover:scale-[1.02]">
@@ -109,7 +109,7 @@ function CustomOrdersForm() {
           </div>
           <h1 className="text-4xl font-black text-earth tracking-tight mb-2">Custom Orders</h1>
           <p className="text-muted-earth text-sm">
-            Celebrate with custom cakes, personalized cookies, special loaves, or custom pantry bundles. Let us know what you need and Kirstin will make it happen!
+            Celebrate with custom cakes, personalized cookies, special loaves, or custom pantry bundles. Let us know what you need and our baker will make it happen!
           </p>
         </div>
 

@@ -1,4 +1,4 @@
--- Seed default Sage & Sweetgrass categories
+-- Seed default The Artisan Bakery categories
 INSERT INTO categories (name, slug, description, sort_order) VALUES
 ('Baked Fresh', 'baked-fresh', 'Freshly baked breads, buns, and sourdoughs from our homestead oven.', 1),
 ('Desserts', 'desserts', 'Cakes, cheesecakes, cinnamon rolls, and sweet treats.', 2),
@@ -44,7 +44,7 @@ ON CONFLICT (slug) DO NOTHING;
 
 -- Seed default site settings
 INSERT INTO site_settings (key, value) VALUES
-('about_content', 'Welcome to Sage & Sweetgrass Homestead. We are a family-run kitchen located in the heart of our community, focusing on small-batch artisan sourdoughs, freshly baked breads, home-canned pantry preserves, and hand-crafted body care items. Every loaf we bake is shaped by hand and crafted with care, using organic and locally sourced ingredients wherever possible. Because we believe in freshness and reducing waste, we bake exclusively by request. Your support helps build our homestead, including our dream of a wood-fired brick oven to serve our community even better!'),
+('about_content', 'Welcome to The Artisan Bakery. We are a family-run kitchen located in the heart of our community, focusing on small-batch artisan sourdoughs, freshly baked breads, home-canned pantry preserves, and hand-crafted body care items. Every loaf we bake is shaped by hand and crafted with care, using organic and locally sourced ingredients wherever possible. Because we believe in freshness and reducing waste, we bake exclusively by request. Your support helps build our homestead, including our dream of a wood-fired brick oven to serve our community even better!'),
 ('faq_content', 'Q: How do I order?
 A: Browse our menu, add items to your request list, and submit the order request. We will review it and send an e-transfer payment confirmation within 24 hours.
 
@@ -60,11 +60,11 @@ A: Yes, our sourdough starter is fed exclusively with organic unbleached flour, 
 Q: Can I request custom items?
 A: Absolutely! Use the Custom Orders page to request birthday cakes, large bun counts, or specific allergy-safe items.'),
 ('pickup_instructions', 'Pickups are located at our homestead (address provided upon order confirmation). Please specify your desired pickup window in your order request. Fresh items are placed in the pickup cabinet at your scheduled time.'),
-('payment_instructions', 'Payments are accepted via E-transfer to payments@sageandsweetgrass.ca. Once your request is reviewed, we will email you the total and confirmation. Payment is required to secure your baking slot.'),
+('payment_instructions', 'Payments are accepted via E-transfer to payments@theartisanbakery.test. Once your request is reviewed, we will email you the total and confirmation. Payment is required to secure your baking slot.'),
 ('preorder_instructions', 'Preorders for weekend sourdough close Wednesday at 5:00 PM. This allows us to feed the starter and complete the long cold-fermentation process.'),
 ('allergy_disclaimer', 'Our products are made in a home kitchen that handles wheat, nuts, dairy, eggs, and soy. While we take every precaution to prevent cross-contamination, we cannot guarantee a completely allergen-free environment.'),
-('contact_email', 'hello@sageandsweetgrass.ca'),
-('etransfer_email', 'payments@sageandsweetgrass.ca'),
+('contact_email', 'hello@theartisanbakery.test'),
+('etransfer_email', 'payments@theartisanbakery.test'),
 ('oven_fund_title', 'Commercial Oven Upgrade Fund — Phase 1'),
 ('oven_fund_goal', '2500'),
 ('oven_fund_current_amount', '1620'),

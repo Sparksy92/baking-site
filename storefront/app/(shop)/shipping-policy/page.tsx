@@ -34,14 +34,14 @@ export default function ShippingPolicyPage() {
             We offer local delivery within our community boundaries. When submitting your order request, you can select the delivery option and provide your address. 
           </p>
           <p>
-            A flat-rate delivery fee (e.g. $5.00 for orders over $30.00) will be added to your total, subject to confirmation by Kirstin during the order review process.
+            A flat-rate delivery fee (e.g. $5.00 for orders over $30.00) will be added to your total, subject to confirmation by our baker during the order review process.
           </p>
         </section>
 
         <section className="space-y-2">
           <h2 className="text-lg font-bold text-earth">Order Confirmation &amp; Scheduling</h2>
           <p>
-            After submitting a request, Kirstin will review the availability of ingredients and scheduling. We will send you an email confirmation with your total, E-transfer instructions, and pickup/delivery logistics within 24 hours. Prepayment via E-transfer is required to secure your baking slot.
+            After submitting a request, our baker will review the availability of ingredients and scheduling. We will send you an email confirmation with your total, E-transfer instructions, and pickup/delivery logistics within 24 hours. Prepayment via E-transfer is required to secure your baking slot.
           </p>
         </section>
 

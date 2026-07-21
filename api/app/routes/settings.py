@@ -12,15 +12,15 @@ router = APIRouter(tags=["settings"])
 def clean_legacy_value(val: str | None) -> str | None:
     if not val:
         return val
-    # Replace Cedar & Sage names
-    val = re.sub(r'(?i)Cedar\s*&\s*Sage', 'Sage & Sweetgrass Homestead', val)
-    val = re.sub(r'(?i)Cedar\s+and\s+Sage', 'Sage & Sweetgrass Homestead', val)
+    # Replace The Artisan Bakery names
+    val = re.sub(r'(?i)Cedar\s*&\s*Sage', 'The Artisan Bakery', val)
+    val = re.sub(r'(?i)Cedar\s+and\s+Sage', 'The Artisan Bakery', val)
     # Replace emails
     def repl(m):
         match_str = m.group(0).lower()
         if 'payment' in match_str or 'etransfer' in match_str:
-            return 'payments@sageandsweetgrass.ca'
-        return 'hello@sageandsweetgrass.ca'
+            return 'payments@theartisanbakery.test'
+        return 'hello@theartisanbakery.test'
     val = re.sub(r'(?i)[a-zA-Z0-9._%+-]+@cedar(?:and)?sage(?:homestead)?\.(?:ca|com)', repl, val)
     # Clean homestead kitchen duplications
     val = re.sub(r'(?i)family-run\s+homestead\s+kitchen', 'family-run kitchen', val)

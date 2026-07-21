@@ -41,20 +41,20 @@ async def test_public_settings_custom_announcement(client: AsyncClient):
 
 @pytest.mark.asyncio
 async def test_admin_settings_cleans_legacy_values(admin_client: AsyncClient):
-    """Admin settings GET endpoint cleans legacy Cedar & Sage brand values."""
+    """Admin settings GET endpoint cleans legacy The Artisan Bakery brand values."""
     from app.database import get_db
     async for db in get_db():
         await db.execute(
             "INSERT OR REPLACE INTO settings (key, value) VALUES (?, ?)",
-            ("brand_name", "Cedar & Sage"),
+            ("brand_name", "The Artisan Bakery"),
         )
         await db.execute(
             "INSERT OR REPLACE INTO settings (key, value) VALUES (?, ?)",
-            ("contact_email", "kirstinsparks@hotmail.com"),
+            ("contact_email", "hello@theartisanbakery.test"),
         )
         await db.execute(
             "INSERT OR REPLACE INTO settings (key, value) VALUES (?, ?)",
-            ("about_content", "Welcome to Sage & Sweetgrass Homestead. We are a family-run homestead kitchen."),
+            ("about_content", "Welcome to The Artisan Bakery. We are a family-run homestead kitchen."),
         )
         await db.commit()
 
@@ -66,7 +66,7 @@ async def test_admin_settings_cleans_legacy_values(admin_client: AsyncClient):
     contact_email_setting = next(s for s in data if s["key"] == "contact_email")
     about_content_setting = next(s for s in data if s["key"] == "about_content")
     
-    assert brand_name_setting["value"] == "Sage & Sweetgrass Homestead"
-    assert contact_email_setting["value"] == "hello@sageandsweetgrass.ca"
-    assert about_content_setting["value"] == "Welcome to Sage & Sweetgrass Homestead. We are a family-run kitchen."
+    assert brand_name_setting["value"] == "The Artisan Bakery"
+    assert contact_email_setting["value"] == "hello@theartisanbakery.test"
+    assert about_content_setting["value"] == "Welcome to The Artisan Bakery. We are a family-run kitchen."
 

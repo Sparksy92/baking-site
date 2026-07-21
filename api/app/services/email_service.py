@@ -268,7 +268,7 @@ async def send_back_in_stock_notification(
 
 
 async def send_order_request_notification(request_data: dict) -> None:
-    """Send order request notification email to administrator (Kirstin)."""
+    """Send order request notification email to administrator (our baker)."""
     settings = get_settings()
     if not settings.resend_api_key:
         logger.warning("RESEND_API_KEY not set — skipping order request notification email")

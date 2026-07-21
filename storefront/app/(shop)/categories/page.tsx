@@ -9,7 +9,7 @@ export const dynamic = 'force-dynamic';
 export function generateMetadata(): Metadata {
   const url = `${siteUrl()}/categories`;
   return {
-    title: 'Browse Collections | Sage & Sweetgrass Homestead',
+    title: 'Browse Collections | The Artisan Bakery',
     description: 'Explore our curated collections of artisanal sourdough baking, wildflower honey, apothecary, and organic pantry items.',
     alternates: {
       canonical: url,
@@ -27,7 +27,7 @@ export default async function CategoriesPage() {
           Our Collections
         </span>
         <h1 className="text-4xl sm:text-5xl font-serif font-bold mt-3 text-[var(--brand-text)]">
-          Sage & Sweetgrass Offerings
+          The Artisan Bakery Offerings
         </h1>
         <p className="mt-4 text-lg text-[var(--brand-text-muted)] max-w-xl mx-auto">
           Honest, handcrafted kitchen foods, nourishing apothecary balms, and home supplies.

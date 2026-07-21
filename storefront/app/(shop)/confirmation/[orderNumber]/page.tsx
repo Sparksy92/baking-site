@@ -92,7 +92,7 @@ export default function ConfirmationPage() {
   const deliveryCost = request?.pickup_or_delivery === 'delivery' && subtotal < freeThreshold ? deliveryFee : 0;
   const total = subtotal + deliveryCost + tax;
 
-  const etransferEmail = settings?.etransfer_email || 'payments@sageandsweetgrass.ca';
+  const etransferEmail = settings?.etransfer_email || 'payments@theartisanbakery.test';
 
   return (
     <div className="bg-cream min-h-screen py-12 sm:py-20">
@@ -119,7 +119,7 @@ export default function ConfirmationPage() {
           <div className="absolute top-0 left-0 w-full h-1.5 bg-brand" />
           <h2 className="text-xl font-bold text-earth mb-2 font-serif">How to Pay (Interac e-Transfer)</h2>
           <p className="text-sm text-muted-earth mb-6">
-            Kirstin will review ingredient availability and baking schedules within 24 hours. Once your request is approved, please send payment:
+            our baker will review ingredient availability and baking schedules within 24 hours. Once your request is approved, please send payment:
           </p>
           <div className="bg-[#FAF8F5] border border-sand rounded-2xl p-5 inline-block text-left shadow-sm max-w-md w-full">
             <div className="mb-4">
@@ -240,7 +240,7 @@ export default function ConfirmationPage() {
         ) : (
           <div className="bg-white border border-sand/50 rounded-[2rem] p-8 text-center shadow-sm">
             <p className="text-muted-earth mb-4">We submitted your request, but details couldn&apos;t be fetched directly.</p>
-            <p className="text-xs text-muted-earth/70">Kirstin will email you soon at the address provided.</p>
+            <p className="text-xs text-muted-earth/70">our baker will email you soon at the address provided.</p>
           </div>
         )}
 

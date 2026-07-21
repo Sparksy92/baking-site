@@ -13,7 +13,7 @@ export default function OrderInfoPage() {
       .catch(() => {});
   }, []);
 
-  const pickup = settings?.pickup_instructions || 'Orders are prepared by request. Pickup or local delivery details will be confirmed after Kirstin reviews your order request.';
+  const pickup = settings?.pickup_instructions || 'Orders are prepared by request. Pickup or local delivery details will be confirmed after our baker reviews your order request.';
   const payment = settings?.payment_instructions || 'Payment details will be confirmed after your request is reviewed. E-transfer or pay-on-confirmation is preferred while the menu and availability are being finalized.';
   const preorder = settings?.preorder_instructions || 'Sourdough is available by preorder and is usually prepared on weekends. Please include your desired date and any special notes when submitting your request.';
   const allergy = settings?.allergy_disclaimer || 'Items are prepared in a home kitchen and may come into contact with common allergens including wheat, dairy, eggs, nuts, peanuts, soy, and other ingredients. If you have an allergy or dietary concern, include it in your order request before confirming your order.';
@@ -91,7 +91,7 @@ export default function OrderInfoPage() {
         <div className="bg-brand/5 border border-brand/20 rounded-[2.5rem] p-8 md:p-10 text-center">
           <h3 className="text-lg font-black text-earth mb-2">A Quick Note on Pricing &amp; Checkout</h3>
           <p className="text-sm text-muted-earth leading-relaxed max-w-2xl mx-auto">
-            Our checkout acts as an <strong>order request system</strong>. Many of our items have prices that may be confirmed after request depending on size, batch requirements, or seasonal ingredients. Submitting a request is not a guaranteed booking until confirmed by Kirstin.
+            Our checkout acts as an <strong>order request system</strong>. Many of our items have prices that may be confirmed after request depending on size, batch requirements, or seasonal ingredients. Submitting a request is not a guaranteed booking until confirmed by our baker.
           </p>
         </div>
 

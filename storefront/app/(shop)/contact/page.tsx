@@ -16,8 +16,8 @@ export default function ContactPage() {
       .catch(() => {});
   }, []);
 
-  const name = settings?.brand_name || brandName() || 'Sage & Sweetgrass Homestead';
-  const email = settings?.contact_email || settings?.etransfer_email || 'hello@sageandsweetgrass.ca';
+  const name = settings?.brand_name || brandName() || 'The Artisan Bakery';
+  const email = settings?.contact_email || settings?.etransfer_email || 'hello@theartisanbakery.test';
 
   return (
     <div className="bg-cream min-h-screen py-16 md:py-24">
@@ -65,7 +65,7 @@ export default function ContactPage() {
                 </div>
                 <div>
                   <h2 className="text-base font-bold text-earth mb-1 font-serif">Response Time</h2>
-                  <p className="text-muted-earth text-sm leading-relaxed font-medium">Kirstin typically responds within 24 hours.</p>
+                  <p className="text-muted-earth text-sm leading-relaxed font-medium">our baker typically responds within 24 hours.</p>
                 </div>
               </div>
 
@@ -76,7 +76,7 @@ export default function ContactPage() {
                 <div>
                   <h2 className="text-base font-bold text-earth mb-1 font-serif">Order Requests</h2>
                   <p className="text-muted-earth text-sm leading-relaxed font-medium">
-                    Order requests are reviewed in the order received. You will receive an email once Kirstin confirms availability and final pricing.
+                    Order requests are reviewed in the order received. You will receive an email once our baker confirms availability and final pricing.
                   </p>
                 </div>
               </div>

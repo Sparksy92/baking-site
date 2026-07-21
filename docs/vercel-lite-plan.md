@@ -1,6 +1,6 @@
 # Vercel-Lite Architecture Plan
 
-This document outlines the architecture and deployment strategy for the Vercel-Lite version of the Cedar & Sage Homestead website.
+This document outlines the architecture and deployment strategy for the Vercel-Lite version of the The Artisan Bakery website.
 
 ## Architectural Changes
 

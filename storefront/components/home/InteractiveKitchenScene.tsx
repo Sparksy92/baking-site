@@ -260,7 +260,7 @@ export default function InteractiveKitchenScene() {
           {/* TODO: Replace with optimized final image storefront/public/images/home/interactive-kitchen.jpg when available. Currently using placeholder copy. */}
           <img
             src="/images/home/interactive-kitchen.jpg"
-            alt="Sage & Sweetgrass Homestead kitchen showing oven, pantry, prep table, window, and apothecary shelves"
+            alt="The Artisan Bakery kitchen showing oven, pantry, prep table, window, and apothecary shelves"
             className="w-full h-full object-cover select-none"
           />
 

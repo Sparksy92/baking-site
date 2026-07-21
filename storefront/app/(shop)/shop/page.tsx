@@ -80,7 +80,7 @@ function ShopContent() {
               <li>Some prices are placeholder starting rates and will be finalized after your request is reviewed.</li>
               <li>Sourdough is prepared by preorder and is typically baked on weekends.</li>
               <li>Custom cakes, cheesecakes, and custom desserts require a quote request.</li>
-              <li>Order requests are not guaranteed until Kirstin confirms availability.</li>
+              <li>Order requests are not guaranteed until our baker confirms availability.</li>
               <li>E-transfer details and pickup/delivery logistics will be finalized upon request review.</li>
             </ul>
           </div>

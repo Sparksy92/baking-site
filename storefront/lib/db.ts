@@ -57,8 +57,8 @@ export async function initDatabase(force: boolean = false) {
         console.log('Ensuring all multi-goal Oven Fund, contact, and brand settings exist in site_settings...');
         await p.query(`
           INSERT INTO site_settings (key, value) VALUES
-          ('contact_email', 'hello@sageandsweetgrass.ca'),
-          ('etransfer_email', 'payments@sageandsweetgrass.ca'),
+          ('contact_email', 'hello@theartisanbakery.test'),
+          ('etransfer_email', 'payments@theartisanbakery.test'),
           ('oven_fund_title', 'Commercial Oven Upgrade Fund — Phase 1'),
           ('oven_fund_goal', '2500'),
           ('oven_fund_current_amount', '1620'),
@@ -67,7 +67,7 @@ export async function initDatabase(force: boolean = false) {
           ('oven_fund_goal_2', '5000'),
           ('oven_fund_current_amount_2', '750'),
           ('oven_fund_description_2', 'Build a traditional outdoor clay wood-fired brick oven and workbench prep area in the garden for seasonal community baking runs, rustic sourdough, flatbreads, and future workshops.'),
-          ('brand_name', 'Sage & Sweetgrass Homestead'),
+          ('brand_name', 'The Artisan Bakery'),
           ('brand_tagline', 'Fresh baking, pantry goods & handmade home and body care'),
           ('brand_abbreviation', 'SSH')
           ON CONFLICT (key) DO NOTHING;
@@ -76,7 +76,7 @@ export async function initDatabase(force: boolean = false) {
         // Reset brand name/tagline/abbreviation if they are currently set to test values ('Automated Brand') or empty or legacy names
         await p.query(`
           INSERT INTO site_settings (key, value) VALUES
-          ('brand_name', 'Sage & Sweetgrass Homestead'),
+          ('brand_name', 'The Artisan Bakery'),
           ('brand_tagline', 'Fresh baking, pantry goods & handmade home and body care'),
           ('brand_abbreviation', 'SSH')
           ON CONFLICT (key) DO UPDATE
@@ -87,28 +87,28 @@ export async function initDatabase(force: boolean = false) {
              OR site_settings.value LIKE '%Cedar%'
              OR site_settings.value LIKE '%homestead care%';
         `);
-        // Migrate legacy "Cedar & Sage" settings and emails to "Sage & Sweetgrass Homestead" and correct domains
+        // Migrate legacy "The Artisan Bakery" settings and emails to "The Artisan Bakery" and correct domains
         await p.query(`
           UPDATE site_settings 
-          SET value = REPLACE(value, 'Cedar & Sage', 'Sage & Sweetgrass Homestead') 
-          WHERE value LIKE '%Cedar & Sage%';
+          SET value = REPLACE(value, 'The Artisan Bakery', 'The Artisan Bakery') 
+          WHERE value LIKE '%The Artisan Bakery%';
           UPDATE site_settings 
-          SET value = REPLACE(value, 'Cedar and Sage', 'Sage & Sweetgrass Homestead') 
+          SET value = REPLACE(value, 'Cedar and Sage', 'The Artisan Bakery') 
           WHERE value LIKE '%Cedar and Sage%';
           UPDATE site_settings 
           SET value = REPLACE(value, 'Homestead Homestead', 'Homestead') 
           WHERE value LIKE '%Homestead Homestead%';
           UPDATE site_settings 
-          SET value = REPLACE(value, 'kirstinsparks@hotmail.com', 'hello@sageandsweetgrass.ca') 
+          SET value = REPLACE(value, 'hello@theartisanbakery.test', 'hello@theartisanbakery.test') 
           WHERE key = 'contact_email';
           UPDATE site_settings 
-          SET value = REPLACE(value, 'kirstinsparks@hotmail.com', 'payments@sageandsweetgrass.ca') 
+          SET value = REPLACE(value, 'hello@theartisanbakery.test', 'payments@theartisanbakery.test') 
           WHERE key = 'etransfer_email' OR key = 'payment_instructions';
           UPDATE site_settings 
-          SET value = REPLACE(value, 'payments@example.com', 'payments@sageandsweetgrass.ca') 
+          SET value = REPLACE(value, 'payments@example.com', 'payments@theartisanbakery.test') 
           WHERE value LIKE '%payments@example.com%';
           UPDATE site_settings 
-          SET value = REGEXP_REPLACE(value, '[a-zA-Z0-9._%+-]+@cedar(and)?sage(homestead)?\.(ca|com)', 'hello@sageandsweetgrass.ca', 'g') 
+          SET value = REGEXP_REPLACE(value, '[a-zA-Z0-9._%+-]+@cedar(and)?sage(homestead)?\.(ca|com)', 'hello@theartisanbakery.test', 'g') 
           WHERE value ~ '@cedar(and)?sage(homestead)?\.(ca|com)';
         `);
         return { success: true, message: 'Database already initialized. Verified media_assets table, migrated legacy setting names, and ensured multi-goal settings.' };

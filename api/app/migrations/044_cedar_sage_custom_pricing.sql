@@ -1,4 +1,4 @@
--- Cedar & Sage Custom Pricing and Order Requests migration
+-- The Artisan Bakery Custom Pricing and Order Requests migration
 
 -- Add custom fields to products table
 ALTER TABLE products ADD COLUMN IF NOT EXISTS pricing_mode TEXT NOT NULL DEFAULT 'fixed' 
@@ -38,10 +38,10 @@ CREATE INDEX IF NOT EXISTS idx_order_requests_created_at ON order_requests(creat
 
 -- Seed default Homestead settings content
 INSERT INTO settings (key, value) VALUES 
-  ('about_content', 'Welcome to Sage & Sweetgrass Homestead. We bake fresh small-batch goods and handcraft homestead care items.'),
+  ('about_content', 'Welcome to The Artisan Bakery. We bake fresh small-batch goods and handcraft homestead care items.'),
   ('faq_content', 'Q: How do I order?\nA: Submit an order request, and we will email you to confirm pickup/delivery and e-transfer details.'),
   ('pickup_instructions', 'Pickups are at the Homestead on Saturdays between 10am and 2pm. Please coordinate in advance.'),
-  ('payment_instructions', 'We accept e-Transfers. Please send payment to payments@sageandsweetgrass.ca after receiving order confirmation.'),
+  ('payment_instructions', 'We accept e-Transfers. Please send payment to payments@theartisanbakery.test after receiving order confirmation.'),
   ('allergy_disclaimer', 'Our products are baked in a kitchen that handles wheat, nuts, dairy, and eggs.'),
   ('preorder_instructions', 'Preorders close on Wednesday evenings for Saturday baking. Standard lead time is 3 days.')
 ON CONFLICT (key) DO NOTHING;

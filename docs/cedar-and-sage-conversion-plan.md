@@ -1,10 +1,10 @@
-# Cedar & Sage Homestead Conversion Plan
+# The Artisan Bakery Conversion Plan
 
 ## Project Goal
 
-Convert the clothing/apparel baseline into Cedar & Sage Homestead, a warm, rustic, professional baking and homestead commerce site.
+Convert the clothing/apparel baseline into The Artisan Bakery, a warm, rustic, professional baking and homestead commerce site.
 
-The highest priority is admin self-service. Kirstin must be able to manage products, prices, options, availability, photos, content, and order requests from the admin dashboard without code.
+The highest priority is admin self-service. our baker must be able to manage products, prices, options, availability, photos, content, and order requests from the admin dashboard without code.
 
 ## Business Model
 
@@ -52,7 +52,7 @@ Home & Body:
 
 ## Admin Self-Service Requirements
 
-Kirstin must be able to:
+our baker must be able to:
 * Add/edit/hide products and menu items
 * Update prices
 * Manage options such as batch size, flavour, icing, add-ons, inclusions, yeast/sourdough, half-dozen/dozen
@@ -163,7 +163,7 @@ Add CHECK constraints:
 ## Brand Defaults
 
 Name:
-Cedar & Sage Homestead
+The Artisan Bakery
 
 Tagline:
 Fresh baking, pantry goods & handmade homestead care
@@ -246,16 +246,16 @@ Do not build in Phase 1:
 ## Acceptance Criteria for Future Build Phase
 
 The build is not complete until:
-* Kirstin can change a product price from admin.
+* our baker can change a product price from admin.
 * Public price updates without code.
-* Kirstin can add a menu item.
-* Kirstin can hide an unavailable item.
-* Kirstin can upload/change a product photo.
-* Kirstin can mark cheesecake/custom desserts as quote-only.
-* Kirstin can mark sourdough as preorder/weekend-only.
+* our baker can add a menu item.
+* our baker can hide an unavailable item.
+* our baker can upload/change a product photo.
+* our baker can mark cheesecake/custom desserts as quote-only.
+* our baker can mark sourdough as preorder/weekend-only.
 * Customer can submit an order request.
 * Order request appears in admin.
-* Kirstin can update request status/admin notes.
+* our baker can update request status/admin notes.
 * Email alert is attempted.
 * Backend rejects invalid checkout attempts.
 * No old hardcoded menu prices appear.

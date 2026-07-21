@@ -241,7 +241,7 @@ export function ProductInteractive({ product }: { product: Product }) {
           </Link>
 
           <p className="text-center text-xs text-muted-earth">
-            All orders are processed as requests. Kirstin will review availability and confirm your baking date via email.
+            All orders are processed as requests. our baker will review availability and confirm your baking date via email.
           </p>
         </div>
 

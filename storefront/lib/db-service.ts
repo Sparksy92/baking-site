@@ -204,24 +204,24 @@ export async function getPublicSettings(): Promise<PublicSettings> {
       console.log('Stale settings detected. Running self-healing Postgres updates...');
       await query(`
         INSERT INTO site_settings (key, value) VALUES
-        ('brand_name', 'Sage & Sweetgrass Homestead'),
+        ('brand_name', 'The Artisan Bakery'),
         ('brand_tagline', 'Fresh baking, pantry goods & handmade home and body care'),
         ('brand_abbreviation', 'SSH'),
-        ('contact_email', 'hello@sageandsweetgrass.ca'),
-        ('etransfer_email', 'payments@sageandsweetgrass.ca')
+        ('contact_email', 'hello@theartisanbakery.test'),
+        ('etransfer_email', 'payments@theartisanbakery.test')
         ON CONFLICT (key) DO UPDATE
         SET value = EXCLUDED.value;
       `);
       
       await query(`
         UPDATE site_settings 
-        SET value = REPLACE(value, 'Cedar & Sage', 'Sage & Sweetgrass Homestead') 
-        WHERE value LIKE '%Cedar & Sage%';
+        SET value = REPLACE(value, 'The Artisan Bakery', 'The Artisan Bakery') 
+        WHERE value LIKE '%The Artisan Bakery%';
       `);
       
       await query(`
         UPDATE site_settings 
-        SET value = REPLACE(value, 'Cedar and Sage', 'Sage & Sweetgrass Homestead') 
+        SET value = REPLACE(value, 'Cedar and Sage', 'The Artisan Bakery') 
         WHERE value LIKE '%Cedar and Sage%';
       `);
 
@@ -258,8 +258,8 @@ export async function getPublicSettings(): Promise<PublicSettings> {
   res.rows.forEach(r => {
     let val = r.value || '';
     if (typeof val === 'string') {
-      val = val.replace(/Cedar\s*&\s*Sage/gi, 'Sage & Sweetgrass Homestead');
-      val = val.replace(/Cedar\s+and\s+Sage/gi, 'Sage & Sweetgrass Homestead');
+      val = val.replace(/Cedar\s*&\s*Sage/gi, 'The Artisan Bakery');
+      val = val.replace(/Cedar\s+and\s+Sage/gi, 'The Artisan Bakery');
       val = val.replace(/family-run homestead kitchen/gi, 'family-run kitchen');
       val = val.replace(/small-batch homestead kitchen/gi, 'small-batch kitchen');
       val = val.replace(/Homestead\s+Homestead/gi, 'Homestead');
@@ -267,9 +267,9 @@ export async function getPublicSettings(): Promise<PublicSettings> {
       // Self-healing email domain replacements
       val = val.replace(/[a-zA-Z0-9._%+-]+@cedar(?:and)?sage(?:homestead)?\.(?:ca|com)/gi, (match: string) => {
         if (match.toLowerCase().includes('payment') || match.toLowerCase().includes('etransfer')) {
-          return 'payments@sageandsweetgrass.ca';
+          return 'payments@theartisanbakery.test';
         }
-        return 'hello@sageandsweetgrass.ca';
+        return 'hello@theartisanbakery.test';
       });
     }
 
@@ -278,14 +278,14 @@ export async function getPublicSettings(): Promise<PublicSettings> {
       val = 'Fresh baking, pantry goods & handmade home and body care';
     }
     if (r.key === 'brand_name' && (val === 'Automated Brand' || val.toLowerCase().includes('cedar'))) {
-      val = 'Sage & Sweetgrass Homestead';
+      val = 'The Artisan Bakery';
     }
 
     settingsMap[r.key] = val;
   });
 
   return {
-    brand_name: settingsMap['brand_name'] || 'Sage & Sweetgrass Homestead',
+    brand_name: settingsMap['brand_name'] || 'The Artisan Bakery',
     brand_tagline: settingsMap['brand_tagline'] || 'Fresh baking, pantry goods & handmade home and body care',
     store_announcement: settingsMap['store_announcement'] || '',
     shipping_flat_rate_cents: parseInt(settingsMap['shipping_flat_rate_cents'] || '0', 10),
@@ -293,8 +293,8 @@ export async function getPublicSettings(): Promise<PublicSettings> {
     tax_rate: parseFloat(settingsMap['tax_rate'] || '0'),
     currency: settingsMap['currency'] || 'CAD',
     analytics_id: settingsMap['analytics_id'] || '',
-    etransfer_email: settingsMap['etransfer_email'] || 'payments@sageandsweetgrass.ca',
-    contact_email: settingsMap['contact_email'] || 'hello@sageandsweetgrass.ca',
+    etransfer_email: settingsMap['etransfer_email'] || 'payments@theartisanbakery.test',
+    contact_email: settingsMap['contact_email'] || 'hello@theartisanbakery.test',
     payment_method: 'etransfer',
     about_content: settingsMap['about_content'] || '',
     faq_content: settingsMap['faq_content'] || '',

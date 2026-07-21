@@ -1,6 +1,6 @@
-# Cedar & Sage Homestead Render Deployment Guide
+# The Artisan Bakery Render Deployment Guide
 
-This guide details the steps and configuration required to deploy the full Cedar & Sage Homestead application on Render.
+This guide details the steps and configuration required to deploy the full The Artisan Bakery application on Render.
 
 ## Recommended Render Services
 
@@ -30,7 +30,7 @@ This guide details the steps and configuration required to deploy the full Cedar
   - `STORE_DOMAIN`: The public URL of the storefront service (e.g., `https://cedar-sage-storefront.onrender.com`).
   - `CORS_ALLOWED_ORIGINS`: Comma-separated list of allowed origins (e.g., `https://cedar-sage-storefront.onrender.com`).
   - `DEV_MODE`: Set to `false` in production (this activates localhost guards to prevent booting with localhost store domains).
-  - `RESEND_API_KEY`: (Optional) Your Resend API key for emailing order confirmations to Kirstin.
+  - `RESEND_API_KEY`: (Optional) Your Resend API key for emailing order confirmations to our baker.
   - `UPLOAD_STORAGE_ROOT`: `/var/data/uploads`
   - `ENABLE_BACKGROUND_WORKERS`: `false` (Recommended: Set to `true` only if social/RSS automation features are intentionally configured later).
   - `STRIPE_SECRET_KEY`: (Optional) Your Stripe secret key if Stripe is enabled.

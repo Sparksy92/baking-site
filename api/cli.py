@@ -84,7 +84,7 @@ async def seed_admin(username: str, password: str, display_name: str | None, rol
 
 
 async def seed():
-    """Insert sample products, categories, and collections for Sage & Sweetgrass Homestead."""
+    """Insert sample products, categories, and collections for The Artisan Bakery."""
     from app.config import get_settings
     from app.database import init_db, db_connection
 
@@ -98,7 +98,7 @@ async def seed():
             ("Desserts", "desserts", "Small-batch desserts, muffins, banana bread, cookies, cheesecakes, and special requests.", 1),
             ("Pantry", "pantry", "Homemade pantry goods, preserves, pickled goods, dried mixes, simmer pots, and seasonal bundles.", 2),
             ("Home & Body", "home-body", "Handmade homestead care products including lotions, lip balms, salves, and herbal oils.", 3),
-            ("Oven Fund", "oven-fund", "Support Sage & Sweetgrass Homestead’s equipment and baking capacity goals.", 4),
+            ("Oven Fund", "oven-fund", "Support The Artisan Bakery’s equipment and baking capacity goals.", 4),
         ]
         
         category_ids = {}
@@ -117,7 +117,7 @@ async def seed():
         # Product tuples: (name, slug, description, category_slug, is_active, is_featured, sort_order, pricing_mode, availability_status, lead_time_days, is_preorder, is_weekend, is_quote, allergy_notes, pickup_notes)
         products_data = [
             # BAKED FRESH
-            ("Artisan Bread", "artisan-bread", "A homemade artisan-style loaf prepared in small batches. Submit a request and Kirstin will confirm availability, timing, and price.", 
+            ("Artisan Bread", "artisan-bread", "A homemade artisan-style loaf prepared in small batches. Submit a request and our baker will confirm availability, timing, and price.", 
              "baked-fresh", True, True, 0, "starting_at", "available", 2, False, False, False, "Contains gluten/wheat.", "Freshly baked on demand."),
             
             ("Sandwich Loaf", "sandwich-loaf", "A soft homemade sandwich loaf for everyday meals, toast, and packed lunches. Submit a request to confirm the next available baking day.", 
@@ -148,10 +148,10 @@ async def seed():
             ("Special Cookies", "special-cookies", "Specialty cookies and custom cookie requests. Pricing and timing are confirmed after request review.", 
              "desserts", True, False, 9, "quote_only", "available", 3, False, False, False, "Contains wheat, dairy, egg. Custom allergens depend on request.", "Pricing confirmed after request review."),
             
-            ("Cheesecakes", "cheesecakes", "Custom cheesecake requests are reviewed individually. Submit your flavour, size, and date needed so Kirstin can confirm price and availability.", 
+            ("Cheesecakes", "cheesecakes", "Custom cheesecake requests are reviewed individually. Submit your flavour, size, and date needed so our baker can confirm price and availability.", 
              "desserts", True, False, 10, "quote_only", "quote_only", 3, False, False, True, "Contains dairy, gluten, egg.", "Hand-delivered or pickup only due to refrigeration requirements."),
             
-            ("Custom Desserts", "custom-desserts", "Special desserts, custom requests, and event-style orders. Submit details and Kirstin will confirm availability, timing, and price.", 
+            ("Custom Desserts", "custom-desserts", "Special desserts, custom requests, and event-style orders. Submit details and our baker will confirm availability, timing, and price.", 
              "desserts", True, False, 11, "quote_only", "quote_only", 3, False, False, True, "Allergens depend on custom design.", "Custom dessert consultation."),
             
             # PANTRY
@@ -184,7 +184,7 @@ async def seed():
              "home-body", True, False, 20, "starting_at", "available", 2, False, False, False, "Essential oils, botanical carrier oils.", "Organic herbal extracts."),
              
             # OVEN FUND
-            ("Oven Fund Support", "oven-fund-support", "Support Sage & Sweetgrass Homestead’s equipment and baking capacity goals. This is separate from product checkout.", 
+            ("Oven Fund Support", "oven-fund-support", "Support The Artisan Bakery’s equipment and baking capacity goals. This is separate from product checkout.", 
              "oven-fund", True, True, 21, "quote_only", "quote_only", 0, False, False, True, "N/A", "Donations are processed separately from storefront orders.")
         ]
 
@@ -303,7 +303,7 @@ async def seed():
         # 4. Collections Seeding
         collections_data = [
             ("New Arrivals", "new-arrivals", "Fresh seasonal preorders and specials from our kitchen.", 0),
-            ("Best Sellers", "best-sellers", "Sage & Sweetgrass community favorites.", 1),
+            ("Best Sellers", "best-sellers", "The Artisan Bakery community favorites.", 1),
         ]
         
         collection_ids = {}
@@ -339,17 +339,17 @@ async def seed():
 
         # 6. Default Homestead Settings Seeding
         settings_to_seed = [
-            ('brand_name', 'Sage & Sweetgrass Homestead'),
+            ('brand_name', 'The Artisan Bakery'),
             ('brand_tagline', 'Fresh baking, pantry goods & handmade home and body care'),
             ('store_announcement', 'Fresh weekly baking preorders — Local pickup & custom requests welcome!'),
             ('brand_abbreviation', 'SSH'),
-            ('about_content', 'Sage & Sweetgrass Homestead is a small-batch kitchen offering fresh baking, pantry goods, and handmade home and body products. Every request is handled with care, and many items are prepared by preorder so they can be made fresh.'),
-            ('pickup_instructions', 'Orders are prepared by request. Pickup or local delivery details will be confirmed after Kirstin reviews your order request.'),
+            ('about_content', 'The Artisan Bakery is a small-batch kitchen offering fresh baking, pantry goods, and handmade home and body products. Every request is handled with care, and many items are prepared by preorder so they can be made fresh.'),
+            ('pickup_instructions', 'Orders are prepared by request. Pickup or local delivery details will be confirmed after our baker reviews your order request.'),
             ('payment_instructions', 'Payment details will be confirmed after your request is reviewed. E-transfer or pay-on-confirmation is preferred while the menu and availability are being finalized.'),
             ('preorder_instructions', 'Sourdough is available by preorder and is usually prepared on weekends. Please include your desired date and any special notes when submitting your request.'),
             ('allergy_disclaimer', 'Items are prepared in a home kitchen and may come into contact with common allergens including wheat, dairy, eggs, nuts, peanuts, soy, and other ingredients. If you have an allergy or dietary concern, include it in your order request before confirming your order.'),
             ('faq_content', """Q: How do I place an order?
-A: Browse our menu, select your items, and submit an order request. Kirstin will review it and reach out to confirm pickup/delivery and payment details.
+A: Browse our menu, select your items, and submit an order request. our baker will review it and reach out to confirm pickup/delivery and payment details.
 
 Q: Are prices final?
 A: For custom bakes and quote-only items, final pricing is confirmed after request review.
@@ -379,7 +379,7 @@ A: Visit our Oven Fund page to view current progress and support tiers. Contribu
                 ON CONFLICT (key) DO UPDATE SET value = EXCLUDED.value
             """, (key, value))
 
-    print("Success: Seeded database with Sage & Sweetgrass Homestead data:")
+    print("Success: Seeded database with The Artisan Bakery data:")
     print("  - 5 categories (Baked Fresh, Desserts, Pantry, Home & Body, Oven Fund)")
     print("  - 22 custom products with options and variants")
     print("  - 2 collections (New Arrivals, Best Sellers)")

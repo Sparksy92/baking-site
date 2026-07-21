@@ -15,11 +15,11 @@ export async function GET() {
     // 1. Run self-healing updates on site_settings
     await query(`
       INSERT INTO site_settings (key, value) VALUES
-      ('brand_name', 'Sage & Sweetgrass Homestead'),
+      ('brand_name', 'The Artisan Bakery'),
       ('brand_tagline', 'Fresh baking, pantry goods & handmade home and body care'),
       ('brand_abbreviation', 'SSH'),
-      ('contact_email', 'hello@sageandsweetgrass.ca'),
-      ('etransfer_email', 'payments@sageandsweetgrass.ca')
+      ('contact_email', 'hello@theartisanbakery.test'),
+      ('etransfer_email', 'payments@theartisanbakery.test')
       ON CONFLICT (key) DO UPDATE
       SET value = EXCLUDED.value
       WHERE site_settings.value = 'Automated Brand' 
@@ -31,13 +31,13 @@ export async function GET() {
 
     await query(`
       UPDATE site_settings 
-      SET value = REPLACE(value, 'Cedar & Sage', 'Sage & Sweetgrass Homestead') 
-      WHERE value LIKE '%Cedar & Sage%';
+      SET value = REPLACE(value, 'The Artisan Bakery', 'The Artisan Bakery') 
+      WHERE value LIKE '%The Artisan Bakery%';
     `);
     
     await query(`
       UPDATE site_settings 
-      SET value = REPLACE(value, 'Cedar and Sage', 'Sage & Sweetgrass Homestead') 
+      SET value = REPLACE(value, 'Cedar and Sage', 'The Artisan Bakery') 
       WHERE value LIKE '%Cedar and Sage%';
     `);
 
@@ -49,25 +49,25 @@ export async function GET() {
 
     await query(`
       UPDATE site_settings 
-      SET value = REPLACE(value, 'kirstinsparks@hotmail.com', 'hello@sageandsweetgrass.ca') 
+      SET value = REPLACE(value, 'hello@theartisanbakery.test', 'hello@theartisanbakery.test') 
       WHERE key = 'contact_email';
     `);
 
     await query(`
       UPDATE site_settings 
-      SET value = REPLACE(value, 'kirstinsparks@hotmail.com', 'payments@sageandsweetgrass.ca') 
+      SET value = REPLACE(value, 'hello@theartisanbakery.test', 'payments@theartisanbakery.test') 
       WHERE key = 'etransfer_email' OR key = 'payment_instructions';
     `);
 
     await query(`
       UPDATE site_settings 
-      SET value = REPLACE(value, 'payments@example.com', 'payments@sageandsweetgrass.ca') 
+      SET value = REPLACE(value, 'payments@example.com', 'payments@theartisanbakery.test') 
       WHERE value LIKE '%payments@example.com%';
     `);
 
     await query(`
       UPDATE site_settings 
-      SET value = REGEXP_REPLACE(value, '[a-zA-Z0-9._%+-]+@cedar(and)?sage(homestead)?\\.(ca|com)', 'hello@sageandsweetgrass.ca', 'g') 
+      SET value = REGEXP_REPLACE(value, '[a-zA-Z0-9._%+-]+@cedar(and)?sage(homestead)?\\.(ca|com)', 'hello@theartisanbakery.test', 'g') 
       WHERE value ~ '@cedar(and)?sage(homestead)?\\.(ca|com)';
     `);
 
@@ -88,16 +88,16 @@ export async function GET() {
     const cleanedRows = res.rows.map(r => {
       let val = r.value || '';
       if (typeof val === 'string') {
-        val = val.replace(/Cedar\s*&\s*Sage/gi, 'Sage & Sweetgrass Homestead');
-        val = val.replace(/Cedar\s+and\s+Sage/gi, 'Sage & Sweetgrass Homestead');
+        val = val.replace(/Cedar\s*&\s*Sage/gi, 'The Artisan Bakery');
+        val = val.replace(/Cedar\s+and\s+Sage/gi, 'The Artisan Bakery');
         val = val.replace(/Homestead\s+Homestead/gi, 'Homestead');
         
         // Self-healing email domain replacements
         val = val.replace(/[a-zA-Z0-9._%+-]+@cedar(?:and)?sage(?:homestead)?\.(?:ca|com)/gi, (match: string) => {
           if (match.toLowerCase().includes('payment') || match.toLowerCase().includes('etransfer')) {
-            return 'payments@sageandsweetgrass.ca';
+            return 'payments@theartisanbakery.test';
           }
-          return 'hello@sageandsweetgrass.ca';
+          return 'hello@theartisanbakery.test';
         });
 
         // Clean homestead kitchen duplications
@@ -110,7 +110,7 @@ export async function GET() {
         val = 'Fresh baking, pantry goods & handmade home and body care';
       }
       if (r.key === 'brand_name' && (val === 'Automated Brand' || val.toLowerCase().includes('cedar'))) {
-        val = 'Sage & Sweetgrass Homestead';
+        val = 'The Artisan Bakery';
       }
 
       return { ...r, value: val };

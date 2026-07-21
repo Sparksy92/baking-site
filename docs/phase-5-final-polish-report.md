@@ -1,4 +1,4 @@
-# Cedar & Sage Homestead Phase 5 Final Polish Report
+# The Artisan Bakery Phase 5 Final Polish Report
 
 ## Branch
 `feature/cedar-sage-final-polish`
@@ -30,7 +30,7 @@
 * **Checkout Preferences**: Customers are explicitly notified during checkout that e-transfer is preferred, and the payment method radio is preselected to Interac e-Transfer.
 
 ## Metadata Updates
-* **Homepage**: Exported static Next.js `metadata` object in `page.tsx` with title `"Cedar & Sage Homestead | Fresh Baking & Homestead Goods"` and custom description.
+* **Homepage**: Exported static Next.js `metadata` object in `page.tsx` with title `"The Artisan Bakery | Fresh Baking & Homestead Goods"` and custom description.
 * **Sub-Pages**: Added separate layout wrappers (`layout.tsx`) in subfolders for `shop`, `custom-orders`, `order-info`, `about`, `faq`, `oven-fund`, and `contact` to define custom SEO titles and meta descriptions for each page.
 
 ## Admin Guide Updates

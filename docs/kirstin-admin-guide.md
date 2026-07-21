@@ -1,6 +1,6 @@
-# Kirstin's Admin Guide: Cedar & Sage Homestead
+# our baker's Admin Guide: The Artisan Bakery
 
-Welcome to your Cedar & Sage Homestead admin dashboard! This guide will help you manage your products, pricing, availability, storefront settings, and customer order requests. No code, developer tools, or technical command-line actions are needed for any of these daily tasks.
+Welcome to your The Artisan Bakery admin dashboard! This guide will help you manage your products, pricing, availability, storefront settings, and customer order requests. No code, developer tools, or technical command-line actions are needed for any of these daily tasks.
 
 ---
 
@@ -95,7 +95,7 @@ To update the instructions customers see during ordering:
 1. Go to **Settings** in the sidebar.
 2. Scroll down to the **Homestead Settings** section.
 3. Edit the content in the respective text areas:
-   - **About Content**: The story behind Cedar & Sage Homestead.
+   - **About Content**: The story behind The Artisan Bakery.
    - **FAQ Content**: Answers to common baking questions, delivery details, etc.
    - **Pickup Instructions**: Where and when customers can pick up sourdough and baked goods.
    - **Payment Instructions**: E-transfer email details (e.g., where to send payments) or cash-on-pickup terms.
