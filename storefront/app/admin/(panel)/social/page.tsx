@@ -115,7 +115,15 @@ export default function SocialDashboardPage() {
     try {
       setLoading(true);
       const [rawDash, garyData, velocityData, viralData] = await Promise.all([
-        api.get<DashboardRaw>('/api/admin/social/dashboard'),
+        api.get<DashboardRaw>('/api/admin/social/dashboard').catch(() => ({
+          health_score: { score: 0, status: "offline" },
+          content_pipeline: { drafts: 0, scheduled: 0, pending_approval: 0, published_recent: 0, published_today: 0, failed: 0 },
+          attention_needed: { unreplied_comments: 0, pending_agent_approvals: 0, pending_influencer_approvals: 0, failed_posts: 0, active_crisis_alerts: 0 },
+          engagement: { total_events: 0, avg_sentiment_score: 0.0, reply_rate: 0 },
+          revenue: { monetized_posts: 0, attributed_orders: 0, revenue_usd: 0 },
+          ai_agent_activity: { total_actions: 0 },
+          recommendations: { next_best_action: "Please deploy and connect the Python API backend to activate the social features." }
+        })),
         api.get<GaryVeeScore>('/api/admin/social/strategy/gary-vee-score').catch(() => null),
         api.get<VelocityData>('/api/admin/social/strategy/velocity').catch(() => null),
         api.get<{ alerts: ViralAlert[] }>('/api/admin/social/viral-alerts').catch(() => null),
