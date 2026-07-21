@@ -4,7 +4,7 @@ import { NextRequest } from 'next/server';
 const { mockUserRef, mockQueryFn, mockPutFn, mockDelFn } = vi.hoisted(() => {
   return {
     mockUserRef: { current: null as any },
-    mockQueryFn: vi.fn(async () => ({ rows: [] as any[] })),
+    mockQueryFn: vi.fn(async (sql?: string, params?: any[]) => ({ rows: [] as any[] })),
     mockPutFn: vi.fn(async (pathname: string) => ({
       url: `https://blob.vercel-storage.com/${pathname}`,
       pathname
@@ -96,7 +96,7 @@ describe('Media API Routes - Authentication & Security', () => {
   it('upload route succeeds and saves records on valid files', async () => {
     mockUserRef.current = { role: 'admin', username: 'admin' };
     
-    mockQueryFn.mockImplementation(async (sql: string) => {
+    mockQueryFn.mockImplementation(async (sql: any) => {
       if (sql.includes('INSERT INTO media_assets')) {
         return {
           rows: [{
@@ -134,7 +134,7 @@ describe('Media API Routes - Authentication & Security', () => {
   it('delete route blocks deletion when image is used by a product', async () => {
     mockUserRef.current = { role: 'admin', username: 'admin' };
     
-    mockQueryFn.mockImplementation(async (sql: string) => {
+    mockQueryFn.mockImplementation(async (sql: any) => {
       if (sql.includes('SELECT * FROM media_assets')) {
         return { rows: [{ id: 1, url: 'https://blob.vercel-storage.com/media/test.jpg', source: 'vercel_blob' }] };
       }
@@ -158,7 +158,7 @@ describe('Media API Routes - Authentication & Security', () => {
   it('delete route allows deletion with force=true', async () => {
     mockUserRef.current = { role: 'admin', username: 'admin' };
     
-    mockQueryFn.mockImplementation(async (sql: string) => {
+    mockQueryFn.mockImplementation(async (sql: any) => {
       if (sql.includes('SELECT * FROM media_assets')) {
         return { rows: [{ id: 1, url: 'https://blob.vercel-storage.com/media/test.jpg', source: 'vercel_blob' }] };
       }

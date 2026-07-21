@@ -39,6 +39,7 @@ describe('Vercel-Lite Admin Auth Helper', () => {
     
     try {
       // Set to production mode
+      // @ts-ignore
       process.env.NODE_ENV = 'production';
       process.env.DEV_MODE = 'false';
       
