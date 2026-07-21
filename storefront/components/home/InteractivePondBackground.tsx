@@ -159,7 +159,7 @@ class KoiFish {
   mouthOpen: number;
 
   static readonly SEG_COUNT = 18;
-  static readonly SEG_SPACING = 20; // px base spacing between segments — matches uncompressed photo aspect ratio
+  static readonly SEG_SPACING = 10; // px base spacing between segments — matches uncompressed photo aspect ratio
 
   constructor(x: number, y: number, img: HTMLImageElement, sizeMultiplier: number) {
     this.x = x;
@@ -272,10 +272,11 @@ class KoiFish {
   }
 
   private getSegAngle(i: number): number {
-    if (i === 0) return this.angle;
-    const prev = this.segments[i - 1];
-    const curr = this.segments[i];
-    return Math.atan2(curr.y - prev.y, curr.x - prev.x);
+    if (this.segments.length < 2) return this.angle;
+    const prev = this.segments[Math.max(0, i - 1)];
+    const next = this.segments[Math.min(this.segments.length - 1, i + 1)];
+    if (prev === next) return this.angle;
+    return Math.atan2(prev.y - next.y, prev.x - next.x);
   }
 
   drawShadow(ctx: CanvasRenderingContext2D) {
@@ -283,7 +284,7 @@ class KoiFish {
     const shadowOffset = 14 + this.depth * 26;
     const alpha = 0.18 - this.depth * 0.08;
     const scale = 1.0 - this.depth * 0.12;
-    const s = (this.sizeMultiplier * 0.70) * scale;
+    const s = (this.sizeMultiplier * 0.38) * scale;
 
     ctx.save();
     ctx.globalAlpha = alpha;
@@ -298,7 +299,7 @@ class KoiFish {
       const segAngle = this.getSegAngle(i);
       const sy = i * sliceH;
       const dw = imgW * s;
-      const dh = sliceH * s * 1.05;
+      const dh = sliceH * s * 1.1;
 
       ctx.save();
       ctx.translate(seg.x + shadowOffset, seg.y + shadowOffset + 6);
@@ -313,7 +314,7 @@ class KoiFish {
     if (!this.img || !this.img.complete || this.img.naturalWidth === 0) return;
     const scale = 1.0 - this.depth * 0.12;
     const alpha = 0.92 - this.depth * 0.2;
-    const s = (this.sizeMultiplier * 0.70) * scale;
+    const s = (this.sizeMultiplier * 0.38) * scale;
 
     ctx.save();
     ctx.globalAlpha = alpha;
@@ -329,7 +330,7 @@ class KoiFish {
       const segAngle = this.getSegAngle(i);
       const sy = i * sliceH;
       const dw = imgW * s;
-      const dh = sliceH * s * 1.05; // Exact uncompressed ratio
+      const dh = sliceH * s * 1.1; // Exact uncompressed ratio
 
       ctx.save();
       ctx.translate(seg.x, seg.y);
