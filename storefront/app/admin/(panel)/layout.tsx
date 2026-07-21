@@ -7,7 +7,7 @@ import {
   LayoutDashboard, Package, ShoppingCart, Layers, FolderOpen, Tag, Settings, LogOut, Mail,
   BarChart3, RotateCcw, Webhook, Gift, Star, PackageOpen, FileText, Tags, Users, Ruler, Shield,
   ArrowLeftRight, ChevronDown, ChevronRight, Megaphone, Wrench, CreditCard, TrendingUp, Share2, Bot, Inbox,
-  AlertTriangle, Menu,
+  AlertTriangle, Menu, CalendarDays, MessageSquare, BarChart2, UserCheck, Crosshair, Link2, Rss, Cpu
 } from 'lucide-react';
 import { api } from '@/lib/api';
 import { Toaster } from '@/components/Toaster';
@@ -40,7 +40,36 @@ const SECTIONS: NavSection[] = [
     icon: Megaphone,
     items: [
       { label: 'Promos',      to: '/admin/promos',      icon: Tag },
+      { label: 'Gift Cards',  to: '/admin/gift-cards',  icon: Gift },
+      { label: 'Loyalty',     to: '/admin/loyalty',     icon: Star },
+      { label: 'Store Credit',to: '/admin/store-credit',icon: CreditCard },
+      { label: 'Segments',    to: '/admin/segments',    icon: Users },
       { label: 'Newsletter',  to: '/admin/newsletter',  icon: Mail },
+      { label: 'Analytics',   to: '/admin/analytics',   icon: BarChart3 },
+      { label: 'LTV Report',  to: '/admin/ltv',          icon: TrendingUp },
+    ],
+  },
+  {
+    id: 'social',
+    label: 'Social & AI',
+    icon: Share2,
+    items: [
+      { label: 'Dashboard',      to: '/admin/social',                icon: LayoutDashboard },
+      { label: 'Platforms',      to: '/admin/social/platforms',      icon: Share2 },
+      { label: 'Outbox',         to: '/admin/social/outbox',         icon: Inbox },
+      { label: 'Calendar',       to: '/admin/social/calendar',       icon: CalendarDays },
+      { label: 'Inbox',          to: '/admin/social/inbox',          icon: MessageSquare },
+      { label: 'Crisis Alerts',  to: '/admin/social/crisis',         icon: AlertTriangle },
+      { label: 'Content Analytics', to: '/admin/social/strategy',    icon: TrendingUp },
+      { label: 'Reports',        to: '/admin/social/reports',        icon: BarChart2 },
+      { label: 'A/B Tests',      to: '/admin/social/ab-tests',       icon: BarChart3 },
+      { label: 'Influencers',    to: '/admin/social/influencers',    icon: UserCheck },
+      { label: 'Competitors',    to: '/admin/social/competitors',    icon: Crosshair },
+      { label: 'Link in Bio',    to: '/admin/social/linkinbio',      icon: Link2 },
+      { label: 'RSS Feeds',      to: '/admin/social/rss',            icon: Rss },
+      { label: 'Brand Persona',  to: '/admin/social/persona',        icon: Bot },
+      { label: 'AI Models',      to: '/admin/social/ai-models',      icon: Cpu },
+      { label: 'Compliance',     to: '/admin/compliance',    icon: Shield },
     ],
   },
   {
@@ -48,7 +77,12 @@ const SECTIONS: NavSection[] = [
     label: 'Advanced',
     icon: Wrench,
     items: [
+      { label: 'Bundles',     to: '/admin/bundles',     icon: PackageOpen },
+      { label: 'Tags',        to: '/admin/tags',        icon: Tags },
+      { label: 'Size Guides', to: '/admin/size-guides', icon: Ruler },
       { label: 'Redirects',   to: '/admin/redirects',   icon: ArrowLeftRight },
+      { label: 'Webhooks',    to: '/admin/webhooks',    icon: Webhook },
+      { label: 'Staff',       to: '/admin/staff',       icon: Shield },
     ],
   },
 ];
