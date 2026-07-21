@@ -281,13 +281,12 @@ class KoiFish {
   drawShadow(ctx: CanvasRenderingContext2D) {
     if (!this.img || !this.img.complete || this.img.naturalWidth === 0) return;
     const shadowOffset = 14 + this.depth * 26;
-    const alpha = 0.25 - this.depth * 0.12;
+    const alpha = 0.18 - this.depth * 0.08;
     const scale = 1.0 - this.depth * 0.12;
     const s = (this.sizeMultiplier * 0.45) * scale;
 
     ctx.save();
     ctx.globalAlpha = alpha;
-    ctx.filter = `blur(${(8 + this.depth * 10)}px) brightness(0)`;
 
     const numSlices = this.segments.length;
     const imgH = this.img.naturalHeight;
@@ -307,7 +306,6 @@ class KoiFish {
       ctx.drawImage(this.img, 0, sy, imgW, sliceH, -dw / 2, -dh / 2, dw, dh);
       ctx.restore();
     }
-    ctx.filter = 'none';
     ctx.restore();
   }
 
@@ -421,7 +419,7 @@ export default function InteractivePondBackground() {
     const resize = () => {
       width = glCanvas.offsetWidth;
       height = glCanvas.offsetHeight;
-      const dpr = Math.min(window.devicePixelRatio, 2);
+      const dpr = Math.min(window.devicePixelRatio, 1.25);
       glCanvas.width = width * dpr;
       glCanvas.height = height * dpr;
       fishCanvas.width = width;
@@ -507,7 +505,7 @@ export default function InteractivePondBackground() {
         const { gl, uTime, uResolution, uMouse, uMouseStrength } = glRef.current;
         gl.uniform1f(uTime, t);
         gl.uniform2f(uResolution, glCanvasRef.current!.width, glCanvasRef.current!.height);
-        const dpr = Math.min(window.devicePixelRatio, 2);
+        const dpr = Math.min(window.devicePixelRatio, 1.25);
         gl.uniform2f(uMouse, mouse.x * dpr, mouse.y * dpr);
         gl.uniform1f(uMouseStrength, mouse.strength);
         gl.drawArrays(gl.TRIANGLE_STRIP, 0, 4);
