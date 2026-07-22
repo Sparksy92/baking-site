@@ -21,6 +21,7 @@ const fragmentShaderSource = `
   uniform float uTime;
   uniform vec2 uResolution;
   uniform vec2 uMouse;
+  uniform vec2 uMouseVelocity;
   varying vec2 vUv;
 
   float hash(vec2 p) {
@@ -36,30 +37,76 @@ const fragmentShaderSource = `
 
   void main() {
     vec2 uv = vUv;
+    float aspect = uResolution.x / uResolution.y;
 
-    // 1. Parallax Depth: bottom of image moves more than top
+    // 1. Mouse Liquid Distortion (Shockwave / Ripple under cursor)
+    vec2 mouseUV = uMouse / uResolution;
+    mouseUV.y = 1.0 - mouseUV.y; // Flip Y for WebGL vs Screen coords
+    
+    // Correct aspect ratio for distance calculation
+    vec2 diff = uv - mouseUV;
+    diff.x *= aspect;
+    float distToMouse = length(diff);
+    
+    // Create a smooth ripple/bulge effect around the mouse
+    float mouseIntensity = length(uMouseVelocity) * 0.002;
+    mouseIntensity = clamp(mouseIntensity, 0.0, 0.05); // cap the intensity
+    
+    // Subtle constant liquid lens, enhanced by movement
+    float lensEffect = smoothstep(0.3, 0.0, distToMouse) * (0.01 + mouseIntensity);
+    
+    // Push UVs away from mouse
+    vec2 dir = normalize(diff + vec2(0.001)); // add tiny offset to avoid div by zero
+    uv -= dir * lensEffect * sin(distToMouse * 30.0 - uTime * 5.0);
+
+    // 2. Parallax Depth: bottom of image moves more than top
     float depth = uv.y; // 0.0 top, 1.0 bottom
     vec2 parallaxOffset = (uMouse / uResolution - 0.5) * depth * 0.03;
-    uv -= parallaxOffset; // shift image based on mouse
+    uv -= parallaxOffset;
 
     // Clamp to avoid edge wrap
     uv = clamp(uv, 0.0, 1.0);
 
-    // 2. Heat Haze around oven (approx x: 0.85, y: 0.6)
-    float distToOven = distance(uv, vec2(0.85, 0.6));
-    float heatHaze = smoothstep(0.2, 0.0, distToOven) * noise(uv * 30.0 + uTime * 3.0) * 0.003;
-    uv.y += heatHaze;
-
-    // 3. Wind on foliage (middle depths)
-    float wind = noise(uv * 10.0 + uTime * 0.5) * 0.002 * (1.0 - abs(depth - 0.5)*2.0);
-    uv.x += wind;
-
-    vec4 color = texture2D(uImage, uv);
+    // Sample the base image to find foliage
+    vec4 baseColor = texture2D(uImage, uv);
     
+    // 3. Color-Masked Wind (Only affects greens/yellows of foliage)
+    // Calculate how "green/yellow" a pixel is
+    float foliageMask = smoothstep(0.0, 0.2, baseColor.g - (baseColor.r * 0.3 + baseColor.b * 0.7));
+    // Amplify mask for the grassy areas in the lower half
+    foliageMask *= smoothstep(0.3, 0.8, uv.y); 
+
+    float wind = noise(uv * 10.0 + uTime * 0.5) * 0.004 * foliageMask;
+    
+    // Apply wind distortion to UV and re-sample
+    vec2 finalUv = clamp(uv + vec2(wind, 0.0), 0.0, 1.0);
+    
+    // 4. Cinematic Chromatic Aberration based on Mouse Velocity
+    // Split RGB slightly along the velocity vector
+    vec2 caOffset = normalize(uMouseVelocity + vec2(0.001)) * mouseIntensity * 0.5;
+    
+    float r = texture2D(uImage, clamp(finalUv + caOffset, 0.0, 1.0)).r;
+    float g = texture2D(uImage, finalUv).g;
+    float b = texture2D(uImage, clamp(finalUv - caOffset, 0.0, 1.0)).b;
+    
+    vec4 color = vec4(r, g, b, 1.0);
+    
+    // Heat Haze around oven (approx x: 0.85, y: 0.6) - kept for atmosphere
+    float distToOven = distance(finalUv, vec2(0.85, 0.6));
+    float heatHaze = smoothstep(0.2, 0.0, distToOven) * noise(finalUv * 30.0 + uTime * 3.0) * 0.003;
+    finalUv.y += heatHaze;
+    color = texture2D(uImage, finalUv); // re-sample with heat haze
+    
+    // Re-apply CA to the final sampled color if we want it to affect everything, 
+    // but doing it once above is usually enough. Let's stick to the heat haze re-sample 
+    // and manually mix the CA back in.
+    color.r = texture2D(uImage, clamp(finalUv + caOffset, 0.0, 1.0)).r;
+    color.b = texture2D(uImage, clamp(finalUv - caOffset, 0.0, 1.0)).b;
+
     // Golden Hour God Rays
-    vec2 lightOrigin = vec2(0.8, 0.1); // Sun in top right
-    float ray = max(0.0, 1.0 - distance(uv, lightOrigin) * 1.5) * 0.15;
-    float rayNoise = noise(uv * 15.0 - uTime * 0.3);
+    vec2 lightOrigin = vec2(0.8, 0.1); 
+    float ray = max(0.0, 1.0 - distance(finalUv, lightOrigin) * 1.5) * 0.15;
+    float rayNoise = noise(finalUv * 15.0 - uTime * 0.3);
     color.rgb += ray * rayNoise * vec3(1.0, 0.7, 0.3);
 
     // Vignette
@@ -99,10 +146,100 @@ function createProgram(gl: WebGLRenderingContext, vSource: string, fSource: stri
   return program;
 }
 
+/* ═══════════════════════════════════════════════════════════════════
+   FIREFLIES PARTICLE SYSTEM
+═══════════════════════════════════════════════════════════════════ */
+class Firefly {
+  x: number;
+  y: number;
+  vx: number;
+  vy: number;
+  size: number;
+  life: number;
+  maxLife: number;
+  baseVx: number;
+  baseVy: number;
+  phase: number;
+
+  constructor(w: number, h: number) {
+    this.x = Math.random() * w;
+    this.y = h * 0.6 + Math.random() * h * 0.4; // Primarily in the lower garden area
+    this.baseVx = (Math.random() - 0.5) * 0.5;
+    this.baseVy = -Math.random() * 0.5;
+    this.vx = this.baseVx;
+    this.vy = this.baseVy;
+    this.size = 1 + Math.random() * 2;
+    this.maxLife = 200 + Math.random() * 400;
+    this.life = Math.random() * this.maxLife; // start at random life
+    this.phase = Math.random() * Math.PI * 2;
+  }
+
+  update(mouseX: number, mouseY: number, mouseVelocityX: number, mouseVelocityY: number) {
+    this.life += 1;
+    
+    // Hovering / wandering motion
+    this.phase += 0.05;
+    let tvx = this.baseVx + Math.sin(this.phase) * 0.5;
+    let tvy = this.baseVy + Math.cos(this.phase * 0.8) * 0.5;
+
+    // Mouse Interaction (Scattering)
+    const dx = this.x - mouseX;
+    const dy = this.y - mouseY;
+    const dist = Math.hypot(dx, dy);
+    
+    if (dist < 150) {
+      const force = (150 - dist) / 150;
+      // Push away from mouse
+      tvx += (dx / dist) * force * 5;
+      tvy += (dy / dist) * force * 5;
+      
+      // Also get carried by mouse velocity
+      tvx += mouseVelocityX * force * 0.1;
+      tvy += mouseVelocityY * force * 0.1;
+    }
+
+    // Apply drag to return to target velocity
+    this.vx += (tvx - this.vx) * 0.05;
+    this.vy += (tvy - this.vy) * 0.05;
+
+    this.x += this.vx;
+    this.y += this.vy;
+  }
+
+  draw(ctx: CanvasRenderingContext2D) {
+    const progress = this.life / this.maxLife;
+    // Fade in and out
+    const alpha = Math.sin(progress * Math.PI) * (0.6 + Math.sin(this.phase)*0.4);
+    
+    if (alpha <= 0) return;
+
+    ctx.save();
+    ctx.translate(this.x, this.y);
+    
+    // Core
+    ctx.fillStyle = `rgba(200, 255, 150, ${alpha})`;
+    ctx.beginPath();
+    ctx.arc(0, 0, this.size, 0, Math.PI * 2);
+    ctx.fill();
+    
+    // Glow
+    ctx.fillStyle = `rgba(150, 255, 50, ${alpha * 0.3})`;
+    ctx.beginPath();
+    ctx.arc(0, 0, this.size * 3, 0, Math.PI * 2);
+    ctx.fill();
+    
+    ctx.restore();
+  }
+}
+
+
 export default function HomesteadBackground() {
   const glCanvasRef = useRef<HTMLCanvasElement>(null);
+  const fireflyCanvasRef = useRef<HTMLCanvasElement>(null);
   const glRef = useRef<{ gl: WebGLRenderingContext, program: WebGLProgram, texture: WebGLTexture, locs: any } | null>(null);
-  const mouseRef = useRef({ x: 0, y: 0, tx: 0, ty: 0 });
+  
+  const mouseRef = useRef({ x: 0, y: 0, tx: 0, ty: 0, vx: 0, vy: 0 });
+  const firefliesRef = useRef<Firefly[]>([]);
 
   useEffect(() => {
     const canvas = glCanvasRef.current;
@@ -135,6 +272,7 @@ export default function HomesteadBackground() {
       uTime: gl.getUniformLocation(program, 'uTime'),
       uResolution: gl.getUniformLocation(program, 'uResolution'),
       uMouse: gl.getUniformLocation(program, 'uMouse'),
+      uMouseVelocity: gl.getUniformLocation(program, 'uMouseVelocity'),
       uImage: gl.getUniformLocation(program, 'uImage'),
     };
 
@@ -166,21 +304,41 @@ export default function HomesteadBackground() {
     const startTime = performance.now();
     
     const glCanvas = glCanvasRef.current!;
+    const ffCanvas = fireflyCanvasRef.current!;
+    const ctx = ffCanvas.getContext('2d')!;
 
     const resize = () => {
       glCanvas.width = window.innerWidth;
       glCanvas.height = window.innerHeight;
+      ffCanvas.width = window.innerWidth;
+      ffCanvas.height = window.innerHeight;
       
       if (glRef.current) {
         glRef.current.gl.viewport(0, 0, glCanvas.width, glCanvas.height);
+      }
+      
+      // Init fireflies
+      firefliesRef.current = [];
+      for(let i=0; i<60; i++) {
+        firefliesRef.current.push(new Firefly(ffCanvas.width, ffCanvas.height));
       }
     };
     resize();
     window.addEventListener('resize', resize);
 
+    let lastMouseX = 0;
+    let lastMouseY = 0;
+
     const onMove = (e: MouseEvent) => {
       mouseRef.current.tx = e.clientX;
       mouseRef.current.ty = e.clientY;
+      
+      // Calculate instantaneous velocity
+      mouseRef.current.vx = e.clientX - lastMouseX;
+      mouseRef.current.vy = e.clientY - lastMouseY;
+      
+      lastMouseX = e.clientX;
+      lastMouseY = e.clientY;
     };
     window.addEventListener('mousemove', onMove);
 
@@ -189,8 +347,13 @@ export default function HomesteadBackground() {
       const width = glCanvas.width;
       const height = glCanvas.height;
 
+      // Smooth mouse position for the parallax
       mouseRef.current.x += (mouseRef.current.tx - mouseRef.current.x) * 0.1;
       mouseRef.current.y += (mouseRef.current.ty - mouseRef.current.y) * 0.1;
+      
+      // Decay mouse velocity naturally if mouse stops moving
+      mouseRef.current.vx *= 0.9;
+      mouseRef.current.vy *= 0.9;
 
       if (glRef.current) {
         const { gl, program, locs } = glRef.current;
@@ -198,7 +361,25 @@ export default function HomesteadBackground() {
         gl.uniform1f(locs.uTime, t);
         gl.uniform2f(locs.uResolution, width, height);
         gl.uniform2f(locs.uMouse, mouseRef.current.x, mouseRef.current.y);
+        gl.uniform2f(locs.uMouseVelocity, mouseRef.current.vx, mouseRef.current.vy);
         gl.drawArrays(gl.TRIANGLE_STRIP, 0, 4);
+      }
+
+      // Draw Fireflies
+      ctx.clearRect(0, 0, width, height);
+      ctx.globalCompositeOperation = 'screen';
+      
+      const fireflies = firefliesRef.current;
+      for (let i = fireflies.length - 1; i >= 0; i--) {
+        const ff = fireflies[i];
+        ff.update(mouseRef.current.tx, mouseRef.current.ty, mouseRef.current.vx, mouseRef.current.vy);
+        
+        if (ff.life >= ff.maxLife || ff.y < 0 || ff.x < 0 || ff.x > width) {
+          fireflies.splice(i, 1);
+          fireflies.push(new Firefly(width, height)); // respawn
+        } else {
+          ff.draw(ctx);
+        }
       }
 
       animId = requestAnimationFrame(animate);
@@ -214,8 +395,11 @@ export default function HomesteadBackground() {
   }, []);
 
   return (
-    <div className="absolute inset-0 w-full h-full overflow-hidden bg-black">
+    <div className="absolute inset-0 w-full h-full overflow-hidden bg-black pointer-events-none">
+      {/* WebGL Shader Layer */}
       <canvas ref={glCanvasRef} className="absolute inset-0 w-full h-full" style={{ display: 'block' }} />
+      {/* Interactive Fireflies Layer */}
+      <canvas ref={fireflyCanvasRef} className="absolute inset-0 w-full h-full pointer-events-none" style={{ display: 'block' }} />
     </div>
   );
 }
