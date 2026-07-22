@@ -283,67 +283,62 @@ export default function InteractiveKitchenScene() {
           />
 
           {/* Subtle Vignette Overlay for Realism */}
-          <div className="absolute inset-0 pointer-events-none shadow-[inset_0_0_80px_rgba(0,0,0,0.25)] z-5" />
-          <div className="absolute inset-0 bg-gradient-to-t from-black/15 via-transparent to-black/10 pointer-events-none" />
+          <div className="absolute inset-0 pointer-events-none shadow-[inset_0_0_80px_rgba(0,0,0,0.25)] z-2" />
+          <div className="absolute inset-0 bg-gradient-to-t from-black/15 via-transparent to-black/10 pointer-events-none z-2" />
 
-          {/* Warm Light Glow near the Stove/Oven (Baked Fresh: top 62%, left 84%) */}
-          <div className="absolute top-[62%] left-[84%] -translate-x-1/2 -translate-y-1/2 w-48 h-48 bg-amber-500/10 rounded-full blur-3xl pointer-events-none mix-blend-screen" />
+          {/* Dimming overlay when any zone is selected to spotlight the active zone */}
+          <div 
+            className={`absolute inset-0 bg-black/40 transition-opacity duration-700 pointer-events-none z-4 ${
+              activeZone ? 'opacity-100' : 'opacity-0'
+            }`}
+          />
 
           {/* Hotspots Render Overlay */}
           {KITCHEN_ZONES.map((hotspot) => {
             const isSelected = activeZone === hotspot.id;
             const isHovered = hoveredHotspot === hotspot.id;
+            const Icon = hotspot.icon;
 
             return (
               <div
                 key={hotspot.id}
-                className="absolute -translate-x-1/2 -translate-y-1/2 z-10"
+                className={`absolute -translate-x-1/2 -translate-y-1/2 transition-all duration-300 ${
+                  isSelected || isHovered ? 'z-10' : 'z-3'
+                }`}
                 style={{ top: hotspot.top, left: hotspot.left }}
                 onMouseLeave={() => setHoveredHotspot(null)}
               >
                 
-                {/* Subtle radial selection glow behind selected object */}
-                {isSelected && (
-                  <div 
-                    className={`absolute -translate-x-1/2 -translate-y-1/2 w-36 h-36 rounded-full pointer-events-none mix-blend-screen bg-[radial-gradient(ellipse_at_center,rgba(245,158,11,0.18),transparent_60%)] blur-xl z-0 transition-opacity ${
-                      prefersReducedMotion ? '' : 'duration-500'
-                    }`}
-                  />
-                )}
-
-                {/* Always-visible micro labels (desktop only, subtle delay/hover) */}
-                <span 
-                  className={`absolute top-full mt-2 left-1/2 -translate-x-1/2 text-[9px] font-bold uppercase tracking-wider text-earth bg-cream/90 border border-[#EBE3D5] px-2 py-0.5 rounded shadow-xs select-none pointer-events-none transition-all duration-300 md:block hidden whitespace-nowrap z-10 ${
-                    showLabels || isSelected || isHovered ? 'opacity-90 translate-y-0' : 'opacity-0 -translate-y-1'
+                {/* Modern glassmorphic tooltip (displays only on hover/select) */}
+                <div 
+                  className={`absolute bottom-full mb-3 left-1/2 -translate-x-1/2 px-3 py-1.5 rounded-xl border border-white/20 bg-white/25 backdrop-blur-md text-white text-[10px] font-bold uppercase tracking-widest pointer-events-none select-none transition-all duration-300 shadow-xl whitespace-nowrap flex items-center gap-2 ${
+                    isSelected || isHovered ? 'opacity-100 translate-y-0 scale-100' : 'opacity-0 translate-y-1 scale-95'
                   }`}
                 >
-                  {hotspot.shortLabel}
-                </span>
+                  <Icon size={11} className="text-amber-300 shrink-0" />
+                  <span>{hotspot.shortLabel}</span>
+                </div>
 
-                {/* Target click wrapper button */}
+                {/* Minimalist target focus ring button */}
                 <button
                   type="button"
                   onClick={(e) => handleHotspotClick(hotspot.id, e)}
                   onMouseEnter={() => setHoveredHotspot(hotspot.id)}
-                  onFocus={() => {
-                    setHoveredHotspot(hotspot.id);
-                  }}
-                  onBlur={() => {
-                    setHoveredHotspot(null);
-                  }}
-                  className="w-10 h-10 md:w-16 md:h-16 flex items-center justify-center rounded-full focus:outline-none focus-visible:ring-2 focus-visible:ring-amber-500 focus-visible:ring-offset-2 z-10 bg-transparent transition-transform active:scale-95 cursor-pointer"
+                  onFocus={() => setHoveredHotspot(hotspot.id)}
+                  onBlur={() => setHoveredHotspot(null)}
+                  className="w-10 h-10 md:w-16 md:h-16 flex items-center justify-center rounded-full focus:outline-none focus-visible:ring-2 focus-visible:ring-white z-10 bg-transparent transition-transform active:scale-95 cursor-pointer group"
                   aria-label={`Open details for ${hotspot.title}`}
                   aria-expanded={isSelected}
                 >
-                  {/* Visual pulse / core dot */}
-                  <span className="relative flex h-3.5 w-3.5 items-center justify-center">
-                    {(isSelected || isHovered) && (
-                      <span className={`absolute inline-flex h-7 w-7 rounded-full bg-amber-400 opacity-60 ${
-                        prefersReducedMotion ? '' : 'animate-ping'
-                      }`} />
-                    )}
-                    <span className={`relative inline-flex rounded-full h-3 w-3 bg-amber-500 border border-white shadow-md transition-shadow ${
-                      isSelected || isHovered ? 'ring-4 ring-amber-500/20' : ''
+                  <span className="relative flex h-8 w-8 items-center justify-center">
+                    {/* Pulsing outer ring */}
+                    <span className={`absolute inset-0 rounded-full border border-white/40 transition-all duration-300 scale-75 group-hover:scale-100 ${
+                      isSelected || isHovered ? 'scale-100 border-white bg-white/10' : 'animate-pulse'
+                    }`} />
+                    
+                    {/* Core dot */}
+                    <span className={`h-2 w-2 rounded-full bg-white transition-all duration-300 ${
+                      isSelected || isHovered ? 'bg-amber-400 scale-125 shadow-lg' : ''
                     }`} />
                   </span>
                 </button>
