@@ -59,7 +59,7 @@ export default async function Home() {
         <div className="grain pointer-events-none" aria-hidden="true" />
 
         <div className="relative z-10 site-shell flex flex-col justify-center min-h-[60vh]">
-          <div className="max-w-3xl">
+          <div className="max-w-3xl bg-black/45 backdrop-blur-md border border-white/10 p-8 sm:p-12 rounded-[2rem] shadow-2xl">
             {/* Eyebrow */}
             <div className="mb-6 flex flex-wrap items-center gap-3">
               <span className="inline-flex items-center rounded-full border border-white/20 bg-white/5 px-4 py-2 text-[10px] font-bold uppercase tracking-[0.25em] text-white/95">
