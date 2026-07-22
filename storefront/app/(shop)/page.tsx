@@ -10,7 +10,6 @@ import { brandName, brandTagline, siteUrl } from '@/lib/format';
 import { brandConfig } from '@/config/brand.config';
 import { ArrowRight, Leaf, HeartHandshake, Truck, Shield, HelpCircle } from 'lucide-react';
 
-import InteractiveKitchenScene from '@/components/home/InteractiveKitchenScene';
 import HomesteadBackground from '@/components/home/HomesteadBackground';
 
 export const dynamic = 'force-dynamic';
@@ -126,10 +125,7 @@ export default async function Home() {
         </div>
       </section>
 
-      {/* Interactive homestead kitchen scene */}
-      <section className="py-16 bg-cream">
-        <InteractiveKitchenScene />
-      </section>
+
 
       {/* Order Explanation Teaser */}
       <section className="bg-warm border-y border-sand/40 py-16">
