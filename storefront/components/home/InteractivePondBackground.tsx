@@ -1,6 +1,7 @@
 'use client';
 
-import { useEffect, useRef, useCallback } from 'react';
+import { useEffect, useRef, useCallback, useState } from 'react';
+import FishingUI from './FishingUI';
 
 /* ═══════════════════════════════════════════════════════════════════
    WEBGL WATER SHADER — photorealistic top-down clear ocean surface
@@ -206,39 +207,58 @@ class KoiFish {
     }
   }
 
-  update(width: number, height: number, mouseX: number, mouseY: number, foods: Food[], ripples: Ripple[]) {
+  update(width: number, height: number, mouseX: number, mouseY: number, gameState: any, ripples: Ripple[]) {
     const dx = mouseX - this.x;
     const dy = mouseY - this.y;
     const dist = Math.hypot(dx, dy);
 
-    if (dist < 180) {
+    // If fish is hooked
+    if (gameState.hookedFish === this) {
+      if (gameState.phase === 'biting' || gameState.phase === 'reeling') {
+        // Struggle around the bobber
+        this.targetAngle = Math.atan2(this.y - gameState.bobberY, this.x - gameState.bobberX) + (Math.random() - 0.5) * 2;
+        this.targetSpeed = 4.0;
+        this.targetDepth = 0.5;
+        this.mouthOpen = 1;
+        if (Math.random() < 0.1) {
+          ripples.push({ x: this.x, y: this.y, radius: 2, maxRadius: 40, strength: 0.8, speed: 2.0 });
+        }
+      } else if (gameState.phase === 'caught') {
+        // Pulled out of water
+        this.targetSpeed = 0;
+        this.x = gameState.bobberX;
+        this.y = gameState.bobberY;
+        this.depth = -0.5;
+      }
+    }
+    else if (dist < 180 && gameState.phase === 'idle') {
       this.targetAngle = Math.atan2(this.y - mouseY, this.x - mouseX);
       this.targetSpeed = 2.8;
       this.targetDepth = 0.55;
     } else {
-      const activeFoods = foods.filter(f => !f.isEaten);
-      let closestFood: Food | null = null;
       let minDist = 400;
-
-      for (const food of activeFoods) {
-        const fDist = Math.hypot(food.x - this.x, food.y - this.y);
+      let bobberActive = (gameState.phase === 'cast' && gameState.bobberZ === 0);
+      
+      if (bobberActive) {
+        const fDist = Math.hypot(gameState.bobberX - this.x, gameState.bobberY - this.y);
         if (fDist < minDist) {
           minDist = fDist;
-          closestFood = food;
         }
       }
 
-      if (closestFood) {
-        this.targetAngle = Math.atan2(closestFood.y - this.y, closestFood.x - this.x);
-        this.targetSpeed = 1.4 + Math.random() * 0.4;
+      if (bobberActive && minDist < 300) {
+        this.targetAngle = Math.atan2(gameState.bobberY - this.y, gameState.bobberX - this.x);
+        this.targetSpeed = 1.4 + (gameState.baitLevel * 0.2); // Better bait = faster approach
         this.targetDepth = 0.08;
         this.mouthOpen = Math.min(1, this.mouthOpen + 0.05);
 
-        if (minDist < 20) {
-          closestFood.isEaten = true;
-          this.targetSpeed = 3.2;
+        if (minDist < 20 && !gameState.hookedFish) {
+          gameState.hookedFish = this;
+          gameState.phase = 'biting';
+          gameState.timeInPhase = 0;
+          this.targetSpeed = 0;
           this.mouthOpen = 1;
-          ripples.push({ x: closestFood.x, y: closestFood.y, radius: 2, maxRadius: 50, strength: 0.9, speed: 1.3 });
+          ripples.push({ x: this.x, y: this.y, radius: 2, maxRadius: 80, strength: 1.0, speed: 2.0 });
         }
       } else {
         this.mouthOpen = Math.max(0, this.mouthOpen - 0.03);
@@ -337,30 +357,38 @@ class KoiFish {
       rightPts.push({ x: seg.x + offX + Math.cos(a + Math.PI / 2) * r, y: seg.y + offY + Math.sin(a + Math.PI / 2) * r });
     }
 
+    if (rightPts.length === 0) return;
+
     ctx.beginPath();
-    // Rounded head cap
-    const headA = this.getSegAngle(0);
-    const headSeg = this.segments[0];
-    ctx.arc(headSeg.x + offX, headSeg.y + offY, this.getSegRadius(0), headA - Math.PI / 2, headA + Math.PI / 2, true);
-
-    // Left contour spline
-    for (let i = 0; i < leftPts.length - 1; i++) {
-      const mx = (leftPts[i].x + leftPts[i + 1].x) / 2;
-      const my = (leftPts[i].y + leftPts[i + 1].y) / 2;
-      ctx.quadraticCurveTo(leftPts[i].x, leftPts[i].y, mx, my);
+    
+    // Start at right shoulder
+    ctx.moveTo(rightPts[0].x, rightPts[0].y);
+    
+    // Right contour spline (head to tail)
+    for (let i = 0; i < rightPts.length - 1; i++) {
+      const mx = (rightPts[i].x + rightPts[i + 1].x) / 2;
+      const my = (rightPts[i].y + rightPts[i + 1].y) / 2;
+      ctx.quadraticCurveTo(rightPts[i].x, rightPts[i].y, mx, my);
     }
-
+    
     // Tail tip
     const tail = this.segments[this.segments.length - 1];
     ctx.lineTo(tail.x + offX, tail.y + offY);
 
-    // Right contour spline (reversed)
-    for (let i = rightPts.length - 1; i > 0; i--) {
-      const mx = (rightPts[i].x + rightPts[i - 1].x) / 2;
-      const my = (rightPts[i].y + rightPts[i - 1].y) / 2;
-      ctx.quadraticCurveTo(rightPts[i].x, rightPts[i].y, mx, my);
+    // Left contour spline (tail back to head)
+    for (let i = leftPts.length - 2; i >= 0; i--) {
+      const mx = (leftPts[i].x + leftPts[i + 1].x) / 2;
+      const my = (leftPts[i].y + leftPts[i + 1].y) / 2;
+      ctx.quadraticCurveTo(leftPts[i + 1].x, leftPts[i + 1].y, mx, my);
     }
+    
+    ctx.lineTo(leftPts[0].x, leftPts[0].y);
 
+    // Rounded head cap (left shoulder to right shoulder, across the front)
+    const headA = this.getSegAngle(0);
+    const headSeg = this.segments[0];
+    ctx.arc(headSeg.x + offX, headSeg.y + offY, this.getSegRadius(0), headA - Math.PI / 2, headA + Math.PI / 2, false);
+    
     ctx.closePath();
   }
 
@@ -634,7 +662,32 @@ export default function InteractivePondBackground() {
   const mouseRef = useRef({ x: -1000, y: -1000, lastX: -1000, lastY: -1000, strength: 0 });
   const ripplesRef = useRef<Ripple[]>([]);
   const fishRef = useRef<KoiFish[]>([]);
-  const foodsRef = useRef<Food[]>([]);
+  
+  const gameStateRef = useRef({
+    phase: 'idle', // idle, cast, biting, reeling, caught, escaped, highscore
+    tension: 0.5,
+    points: typeof window !== 'undefined' ? Number(localStorage.getItem('fishing_points') || 0) : 0,
+    poleLevel: typeof window !== 'undefined' ? Number(localStorage.getItem('fishing_poleLevel') || 1) : 1,
+    baitLevel: typeof window !== 'undefined' ? Number(localStorage.getItem('fishing_baitLevel') || 1) : 1,
+    bobberX: -1000,
+    bobberY: -1000,
+    bobberZ: 0,
+    hookedFish: null as KoiFish | null,
+    timeInPhase: 0,
+  });
+  
+  const [uiState, setUiState] = useState({ ...gameStateRef.current });
+
+  useEffect(() => {
+    const t = setInterval(() => setUiState({ ...gameStateRef.current }), 50);
+    return () => clearInterval(t);
+  }, []);
+
+  const saveProgress = useCallback(() => {
+    localStorage.setItem('fishing_points', gameStateRef.current.points.toString());
+    localStorage.setItem('fishing_poleLevel', gameStateRef.current.poleLevel.toString());
+    localStorage.setItem('fishing_baitLevel', gameStateRef.current.baitLevel.toString());
+  }, []);
   const glRef = useRef<{
     gl: WebGLRenderingContext;
     program: WebGLProgram;
@@ -756,11 +809,21 @@ export default function InteractivePondBackground() {
     };
 
     const onClick = (e: MouseEvent) => {
-      const rect = fishCanvas.getBoundingClientRect();
-      const x = e.clientX - rect.left;
-      const y = e.clientY - rect.top;
-      foodsRef.current.push({ x, y, size: 4, age: 0, isEaten: false });
-      ripplesRef.current.push({ x, y, radius: 2, maxRadius: 55, strength: 0.9, speed: 1.2 });
+      const state = gameStateRef.current;
+      if (state.phase === 'highscore') return; // block clicks during modal
+      
+      if (state.phase === 'idle') {
+        const rect = fishCanvas.getBoundingClientRect();
+        state.bobberX = e.clientX - rect.left;
+        state.bobberY = e.clientY - rect.top;
+        state.bobberZ = 100; // Start high up for casting arc
+        state.phase = 'cast';
+        state.timeInPhase = 0;
+      } else if (state.phase === 'biting') {
+        state.phase = 'reeling';
+        state.timeInPhase = 0;
+        state.tension = 0.5;
+      }
     };
 
     fishCanvas.addEventListener('mousemove', onMove);
@@ -773,50 +836,134 @@ export default function InteractivePondBackground() {
       const t = (performance.now() - startTime) / 1000;
       const mouse = mouseRef.current;
 
+      const state = gameStateRef.current;
+      state.timeInPhase += 16; // approx ms
+
+      // ── Game Logic ──
+      if (state.phase === 'cast') {
+        if (state.bobberZ > 0) {
+          state.bobberZ -= 5;
+          if (state.bobberZ <= 0) {
+            state.bobberZ = 0;
+            ripplesRef.current.push({ x: state.bobberX, y: state.bobberY, radius: 2, maxRadius: 40, strength: 0.8, speed: 1.5 });
+          }
+        }
+      } else if (state.phase === 'biting') {
+        if (state.timeInPhase > 1500) { // 1.5s to react
+          state.phase = 'escaped';
+          state.timeInPhase = 0;
+          state.hookedFish = null;
+        }
+      } else if (state.phase === 'reeling') {
+        state.tension -= 0.005; // natural decay
+        if (state.tension <= 0) {
+          state.phase = 'escaped';
+          state.timeInPhase = 0;
+          state.hookedFish = null;
+        } else if (state.tension >= 1) {
+          state.phase = 'caught';
+          state.timeInPhase = 0;
+          const pointsEarned = Math.floor(state.hookedFish!.sizeMultiplier * 50);
+          state.points += pointsEarned;
+          saveProgress();
+          // Reset fish
+          state.hookedFish!.x = -200;
+          state.hookedFish!.y = -200;
+          state.hookedFish!.depth = 0.5;
+        }
+      } else if (state.phase === 'escaped') {
+        if (state.timeInPhase > 2000) {
+          state.phase = 'idle';
+          state.bobberX = -1000;
+        }
+      } else if (state.phase === 'caught') {
+        if (state.timeInPhase > 3000) {
+          if (state.points > 0 && Math.random() < 0.3) { // 30% chance to prompt highscore for demo
+             state.phase = 'highscore';
+          } else {
+             state.phase = 'idle';
+             state.bobberX = -1000;
+             state.hookedFish = null;
+          }
+        }
+      }
+
       // ── Render WebGL water ──
       if (glRef.current) {
         const { gl, uTime, uResolution, uMouse, uMouseStrength } = glRef.current;
         gl.uniform1f(uTime, t);
         gl.uniform2f(uResolution, glCanvasRef.current!.width, glCanvasRef.current!.height);
         const dpr = Math.min(window.devicePixelRatio, 2);
-        gl.uniform2f(uMouse, mouse.x * dpr, mouse.y * dpr);
-        gl.uniform1f(uMouseStrength, mouse.strength);
+        
+        // Bobber creates ripples
+        if (state.phase !== 'idle' && state.phase !== 'highscore' && state.bobberZ === 0) {
+          gl.uniform2f(uMouse, state.bobberX * dpr, state.bobberY * dpr);
+          gl.uniform1f(uMouseStrength, 1.0);
+        } else {
+          gl.uniform2f(uMouse, mouse.x * dpr, mouse.y * dpr);
+          gl.uniform1f(uMouseStrength, mouse.strength);
+        }
+        
         gl.drawArrays(gl.TRIANGLE_STRIP, 0, 4);
       }
 
-      // Decay mouse strength
       mouse.strength *= 0.96;
 
       // ── Render Canvas 2D fish layer ──
       ctx.clearRect(0, 0, width, height);
 
-      // Shadows first
+      // Shadows
       fishRef.current.forEach(fish => fish.drawShadow(ctx));
-
-      // Food pellets
-      foodsRef.current = foodsRef.current.filter(food => {
-        if (food.isEaten) return false;
-        food.age++;
-        const bob = Math.sin(food.age * 0.07) * 1.0;
-        ctx.fillStyle = 'rgba(0,20,15,0.3)';
-        ctx.beginPath();
-        ctx.arc(food.x + 2, food.y + 3, food.size * 0.75, 0, Math.PI * 2);
-        ctx.fill();
-        const pelletGrad = ctx.createRadialGradient(food.x - 1, food.y + bob - 1, 0, food.x, food.y + bob, food.size);
-        pelletGrad.addColorStop(0, '#CD853F');
-        pelletGrad.addColorStop(1, '#6B3A1F');
-        ctx.fillStyle = pelletGrad;
-        ctx.beginPath();
-        ctx.arc(food.x, food.y + bob, food.size, 0, Math.PI * 2);
-        ctx.fill();
-        return true;
-      });
 
       // Fish bodies
       fishRef.current.forEach(fish => {
-        fish.update(width, height, mouse.x, mouse.y, foodsRef.current, ripplesRef.current);
+        fish.update(width, height, mouse.x, mouse.y, state, ripplesRef.current);
         fish.draw(ctx);
       });
+
+      // Fishing Line & Bobber
+      if (state.phase !== 'idle' && state.phase !== 'highscore') {
+        ctx.save();
+        // Line from bottom center to bobber
+        ctx.strokeStyle = 'rgba(255,255,255,0.4)';
+        ctx.lineWidth = 1;
+        ctx.beginPath();
+        const startX = width / 2;
+        const startY = height + 50;
+        ctx.moveTo(startX, startY);
+        
+        const bX = state.bobberX;
+        const bY = state.bobberY - state.bobberZ;
+        
+        // Curve the line slightly if reeling
+        if (state.phase === 'reeling') {
+           ctx.quadraticCurveTo((startX + bX)/2 + 50 * state.tension, (startY + bY)/2, bX, bY);
+        } else {
+           ctx.lineTo(bX, bY);
+        }
+        ctx.stroke();
+
+        // Bobber
+        ctx.fillStyle = (state.phase === 'biting' && Math.floor(state.timeInPhase / 100) % 2 === 0) ? '#ff4444' : '#ff3333';
+        ctx.beginPath();
+        ctx.arc(bX, bY, 6, 0, Math.PI * 2);
+        ctx.fill();
+        ctx.fillStyle = '#ffffff';
+        ctx.beginPath();
+        ctx.arc(bX, bY - 6, 4, 0, Math.PI * 2);
+        ctx.fill();
+        
+        // Splash if bitten
+        if (state.phase === 'biting') {
+          ctx.fillStyle = 'rgba(255,255,255,0.8)';
+          for (let i=0; i<5; i++) {
+            ctx.beginPath();
+            ctx.arc(bX + (Math.random()-0.5)*20, bY + (Math.random()-0.5)*20, Math.random()*3, 0, Math.PI*2);
+            ctx.fill();
+          }
+        }
+        ctx.restore();
+      }
 
       // Ripples
       ripplesRef.current = ripplesRef.current.filter(ripple => {
@@ -867,6 +1014,42 @@ export default function InteractivePondBackground() {
         ref={fishCanvasRef}
         className="absolute inset-0 w-full h-full pointer-events-auto"
         style={{ display: 'block' }}
+      />
+      <FishingUI 
+        points={uiState.points}
+        poleLevel={uiState.poleLevel}
+        baitLevel={uiState.baitLevel}
+        gamePhase={uiState.phase}
+        tension={uiState.tension}
+        onReel={() => {
+          gameStateRef.current.tension = Math.min(1.0, gameStateRef.current.tension + 0.1 + (gameStateRef.current.poleLevel * 0.02));
+        }}
+        onUpgradePole={() => {
+          const cost = gameStateRef.current.poleLevel * 150;
+          if (gameStateRef.current.points >= cost) {
+            gameStateRef.current.points -= cost;
+            gameStateRef.current.poleLevel += 1;
+            saveProgress();
+          }
+        }}
+        onUpgradeBait={() => {
+          const cost = gameStateRef.current.baitLevel * 100;
+          if (gameStateRef.current.points >= cost) {
+            gameStateRef.current.points -= cost;
+            gameStateRef.current.baitLevel += 1;
+            saveProgress();
+          }
+        }}
+        onSubmitHighscore={async (initials) => {
+          await fetch('/api/highscores', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ initials, score: gameStateRef.current.points })
+          });
+          gameStateRef.current.phase = 'idle';
+          gameStateRef.current.bobberX = -1000;
+          gameStateRef.current.hookedFish = null;
+        }}
       />
     </div>
   );

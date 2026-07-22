@@ -3,6 +3,7 @@
 import { useState, useEffect, useRef } from 'react';
 import Link from 'next/link';
 import { ArrowRight, Cookie, ShoppingBag, HeartHandshake, Sparkles, Flame, X, ChevronLeft, ChevronRight } from 'lucide-react';
+import KitchenEffectsCanvas from './KitchenEffectsCanvas';
 
 interface KitchenZoneConfig {
   id: string;
@@ -113,6 +114,9 @@ export default function InteractiveKitchenScene() {
   const [showLabels, setShowLabels] = useState(false);
   const [prefersReducedMotion, setPrefersReducedMotion] = useState(false);
   const [isMobile, setIsMobile] = useState(false);
+  const [mouseX, setMouseX] = useState(-1);
+  const [mouseY, setMouseY] = useState(-1);
+  const [isHoveringCanvas, setIsHoveringCanvas] = useState(false);
 
   const drawerRef = useRef<HTMLDivElement>(null);
 
@@ -255,6 +259,13 @@ export default function InteractiveKitchenScene() {
               transform: transformStyle,
               transition: prefersReducedMotion ? 'none' : 'transform 0.7s cubic-bezier(0.25, 1, 0.5, 1)'
             }}
+            onMouseMove={(e) => {
+              const rect = e.currentTarget.getBoundingClientRect();
+              setMouseX(e.clientX - rect.left);
+              setMouseY(e.clientY - rect.top);
+            }}
+            onMouseEnter={() => setIsHoveringCanvas(true)}
+            onMouseLeave={() => setIsHoveringCanvas(false)}
           >
           {/* Main Background Image */}
           {/* TODO: Replace with optimized final image storefront/public/images/home/interactive-kitchen.jpg when available. Currently using placeholder copy. */}
@@ -262,6 +273,13 @@ export default function InteractiveKitchenScene() {
             src="/images/home/interactive-kitchen.jpg"
             alt="The Artisan Bakery kitchen showing oven, pantry, prep table, window, and apothecary shelves"
             className="w-full h-full object-cover select-none"
+          />
+
+          <KitchenEffectsCanvas 
+            prefersReducedMotion={prefersReducedMotion} 
+            mouseX={mouseX} 
+            mouseY={mouseY} 
+            isHovering={isHoveringCanvas} 
           />
 
           {/* Subtle Vignette Overlay for Realism */}

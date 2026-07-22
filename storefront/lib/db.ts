@@ -128,6 +128,21 @@ export async function initDatabase(force: boolean = false) {
     }
   }
 
+  // Check and ensure fishing_highscores exists
+  try {
+    await p.query(`
+      CREATE TABLE IF NOT EXISTS fishing_highscores (
+        id SERIAL PRIMARY KEY,
+        initials VARCHAR(3) NOT NULL,
+        score INTEGER NOT NULL,
+        created_at TIMESTAMPTZ DEFAULT NOW()
+      );
+    `);
+    console.log('Ensured fishing_highscores table exists.');
+  } catch (err) {
+    console.log('Error ensuring fishing_highscores exists:', err);
+  }
+
   console.log('Initializing database schema and seed data...');
   
   await p.query(SCHEMA_SQL);
