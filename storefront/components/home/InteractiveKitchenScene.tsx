@@ -1,9 +1,8 @@
 'use client';
 
-import { useState, useEffect, useRef } from 'react';
+import { useState, useRef } from 'react';
 import Link from 'next/link';
-import { ArrowRight, Cookie, ShoppingBag, HeartHandshake, Sparkles, Flame, X, ChevronLeft, ChevronRight } from 'lucide-react';
-import KitchenEffectsCanvas from './KitchenEffectsCanvas';
+import { ArrowRight, Cookie, ShoppingBag, HeartHandshake, Sparkles, Flame, X } from 'lucide-react';
 
 interface KitchenZoneConfig {
   id: string;
@@ -13,7 +12,6 @@ interface KitchenZoneConfig {
   href: string;
   top: string;
   left: string;
-  focusTransform: string;
   thumbnail: string;
   previewItems: string[];
   icon: any;
@@ -29,7 +27,6 @@ const KITCHEN_ZONES: KitchenZoneConfig[] = [
     href: '/shop?category=baked-fresh',
     top: '62%',
     left: '84%',
-    focusTransform: 'scale(1.2) translate(-32%, -10%)',
     thumbnail: '/images/products/sourdough.jpg',
     previewItems: ['Artisan Bread', 'Sandwich Loaf', 'Bagels', 'Buns', 'Sourdough', 'Cinnamon Rolls'],
     icon: Cookie,
@@ -43,7 +40,6 @@ const KITCHEN_ZONES: KitchenZoneConfig[] = [
     href: '/shop?category=pantry',
     top: '27%',
     left: '76%',
-    focusTransform: 'scale(1.2) translate(-24%, 22%)',
     thumbnail: '/images/products/jams.jpg',
     previewItems: ['Jams/Jellies', 'Pickled Goods', 'Simmer Pots', 'Dried Mix Jars', 'Bundles'],
     icon: ShoppingBag,
@@ -57,7 +53,6 @@ const KITCHEN_ZONES: KitchenZoneConfig[] = [
     href: '/custom-orders',
     top: '52%',
     left: '68%',
-    focusTransform: 'scale(1.2) translate(-18%, -2%)',
     thumbnail: '/images/products/cheesecakes.jpg',
     previewItems: ['Cheesecakes', 'Custom Desserts', 'Occasion Cakes', 'Cupcakes'],
     icon: Sparkles,
@@ -71,7 +66,6 @@ const KITCHEN_ZONES: KitchenZoneConfig[] = [
     href: '/custom-orders',
     top: '67%',
     left: '50%',
-    focusTransform: 'scale(1.2) translate(0%, -15%)',
     thumbnail: '/images/products/custom-desserts.jpg',
     previewItems: ['Celebration Platters', 'Large Batch Bakes', 'Special Preorders'],
     icon: HeartHandshake,
@@ -85,7 +79,6 @@ const KITCHEN_ZONES: KitchenZoneConfig[] = [
     href: '/shop?category=home-body',
     top: '32%',
     left: '36%',
-    focusTransform: 'scale(1.2) translate(14%, 18%)',
     thumbnail: '/images/products/lotions.jpg',
     previewItems: ['Lotions', 'Lip Balms', 'Salves', 'Herbal Oils'],
     icon: Sparkles,
@@ -99,7 +92,6 @@ const KITCHEN_ZONES: KitchenZoneConfig[] = [
     href: '/oven-fund',
     top: '34%',
     left: '18%',
-    focusTransform: 'scale(1.2) translate(30%, 16%)',
     thumbnail: '/images/products/oven-fund.jpg',
     previewItems: ['Primary Oven Upgrade', 'Outdoor Brick Oven', 'Supporter Wall Perk'],
     icon: Flame,
@@ -110,105 +102,14 @@ const KITCHEN_ZONES: KitchenZoneConfig[] = [
 export default function InteractiveKitchenScene() {
   const [activeZone, setActiveZone] = useState<string | null>(null);
   const [hoveredHotspot, setHoveredHotspot] = useState<string | null>(null);
-  const [tourIndex, setTourIndex] = useState<number | null>(null);
-  const [showLabels, setShowLabels] = useState(false);
-  const [prefersReducedMotion, setPrefersReducedMotion] = useState(false);
-  const [isMobile, setIsMobile] = useState(false);
-  const [mouseX, setMouseX] = useState(-1);
-  const [mouseY, setMouseY] = useState(-1);
-  const [isHoveringCanvas, setIsHoveringCanvas] = useState(false);
-
   const drawerRef = useRef<HTMLDivElement>(null);
-
-  // Check prefers-reduced-motion media query
-  useEffect(() => {
-    const mediaQuery = window.matchMedia('(prefers-reduced-motion: reduce)');
-    setPrefersReducedMotion(mediaQuery.matches);
-    const handler = (e: MediaQueryListEvent) => setPrefersReducedMotion(e.matches);
-    mediaQuery.addEventListener('change', handler);
-    return () => mediaQuery.removeEventListener('change', handler);
-  }, []);
-
-  // Check mobile screen width
-  useEffect(() => {
-    const checkMobile = () => setIsMobile(window.innerWidth < 768);
-    checkMobile();
-    window.addEventListener('resize', checkMobile);
-    return () => window.removeEventListener('resize', checkMobile);
-  }, []);
-
-  // Delay showing micro-labels on initial load
-  useEffect(() => {
-    const timer = setTimeout(() => {
-      setShowLabels(true);
-    }, 1500);
-    return () => clearTimeout(timer);
-  }, []);
-
-  // Escape key handler to close active tooltips
-  useEffect(() => {
-    const handleKeyDown = (e: KeyboardEvent) => {
-      if (e.key === 'Escape') {
-        setActiveZone(null);
-        setTourIndex(null);
-      }
-    };
-    window.addEventListener('keydown', handleKeyDown);
-    return () => window.removeEventListener('keydown', handleKeyDown);
-  }, []);
-
-  // Focus navigation shift when drawer is opened
-  useEffect(() => {
-    if (activeZone && drawerRef.current) {
-      drawerRef.current.focus();
-    }
-  }, [activeZone]);
 
   const handleHotspotClick = (id: string, e: React.MouseEvent | React.KeyboardEvent) => {
     e.stopPropagation();
     setActiveZone(activeZone === id ? null : id);
-    setTourIndex(null); // Terminate guided tour if user interacts manually
-  };
-
-  const handleStartTour = () => {
-    setTourIndex(0);
-    setActiveZone(KITCHEN_ZONES[0].id);
-  };
-
-  const handleNextTour = () => {
-    if (tourIndex === null) return;
-    if (tourIndex < KITCHEN_ZONES.length - 1) {
-      const nextIdx = tourIndex + 1;
-      setTourIndex(nextIdx);
-      setActiveZone(KITCHEN_ZONES[nextIdx].id);
-    } else {
-      // Tour completed
-      setTourIndex(null);
-      setActiveZone(null);
-    }
-  };
-
-  const handleBackTour = () => {
-    if (tourIndex === null) return;
-    if (tourIndex > 0) {
-      const prevIdx = tourIndex - 1;
-      setTourIndex(prevIdx);
-      setActiveZone(KITCHEN_ZONES[prevIdx].id);
-    }
-  };
-
-  const handleCloseTour = () => {
-    setTourIndex(null);
-    setActiveZone(null);
   };
 
   const activeZoneConfig = KITCHEN_ZONES.find(z => z.id === activeZone);
-  
-  // Set transforms based on active configuration and screen type
-  const transformStyle = activeZoneConfig && !isMobile && !prefersReducedMotion
-    ? activeZoneConfig.focusTransform
-    : 'scale(1) translate(0%, 0%)';
-
   const isLeftHotspot = activeZoneConfig && parseInt(activeZoneConfig.left) < 50;
   const drawerAlignClass = isLeftHotspot ? 'md:right-4 md:left-auto' : 'md:left-4 md:right-auto';
 
@@ -226,126 +127,86 @@ export default function InteractiveKitchenScene() {
         <p className="text-sm text-muted-earth leading-relaxed">
           Tap around the kitchen to explore fresh baking, pantry goods, handmade care items, custom orders, and the Oven Fund.
         </p>
-
-        {/* Guided Tour Start Button */}
-        <button
-          type="button"
-          onClick={(e) => {
-            e.stopPropagation();
-            handleStartTour();
-          }}
-          className="inline-flex items-center gap-2 bg-brand/10 hover:bg-brand/20 border border-brand/20 text-brand px-5 py-2.5 rounded-full text-xs font-bold uppercase tracking-wider transition-colors mt-5 shadow-xs focus-visible:ring-2 focus-visible:ring-brand focus-visible:ring-offset-2 focus:outline-none"
-          aria-label="Start interactive guided tour of the kitchen map"
-        >
-          <Sparkles size={14} className={prefersReducedMotion ? '' : 'animate-pulse'} /> 
-          <span>Start Kitchen Tour</span>
-        </button>
       </div>
 
       {/* Main Container Card */}
       <div 
-        className="relative w-full aspect-[16/10] md:aspect-[16/9] bg-warm rounded-[2rem]"
-        onClick={() => {
-          setActiveZone(null);
-          setTourIndex(null);
-        }}
+        className="relative w-full aspect-[16/10] md:aspect-[16/9] bg-warm rounded-[2rem] cursor-default"
+        onClick={() => setActiveZone(null)}
       >
-        {/* Inner Rounded Overflow-Hidden Wrapper for the Zoomable Map */}
         <div className="absolute inset-0 rounded-[2rem] border border-[#EBE3D5] overflow-hidden shadow-2xl w-full h-full">
-          {/* Zoomable Wrapper (Transforms only image, glows, and hotspots) */}
-          <div 
-            className="w-full h-full relative origin-center"
-            style={{ 
-              transform: transformStyle,
-              transition: prefersReducedMotion ? 'none' : 'transform 0.7s cubic-bezier(0.25, 1, 0.5, 1)'
-            }}
-            onMouseMove={(e) => {
-              const rect = e.currentTarget.getBoundingClientRect();
-              setMouseX(e.clientX - rect.left);
-              setMouseY(e.clientY - rect.top);
-            }}
-            onMouseEnter={() => setIsHoveringCanvas(true)}
-            onMouseLeave={() => setIsHoveringCanvas(false)}
-          >
-          {/* Main Background Image */}
-          {/* TODO: Replace with optimized final image storefront/public/images/home/interactive-kitchen.jpg when available. Currently using placeholder copy. */}
-          <img
-            src="/images/home/interactive-kitchen.jpg"
-            alt="The Artisan Bakery kitchen showing oven, pantry, prep table, window, and apothecary shelves"
-            className="w-full h-full object-cover select-none"
-          />
+          <div className="w-full h-full relative">
+            {/* Main Background Image */}
+            <img
+              src="/images/home/interactive-kitchen.jpg"
+              alt="The Artisan Bakery kitchen showing oven, pantry, prep table, window, and apothecary shelves"
+              className="w-full h-full object-cover select-none"
+            />
 
-          <KitchenEffectsCanvas 
-            prefersReducedMotion={prefersReducedMotion} 
-            mouseX={mouseX} 
-            mouseY={mouseY} 
-            isHovering={isHoveringCanvas} 
-          />
+            {/* Subtle Vignette Overlay for Realism */}
+            <div className="absolute inset-0 pointer-events-none shadow-[inset_0_0_80px_rgba(0,0,0,0.25)] z-2" />
+            <div className="absolute inset-0 bg-gradient-to-t from-black/15 via-transparent to-black/10 pointer-events-none z-2" />
 
-          {/* Subtle Vignette Overlay for Realism */}
-          <div className="absolute inset-0 pointer-events-none shadow-[inset_0_0_80px_rgba(0,0,0,0.25)] z-2" />
-          <div className="absolute inset-0 bg-gradient-to-t from-black/15 via-transparent to-black/10 pointer-events-none z-2" />
+            {/* Dimming overlay when any zone is selected to spotlight the active zone */}
+            <div 
+              className={`absolute inset-0 bg-black/40 transition-opacity duration-500 pointer-events-none z-4 ${
+                activeZone ? 'opacity-100' : 'opacity-0'
+              }`}
+            />
 
-          {/* Dimming overlay when any zone is selected to spotlight the active zone */}
-          <div 
-            className={`absolute inset-0 bg-black/40 transition-opacity duration-700 pointer-events-none z-4 ${
-              activeZone ? 'opacity-100' : 'opacity-0'
-            }`}
-          />
+            {/* Hotspots Render Overlay */}
+            {KITCHEN_ZONES.map((hotspot) => {
+              const isSelected = activeZone === hotspot.id;
+              const isHovered = hoveredHotspot === hotspot.id;
+              const Icon = hotspot.icon;
 
-          {/* Hotspots Render Overlay */}
-          {KITCHEN_ZONES.map((hotspot) => {
-            const isSelected = activeZone === hotspot.id;
-            const isHovered = hoveredHotspot === hotspot.id;
-            const Icon = hotspot.icon;
-
-            return (
-              <div
-                key={hotspot.id}
-                className={`absolute -translate-x-1/2 -translate-y-1/2 transition-all duration-300 ${
-                  isSelected || isHovered ? 'z-10' : 'z-3'
-                }`}
-                style={{ top: hotspot.top, left: hotspot.left }}
-                onMouseLeave={() => setHoveredHotspot(null)}
-              >
-                
-                {/* Modern glassmorphic tooltip (displays only on hover/select) */}
-                <div 
-                  className={`absolute bottom-full mb-3 left-1/2 -translate-x-1/2 px-3 py-1.5 rounded-xl border border-white/20 bg-white/25 backdrop-blur-md text-white text-[10px] font-bold uppercase tracking-widest pointer-events-none select-none transition-all duration-300 shadow-xl whitespace-nowrap flex items-center gap-2 ${
-                    isSelected || isHovered ? 'opacity-100 translate-y-0 scale-100' : 'opacity-0 translate-y-1 scale-95'
+              return (
+                <div
+                  key={hotspot.id}
+                  className={`absolute -translate-x-1/2 -translate-y-1/2 transition-all duration-300 ${
+                    isSelected || isHovered ? 'z-10' : 'z-3'
                   }`}
+                  style={{ top: hotspot.top, left: hotspot.left }}
+                  onMouseLeave={() => setHoveredHotspot(null)}
                 >
-                  <Icon size={11} className="text-amber-300 shrink-0" />
-                  <span>{hotspot.shortLabel}</span>
-                </div>
+                  
+                  {/* Modern glassmorphic tooltip (displays only on hover/select) */}
+                  <div 
+                    className={`absolute bottom-full mb-3 left-1/2 -translate-x-1/2 px-3 py-1.5 rounded-xl border border-white/20 bg-white/25 backdrop-blur-md text-white text-[10px] font-bold uppercase tracking-widest pointer-events-none select-none transition-all duration-300 shadow-xl whitespace-nowrap flex items-center gap-2 ${
+                      isSelected || isHovered ? 'opacity-100 translate-y-0 scale-100' : 'opacity-0 translate-y-1 scale-95'
+                    }`}
+                  >
+                    <Icon size={11} className="text-amber-300 shrink-0" />
+                    <span>{hotspot.shortLabel}</span>
+                  </div>
 
-                {/* Minimalist target focus ring button */}
-                <button
-                  type="button"
-                  onClick={(e) => handleHotspotClick(hotspot.id, e)}
-                  onMouseEnter={() => setHoveredHotspot(hotspot.id)}
-                  onFocus={() => setHoveredHotspot(hotspot.id)}
-                  onBlur={() => setHoveredHotspot(null)}
-                  className="w-10 h-10 md:w-16 md:h-16 flex items-center justify-center rounded-full focus:outline-none focus-visible:ring-2 focus-visible:ring-white z-10 bg-transparent transition-transform active:scale-95 cursor-pointer group"
-                  aria-label={`Open details for ${hotspot.title}`}
-                  aria-expanded={isSelected}
-                >
-                  <span className="relative flex h-8 w-8 items-center justify-center">
-                    {/* Pulsing outer ring */}
-                    <span className={`absolute inset-0 rounded-full border border-white/40 transition-all duration-300 scale-75 group-hover:scale-100 ${
-                      isSelected || isHovered ? 'scale-100 border-white bg-white/10' : 'animate-pulse'
-                    }`} />
-                    
-                    {/* Core dot */}
-                    <span className={`h-2 w-2 rounded-full bg-white transition-all duration-300 ${
-                      isSelected || isHovered ? 'bg-amber-400 scale-125 shadow-lg' : ''
-                    }`} />
-                  </span>
-                </button>
-              </div>
-            );
-          })}
-        </div>
+                  {/* Minimalist target focus ring button */}
+                  <button
+                    type="button"
+                    onClick={(e) => handleHotspotClick(hotspot.id, e)}
+                    onMouseEnter={() => setHoveredHotspot(hotspot.id)}
+                    onFocus={() => setHoveredHotspot(hotspot.id)}
+                    onBlur={() => setHoveredHotspot(null)}
+                    className="w-10 h-10 md:w-16 md:h-16 flex items-center justify-center rounded-full focus:outline-none focus-visible:ring-2 focus-visible:ring-white z-10 bg-transparent transition-transform active:scale-95 cursor-pointer group"
+                    aria-label={`Open details for ${hotspot.title}`}
+                    aria-expanded={isSelected}
+                  >
+                    <span className="relative flex h-8 w-8 items-center justify-center">
+                      {/* Pulsing outer ring */}
+                      <span className={`absolute inset-0 rounded-full border border-white/40 transition-all duration-300 scale-75 group-hover:scale-100 ${
+                        isSelected || isHovered ? 'scale-100 border-white bg-white/10' : 'animate-pulse'
+                      }`} />
+                      
+                      {/* Core dot */}
+                      <span className={`h-2 w-2 rounded-full bg-white transition-all duration-300 ${
+                        isSelected || isHovered ? 'bg-amber-400 scale-125 shadow-lg' : ''
+                      }`} />
+                    </span>
+                  </button>
+                </div>
+              );
+            })}
+          </div>
         </div>
 
         {/* Mobile Backdrop Overlay */}
@@ -355,24 +216,26 @@ export default function InteractiveKitchenScene() {
             onClick={(e) => {
               e.stopPropagation();
               setActiveZone(null);
-              setTourIndex(null);
             }}
             aria-hidden="true"
           />
         )}
 
-        {/* Stable Overlay Layer (Stable side drawer or bottom sheet outside the transformed wrapper) */}
+        {/* Stable Side Drawer / Details Panel */}
         {activeZoneConfig && (
           <div
             ref={drawerRef}
             tabIndex={-1}
-            className={`fixed bottom-0 left-0 right-0 z-50 rounded-t-[2rem] max-h-[80vh] md:absolute md:top-4 md:bottom-4 md:w-96 md:rounded-2xl md:z-20 p-6 bg-[#FDFBF7]/95 border-t border-x md:border border-[#EBE3D5] shadow-2xl backdrop-blur-md text-left transition-all focus:outline-none ${
-              prefersReducedMotion ? 'duration-0' : 'duration-500 ease-out'
-            } ${drawerAlignClass} overflow-y-auto flex flex-col justify-between`}
+            className="fixed bottom-0 left-0 right-0 z-50 rounded-t-[2rem] max-h-[80vh] md:absolute md:top-4 md:bottom-4 md:w-96 md:rounded-2xl md:z-20 p-6 bg-[#FDFBF7]/95 border-t border-x md:border border-[#EBE3D5] shadow-2xl backdrop-blur-md text-left transition-all duration-300 ease-out drawerAlignClass overflow-y-auto flex flex-col justify-between"
+            style={{
+              left: isLeftHotspot ? 'auto' : '1rem',
+              right: isLeftHotspot ? '1rem' : 'auto'
+            }}
             onClick={(e) => e.stopPropagation()}
           >
             {/* Drag Handle (Mobile only) */}
             <div className="w-12 h-1 bg-[#EBE3D5] rounded-full mx-auto mb-4 md:hidden shrink-0" />
+            
             {/* Drawer Header & Content */}
             <div className="space-y-4">
               <div className="flex justify-between items-start">
@@ -385,7 +248,7 @@ export default function InteractiveKitchenScene() {
                       {activeZoneConfig.title}
                     </h3>
                     <span className="text-[9px] font-bold text-terracotta uppercase tracking-wider block">
-                      Homestead Room Tour
+                      Homestead Room Detail
                     </span>
                   </div>
                 </div>
@@ -396,7 +259,6 @@ export default function InteractiveKitchenScene() {
                   onClick={(e) => {
                     e.stopPropagation();
                     setActiveZone(null);
-                    setTourIndex(null);
                   }}
                   className="w-7 h-7 rounded-lg border border-[#EBE3D5] text-muted-earth hover:text-earth flex items-center justify-center hover:bg-warm transition-colors focus-visible:ring-2 focus-visible:ring-brand focus-visible:ring-offset-2 focus:outline-none"
                   aria-label="Close drawer and return to kitchen overview"
@@ -436,82 +298,26 @@ export default function InteractiveKitchenScene() {
               </div>
             </div>
 
-            {/* Footer Navigation & Tour Controls */}
-            <div className="border-t border-[#EBE3D5] pt-4 mt-6 space-y-4">
-              
+            {/* Footer CTAs */}
+            <div className="border-t border-[#EBE3D5] pt-4 mt-6">
               <div className="flex flex-col sm:flex-row items-stretch sm:items-center gap-3 w-full">
-                {/* Primary CTA (Navigate to Shop/Category/Custom) */}
                 <Link
                   href={activeZoneConfig.href}
                   className="w-full sm:w-auto sm:flex-1 text-center bg-brand text-white px-4 py-2.5 rounded-xl font-bold text-xs hover:bg-brand-accent transition-colors shadow-xs focus-visible:ring-2 focus-visible:ring-brand focus-visible:ring-offset-2 focus:outline-none"
                 >
                   {activeZoneConfig.ctaText}
                 </Link>
-
-                {/* Back to Kitchen overview (Resets zoom) */}
                 <button
                   type="button"
                   onClick={(e) => {
                     e.stopPropagation();
                     setActiveZone(null);
-                    setTourIndex(null);
                   }}
                   className="w-full sm:w-auto text-center px-4 py-2.5 border border-[#EBE3D5] text-earth font-bold text-xs rounded-xl hover:bg-warm transition-colors focus-visible:ring-2 focus-visible:ring-brand focus-visible:ring-offset-2 focus:outline-none"
                 >
                   Back to Kitchen
                 </button>
               </div>
-
-              {/* Guided Tour Navigation Controls */}
-              {tourIndex !== null && (
-                <div className="flex flex-col sm:flex-row sm:items-center justify-between bg-warm/60 border border-[#EBE3D5] rounded-xl p-3 gap-2">
-                  <span className="text-[10px] font-black uppercase tracking-wider text-muted-earth text-center sm:text-left">
-                    Tour Step {tourIndex + 1} of {KITCHEN_ZONES.length}
-                  </span>
-                  
-                  <div className="flex items-center justify-center gap-2">
-                    {/* Back step */}
-                    <button
-                      type="button"
-                      onClick={(e) => {
-                        e.stopPropagation();
-                        handleBackTour();
-                      }}
-                      disabled={tourIndex === 0}
-                      className="inline-flex items-center gap-1 px-3 py-1.5 rounded-lg border border-[#EBE3D5] text-muted-earth hover:text-earth disabled:opacity-30 disabled:pointer-events-none bg-white hover:bg-warm transition-colors font-bold text-xs focus-visible:ring-2 focus-visible:ring-brand focus-visible:ring-offset-1 focus:outline-none"
-                    >
-                      <ChevronLeft size={14} />
-                      <span>Back</span>
-                    </button>
-
-                    {/* Next / Finish step */}
-                    <button
-                      type="button"
-                      onClick={(e) => {
-                        e.stopPropagation();
-                        handleNextTour();
-                      }}
-                      className="inline-flex items-center gap-1 px-3 py-1.5 rounded-lg bg-brand text-white font-bold text-xs hover:bg-brand-accent transition-colors focus-visible:ring-2 focus-visible:ring-brand focus-visible:ring-offset-1 focus:outline-none"
-                    >
-                      <span>{tourIndex === KITCHEN_ZONES.length - 1 ? 'Finish' : 'Next'}</span>
-                      {tourIndex < KITCHEN_ZONES.length - 1 && <ChevronRight size={14} />}
-                    </button>
-
-                    {/* Close tour */}
-                    <button
-                      type="button"
-                      onClick={(e) => {
-                        e.stopPropagation();
-                        handleCloseTour();
-                      }}
-                      className="inline-flex items-center gap-1 px-3 py-1.5 rounded-lg border border-red-200 text-red-700 bg-white hover:bg-red-50 transition-colors font-bold text-xs focus-visible:ring-2 focus-visible:ring-red-500 focus-visible:ring-offset-1 focus:outline-none"
-                    >
-                      <X size={12} />
-                      <span>Close</span>
-                    </button>
-                  </div>
-                </div>
-              )}
             </div>
 
           </div>
